@@ -10,16 +10,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+interface Profile {
+  display_name: string | null;
+  avatar_url: string | null;
+  leaderboard_opt_in: boolean | null;
+}
+
 interface ScoreEntry {
   id: string;
   user_id: string;
   score: number;
   created_at: string;
-  profiles?: {
-    display_name: string | null;
-    avatar_url: string | null;
-    leaderboard_opt_in: boolean | null;
-  };
+  profiles?: Profile | null;
 }
 
 const formatDate = (dateString: string) => {
@@ -38,12 +40,11 @@ const Leaderboard = () => {
       const { data, error } = await supabase
         .from("scores")
         .select(`
-          *,
-          profiles:user_id (
-            display_name,
-            avatar_url,
-            leaderboard_opt_in
-          )
+          id,
+          user_id,
+          score,
+          created_at,
+          profiles:profiles(display_name, avatar_url, leaderboard_opt_in)
         `)
         .order("score", { ascending: false })
         .limit(50);
@@ -53,9 +54,9 @@ const Leaderboard = () => {
       // Filter out users who have opted out of the leaderboard
       const filteredScores = data.filter(score => 
         score.profiles?.leaderboard_opt_in !== false
-      );
+      ) as ScoreEntry[];
       
-      return filteredScores as ScoreEntry[];
+      return filteredScores;
     },
     refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
   });

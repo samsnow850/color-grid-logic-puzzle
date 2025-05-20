@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -404,9 +403,9 @@ const Settings = () => {
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
                                   <FormLabel className="text-base">Leaderboard Visibility</FormLabel>
-                                  <FormDescription>
+                                  <CardDescription>
                                     Show your profile on the public leaderboard
-                                  </FormDescription>
+                                  </CardDescription>
                                 </div>
                                 <FormControl>
                                   <Switch

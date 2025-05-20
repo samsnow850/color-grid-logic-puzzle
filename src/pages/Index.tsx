@@ -110,7 +110,7 @@ const AboutModal = ({ open, onOpenChange }: ModalProps) => (
 
 const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="text-2xl font-bold">Changelog</DialogTitle>
       </DialogHeader>
@@ -124,12 +124,66 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
           </ul>
         </div>
         <div>
-          <h3 className="font-bold text-lg">May 20, 2025 - Initial Release</h3>
+          <h3 className="font-bold text-lg">May 18, 2025 - Beta 2.3</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Launched Color Grid Logic with 3 difficulty levels</li>
-            <li>Implemented core gameplay mechanics</li>
-            <li>Added tutorial for new players</li>
-            <li>Introduced responsive design for mobile and desktop</li>
+            <li>Added high contrast mode for improved accessibility</li>
+            <li>Optimized game load times across all devices</li>
+            <li>Fixed several UI glitches on mobile devices</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">May 16, 2025 - Beta 2.2</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Added profile management features</li>
+            <li>Implemented avatar upload functionality</li>
+            <li>Introduced bio section for user profiles</li>
+            <li>Enhanced leaderboard with profile integration</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">May 14, 2025 - Beta 2.1</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Added sound effects for game interactions</li>
+            <li>Implemented background music toggle feature</li>
+            <li>Enhanced grid number visibility options</li>
+            <li>Fixed several UI/UX issues reported by beta testers</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">May 12, 2025 - Beta 2.0</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Launched comprehensive user settings page</li>
+            <li>Added leaderboard opt-in/out feature</li>
+            <li>Implemented "Coming Soon" feature previews</li>
+            <li>Created Help & FAQ section with troubleshooting guides</li>
+            <li>Added bug reporting system</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">May 10, 2025 - Beta 1.2</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Implemented user account management</li>
+            <li>Added email and password change functionality</li>
+            <li>Created account deletion process</li>
+            <li>Enhanced security for user data</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">May 8, 2025 - Beta 1.1</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Released leaderboard system</li>
+            <li>Added score tracking and persistence</li>
+            <li>Implemented user authentication requirements</li>
+            <li>Fixed several critical gameplay bugs</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">May 5, 2025 - Alpha Release</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Initial alpha release with core gameplay mechanics</li>
+            <li>Implemented three difficulty levels (Easy, Medium, Hard)</li>
+            <li>Added basic user interface and responsive design</li>
+            <li>Released tutorial for new players</li>
             <li>Created puzzle generation algorithm</li>
           </ul>
         </div>
