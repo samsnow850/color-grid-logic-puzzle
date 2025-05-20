@@ -60,7 +60,7 @@ const Leaderboard = () => {
           .from("profiles")
           .select(`display_name, avatar_url, leaderboard_opt_in`)
           .eq("id", score.user_id)
-          .single();
+          .maybeSingle();
         
         // Only add scores where the user has opted into the leaderboard or the profile doesn't exist yet
         if (!profileData || profileData.leaderboard_opt_in !== false) {
@@ -115,6 +115,9 @@ const Leaderboard = () => {
   };
 
   useEffect(() => {
+    // Handle scroll to top when page loads
+    window.scrollTo(0, 0);
+    
     // Refresh leaderboard data on mount
     refetch();
   }, [refetch]);
