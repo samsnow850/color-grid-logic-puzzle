@@ -128,6 +128,14 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
       </DialogHeader>
       <div className="space-y-6">
         <div>
+          <h3 className="font-bold text-lg">May 20, 2025 - Security Update</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Fixed security issue with OTP expiry time in authentication</li>
+            <li>Enhanced user account security measures</li>
+            <li>Improved authentication flow experience</li>
+          </ul>
+        </div>
+        <div>
           <h3 className="font-bold text-lg">May 20, 2025 - Initial Release</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Launched Color Grid Logic with 3 difficulty levels</li>
