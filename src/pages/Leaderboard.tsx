@@ -37,26 +37,42 @@ const Leaderboard = () => {
   const { data: scores, isLoading, error, refetch } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, get the scores
+      const { data: scoresData, error: scoresError } = await supabase
         .from("scores")
         .select(`
           id,
           user_id,
           score,
-          created_at,
-          profiles:profiles(display_name, avatar_url, leaderboard_opt_in)
+          created_at
         `)
         .order("score", { ascending: false })
         .limit(50);
       
-      if (error) throw error;
+      if (scoresError) throw scoresError;
       
-      // Filter out users who have opted out of the leaderboard
-      const filteredScores = data.filter(score => 
-        score.profiles?.leaderboard_opt_in !== false
-      ) as ScoreEntry[];
+      // Then, get the profiles for each user_id
+      const scoreEntries: ScoreEntry[] = [];
       
-      return filteredScores;
+      // Use Promise.all to fetch all profiles in parallel
+      await Promise.all(scoresData.map(async (score) => {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select(`display_name, avatar_url, leaderboard_opt_in`)
+          .eq("id", score.user_id)
+          .single();
+        
+        // Only add scores where the user has opted into the leaderboard or the profile doesn't exist yet
+        if (!profileData || profileData.leaderboard_opt_in !== false) {
+          scoreEntries.push({
+            ...score,
+            profiles: profileData
+          });
+        }
+      }));
+      
+      // Sort by score (highest first) after filtering
+      return scoreEntries.sort((a, b) => b.score - a.score);
     },
     refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
   });
