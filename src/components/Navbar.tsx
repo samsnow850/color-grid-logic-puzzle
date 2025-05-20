@@ -1,88 +1,131 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const { user, signOut, loading } = useAuth();
+  const navigate = useNavigate();
   const [showAbout, setShowAbout] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("There was a problem signing out");
+    }
+  };
+
+  const getInitials = (email: string | undefined) => {
+    if (!email) return "U";
+    return email.charAt(0).toUpperCase();
+  };
+
   return (
-    <nav className="bg-white border-b border-gray-200 py-4 px-6 md:px-12">
-      <div className="flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="grid grid-cols-2 grid-rows-2 gap-1">
-            <div className="w-3 h-3 bg-purple-500 rounded-sm"></div>
-            <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-            <div className="w-3 h-3 bg-orange-500 rounded-sm"></div>
-          </div>
-          <span className="text-xl font-bold text-primary">Color Grid Logic</span>
+    <header className="border-b bg-background z-10">
+      <div className="container flex items-center justify-between h-16 px-4 md:px-6">
+        <Link 
+          to="/" 
+          className="flex items-center gap-2 font-semibold"
+        >
+          <div className="w-6 h-6 rounded bg-primary" />
+          <span className="hidden sm:inline">Color Grid Logic</span>
         </Link>
         
-        <div className="hidden md:flex gap-4">
-          <Button variant="ghost" asChild>
-            <Link to="/game">Play</Link>
-          </Button>
-          <Button variant="ghost" onClick={() => setShowAbout(true)}>
+        <nav className="hidden md:flex items-center gap-5">
+          <Link to="/" className="text-sm font-medium hover:underline underline-offset-4">
+            Home
+          </Link>
+          <Link to="/game" className="text-sm font-medium hover:underline underline-offset-4">
+            Play Game
+          </Link>
+          <Link to="/leaderboard" className="text-sm font-medium hover:underline underline-offset-4">
+            Leaderboard
+          </Link>
+          <button
+            onClick={() => setShowAbout(true)}
+            className="text-sm font-medium hover:underline underline-offset-4"
+          >
             About
-          </Button>
-          <Button variant="ghost" onClick={() => setShowChangelog(true)}>
+          </button>
+          <button
+            onClick={() => setShowChangelog(true)}
+            className="text-sm font-medium hover:underline underline-offset-4"
+          >
             Changelog
-          </Button>
-          <Button variant="ghost" asChild>
-            <Link to="/leaderboard">Leaderboard</Link>
-          </Button>
-          {!loading && (
-            user ? (
-              <Button variant="outline" onClick={signOut}>Sign Out</Button>
-            ) : (
-              <Button variant="outline" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
-            )
-          )}
-        </div>
+          </button>
+        </nav>
         
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="md:hidden">Menu</Button>
-          </SheetTrigger>
-          <SheetContent>
-            <div className="flex flex-col gap-4 pt-8">
-              <Button variant="ghost" asChild>
-                <Link to="/game">Play</Link>
-              </Button>
-              <Button variant="ghost" onClick={() => setShowAbout(true)}>
-                About
-              </Button>
-              <Button variant="ghost" onClick={() => setShowChangelog(true)}>
-                Changelog
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link to="/leaderboard">Leaderboard</Link>
-              </Button>
-              {!loading && (
-                user ? (
-                  <Button variant="outline" onClick={signOut}>Sign Out</Button>
-                ) : (
-                  <Button variant="outline" asChild>
-                    <Link to="/auth">Sign In</Link>
-                  </Button>
-                )
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-4">
+          {loading ? (
+            <div className="w-8 h-8 rounded-full bg-muted animate-pulse"></div>
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/account")}>
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={() => navigate("/auth")}>Sign In</Button>
+          )}
+          
+          <Button className="sm:hidden" variant="outline" size="icon" asChild>
+            <Link to="/game">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" /></svg>
+            </Link>
+          </Button>
+          
+          <div className="hidden sm:block">
+            <Button asChild>
+              <Link to="/game">Play Game</Link>
+            </Button>
+          </div>
+        </div>
       </div>
       
       <AboutModal open={showAbout} onOpenChange={setShowAbout} />
       <ChangelogModal open={showChangelog} onOpenChange={setShowChangelog} />
-    </nav>
+    </header>
   );
 };
 

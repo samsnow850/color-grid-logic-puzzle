@@ -13,6 +13,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import Contact from "./pages/Contact";
 import Leaderboard from "./pages/Leaderboard";
+import Account from "./pages/Account";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="/terms-of-use" element={<TermsOfUse />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/account" element={<Account />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

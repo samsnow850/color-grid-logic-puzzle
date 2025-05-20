@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -14,7 +15,11 @@ interface ScoreEntry {
   user_id: string;
   score: number;
   created_at: string;
-  user_email?: string;
+  profiles?: {
+    display_name: string | null;
+    avatar_url: string | null;
+    leaderboard_opt_in: boolean | null;
+  };
 }
 
 const formatDate = (dateString: string) => {
@@ -27,18 +32,32 @@ const formatDate = (dateString: string) => {
 };
 
 const Leaderboard = () => {
-  const { data: scores, isLoading, error } = useQuery({
+  const { data: scores, isLoading, error, refetch } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("scores")
-        .select("*")
+        .select(`
+          *,
+          profiles:user_id (
+            display_name,
+            avatar_url,
+            leaderboard_opt_in
+          )
+        `)
         .order("score", { ascending: false })
         .limit(50);
       
       if (error) throw error;
-      return data as ScoreEntry[];
-    }
+      
+      // Filter out users who have opted out of the leaderboard
+      const filteredScores = data.filter(score => 
+        score.profiles?.leaderboard_opt_in !== false
+      );
+      
+      return filteredScores as ScoreEntry[];
+    },
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
   });
 
   const [timeFilter, setTimeFilter] = useState<"all" | "month" | "week">("all");
@@ -66,11 +85,28 @@ const Leaderboard = () => {
     return true;
   });
 
+  const getInitials = (name: string | null) => {
+    if (!name) return "#";
+    return name.charAt(0).toUpperCase();
+  };
+
+  const getDisplayName = (score: ScoreEntry) => {
+    if (score.profiles?.display_name) {
+      return score.profiles.display_name;
+    }
+    return `Player ${score.user_id.substring(0, 6)}`;
+  };
+
+  useEffect(() => {
+    // Refresh leaderboard data on mount
+    refetch();
+  }, [refetch]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 p-6 md:p-12">
+      <main className="flex-1 p-6 md:p-12 bg-gradient-to-b from-background to-purple-50">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
           <p className="text-muted-foreground mb-6">See how players rank in Color Grid Logic</p>
@@ -94,6 +130,15 @@ const Leaderboard = () => {
             >
               This Week
             </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="ml-auto"
+              onClick={() => refetch()}
+              title="Refresh leaderboard"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+            </Button>
           </div>
           
           <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -112,6 +157,7 @@ const Leaderboard = () => {
             ) : error ? (
               <div className="p-6 text-center">
                 <p className="text-red-500">Error loading leaderboard data. Please try again later.</p>
+                <Button onClick={() => refetch()} className="mt-4">Retry</Button>
               </div>
             ) : filteredScores && filteredScores.length > 0 ? (
               <Table>
@@ -127,8 +173,19 @@ const Leaderboard = () => {
                   {filteredScores.map((score, index) => (
                     <TableRow key={score.id}>
                       <TableCell className="font-medium">{index + 1}</TableCell>
-                      <TableCell>Player {score.user_id.substring(0, 6)}</TableCell>
-                      <TableCell className="text-right">{score.score}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            {score.profiles?.avatar_url ? (
+                              <AvatarImage src={score.profiles.avatar_url} />
+                            ) : (
+                              <AvatarFallback>{getInitials(score.profiles?.display_name)}</AvatarFallback>
+                            )}
+                          </Avatar>
+                          <span>{getDisplayName(score)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-bold">{score.score}</TableCell>
                       <TableCell className="text-right">{formatDate(score.created_at)}</TableCell>
                     </TableRow>
                   ))}
@@ -155,6 +212,7 @@ const Leaderboard = () => {
               <Separator className="my-4" />
               <p>
                 To appear on the leaderboard, you need to be signed in to your account when you complete a puzzle.
+                You can opt out of appearing on the leaderboard in your <a href="/settings" className="text-primary underline">account settings</a>.
               </p>
             </div>
           </div>
