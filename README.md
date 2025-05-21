@@ -1,3 +1,4 @@
+
 # Welcome to Color Grid Logic
 
 **🎮 Play now at:**  
@@ -36,9 +37,29 @@ The game supports **multiple input methods**, features a responsive and accessib
 4. Make sure each row, column, and box has no repeating values.  
 5. Solve the entire puzzle to win — or reset to try again!
 
-💡 Tip: Use logic, not guessing — it’s all solvable with reasoning!
+💡 Tip: Use logic, not guessing — it's all solvable with reasoning!
+
+## Interactive Features
+
+- **Hint System**: Stuck on a tricky cell? Use the hint button to reveal one correct cell. Each puzzle grants a limited number of hints.
+- **Achievements**: Unlock achievements as you solve puzzles of different difficulties, achieve time milestones, and develop your skills.
+- **Tutorial Mode**: New to the game? Check out our step-by-step tutorial explaining the rules and strategies.
+- **Undo/Redo**: Made a mistake? Use the undo/redo buttons to step back and forth through your moves.
 
 ## Release Date
 
 🟢 **Public Beta**: May 20, 2025  
 🚀 **Full Launch**: May 23, 2025
+
+## Changelog
+
+### May 22, 2025
+- Added achievements system with multiple unlockable rewards
+- Added hint system with limited hints per puzzle
+- Implemented interactive tutorial mode for new players
+- Added undo/redo functionality for gameplay moves
+- Fixed issues with the medium difficulty level (7×7 grid) - temporarily disabled
+- Improved UI elements and game controls
+
+### May 20, 2025
+- Initial public beta release
