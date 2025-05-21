@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 // Define Google API types
 interface GoogleCredentialResponse {
@@ -11,14 +12,6 @@ interface GoogleCredentialResponse {
 interface GoogleAuthButtonProps {
   buttonType: "signin_with" | "signup_with";
   onSuccess?: () => void;
-}
-
-// Google Identity Services API initialization options
-interface GoogleInitOptions {
-  client_id: string;
-  callback: (response: GoogleCredentialResponse) => void;
-  auto_select?: boolean;
-  cancel_on_tap_outside?: boolean;
 }
 
 const GOOGLE_CLIENT_ID = "631765203877-09ko5kuh9gnufa2dcl595ip4q4ll1da9.apps.googleusercontent.com";
@@ -49,13 +42,18 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
           callback: handleGoogleSignIn,
           auto_select: false,
           cancel_on_tap_outside: true,
-        } as GoogleInitOptions);
+        });
         
         // Render the button
         if (buttonRef.current) {
           window.google.accounts.id.renderButton(
             buttonRef.current,
-            { theme: "outline", size: "large", text: buttonType, width: 280 }
+            { 
+              type: "icon",
+              shape: "circle",
+              theme: "outline",
+              size: "large"
+            }
           );
         }
       } else {

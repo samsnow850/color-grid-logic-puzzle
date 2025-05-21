@@ -42,10 +42,8 @@ const Auth = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         
-        <main className="flex-1 flex items-center justify-center p-6 md:p-12 bg-gradient-to-b from-background to-purple-50">
-          <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg">
-            <h1 className="text-2xl font-bold mb-4 text-center text-primary">Welcome to Color Grid Logic</h1>
-            
+        <main className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-purple-600 to-blue-400">
+          <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>

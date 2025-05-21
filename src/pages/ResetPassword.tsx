@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -12,6 +12,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Lock } from "lucide-react";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -88,13 +89,9 @@ const ResetPassword = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 flex items-center justify-center p-6 md:p-12 bg-gradient-to-b from-background to-purple-50">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-            <CardDescription>Enter a new password for your account</CardDescription>
-          </CardHeader>
-          <CardContent>
+      <main className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-purple-600 to-blue-400">
+        <Card className="w-full max-w-md bg-white rounded-xl shadow-lg">
+          <CardContent className="p-8">
             {success ? (
               <div className="text-center space-y-4">
                 <div className="rounded-full bg-green-100 w-16 h-16 flex items-center justify-center mx-auto">
@@ -102,64 +99,86 @@ const ResetPassword = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="font-semibold text-lg">Password Updated!</h3>
-                <p className="text-muted-foreground">
+                <h3 className="font-semibold text-xl">Password Updated!</h3>
+                <p className="text-gray-500">
                   Your password has been successfully reset. You can now sign in with your new password.
                 </p>
                 <div className="pt-4">
-                  <Button onClick={() => navigate("/auth")} className="w-full">
+                  <Button 
+                    onClick={() => navigate("/auth")} 
+                    className="w-full bg-gradient-to-r from-cyan-400 to-purple-500 hover:from-cyan-500 hover:to-purple-600"
+                  >
                     Go to Sign In
                   </Button>
                 </div>
               </div>
             ) : (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm New Password</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="password" 
-                            placeholder="••••••••" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full"
-                    disabled={loading}
-                  >
-                    {loading ? "Updating..." : "Reset Password"}
-                  </Button>
-                </form>
-              </Form>
+              <>
+                <h1 className="text-2xl font-bold text-center mb-6">Reset Your Password</h1>
+                <p className="text-center text-gray-500 mb-6">
+                  Enter a new password for your account
+                </p>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-gray-600">New Password</FormLabel>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                              <Lock size={18} />
+                            </div>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Create new password" 
+                                className="pl-10"
+                                {...field} 
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-gray-600">Confirm New Password</FormLabel>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                              <Lock size={18} />
+                            </div>
+                            <FormControl>
+                              <Input 
+                                type="password" 
+                                placeholder="Confirm new password" 
+                                className="pl-10"
+                                {...field} 
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-cyan-400 to-purple-500 hover:from-cyan-500 hover:to-purple-600"
+                      disabled={loading}
+                    >
+                      {loading ? "Updating..." : "Reset Password"}
+                    </Button>
+                  </form>
+                </Form>
+              </>
             )}
           </CardContent>
         </Card>

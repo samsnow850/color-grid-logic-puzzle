@@ -48,7 +48,7 @@ const App = () => {
               <Route path="/about-dev" element={<AboutDev />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster />
+            <Toaster position="top-center" expand={true} richColors />
           </Router>
         </AuthProvider>
       </QueryClientProvider>
