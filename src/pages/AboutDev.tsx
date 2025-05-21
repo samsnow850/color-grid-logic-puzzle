@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { motion, useInView } from "framer-motion";
 import { 
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import PageWrapper from "@/components/PageWrapper";
+import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
