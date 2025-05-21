@@ -49,7 +49,20 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
           // Create custom Google button
           const customButton = document.createElement('button');
           customButton.className = "flex items-center justify-center gap-2 w-full bg-white border border-gray-300 rounded-md px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors";
-          customButton.onclick = () => window.google.accounts.id.prompt();
+          
+          // Handle Google sign-in click without using prompt method
+          customButton.onclick = () => {
+            if (window.google?.accounts?.id) {
+              // Use renderButton method instead of prompt
+              window.google.accounts.id.renderButton(
+                customButton,
+                { theme: 'filled_blue', size: 'large', text: buttonType === 'signin_with' ? 'signin_with' : 'signup_with' }
+              );
+              
+              // Simulate a click to trigger the Google sign-in flow
+              setTimeout(() => customButton.click(), 10);
+            }
+          };
           
           // Create logo image
           const logoImg = document.createElement('img');

@@ -16,6 +16,7 @@ interface Window {
             width?: number;
           }
         ) => void;
+        prompt: () => void;
       };
     };
   };

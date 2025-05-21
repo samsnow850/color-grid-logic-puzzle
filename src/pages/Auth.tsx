@@ -64,7 +64,7 @@ const Auth = () => {
               className="w-full"
             >
               <div className="relative w-full h-12 bg-gray-100 rounded-full p-1 mb-6">
-                <div className="grid grid-cols-2 h-full relative z-10">
+                <TabsList className="grid grid-cols-2 h-full relative z-10">
                   <TabsTrigger 
                     value="signin" 
                     className="rounded-full h-full flex items-center justify-center transition-colors duration-200 text-sm md:text-base font-medium"
@@ -79,7 +79,7 @@ const Auth = () => {
                   >
                     Sign Up
                   </TabsTrigger>
-                </div>
+                </TabsList>
                 
                 {/* Animated highlight */}
                 <motion.div 
