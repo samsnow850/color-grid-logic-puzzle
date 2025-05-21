@@ -1,3 +1,4 @@
+
 export type DifficultyLevel = "easy" | "medium" | "hard";
 
 // Function to generate a new puzzle
@@ -367,7 +368,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return array;
 }
 
-// Export functions with renamed names to match the imports in Game.tsx
+// Export functions to match the imports in Game.tsx
 export const generateGrid = (gridSize: number, difficulty: DifficultyLevel) => {
   const { puzzle } = generatePuzzle(gridSize, difficulty);
   return puzzle;
@@ -379,4 +380,5 @@ export const solvePuzzle = (grid: string[][]) => {
   return generateSolution(puzzleCopy, grid.length);
 };
 
+// Export the checkWinCondition function as checkWin
 export const checkWin = checkWinCondition;
