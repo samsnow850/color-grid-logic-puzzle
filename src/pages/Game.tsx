@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageWrapper from "@/components/PageWrapper";
 import ColorGrid from "@/components/game/ColorGrid";
@@ -31,7 +30,8 @@ import {
 } from "lucide-react";
 import { scrollToTop } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   createHistory, 
   recordHistory, 
@@ -45,10 +45,11 @@ import {
   checkPuzzleCompletionAchievements, 
   checkNoHintAchievement
 } from "@/lib/achievementSystem";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Game = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("easy");
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showGameOverScreen, setShowGameOverScreen] = useState(false);
@@ -72,6 +73,7 @@ const Game = () => {
   const [usedHint, setUsedHint] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [score, setScore] = useState(0);
   
   // Initialize with preview colors based on difficulty
   useEffect(() => {
@@ -205,6 +207,7 @@ const Game = () => {
       setGameTime(0);
       setHintsRemaining(hintCount);
       setUsedHint(false);
+      setScore(0);
       
       toast({
         title: `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} puzzle started!`,
@@ -249,41 +252,78 @@ const Game = () => {
     }
   };
   
-  const handleGameWon = () => {
+  const handleGameWon = async () => {
     setGameWon(true);
     setShowGameOverScreen(true);
     setIsTimerRunning(false);
     
+    // Calculate score based on difficulty, time, and hints used
+    let calculatedScore = 0;
+    const baseScore = difficulty === "easy" ? 100 : 300;
+    const timeDeduction = Math.min(gameTime / 10, baseScore * 0.5); // Time penalty with a cap
+    const hintPenalty = usedHint ? 0.2 : 0; // 20% penalty if hints were used
+    
+    calculatedScore = Math.round(baseScore - timeDeduction - (baseScore * hintPenalty));
+    setScore(calculatedScore);
+    
+    // Save score to Supabase if user is logged in
     if (user) {
-      // Award achievements
-      const achievements = checkPuzzleCompletionAchievements(
-        user.id,
-        difficulty,
-        gameTime
-      );
-      
-      // Award no-hint achievement if applicable
-      if (!usedHint) {
-        checkNoHintAchievement(user.id);
-      }
-      
-      // Show achievement toast if any were unlocked
-      const newlyUnlocked = achievements.filter(a => a.unlocked && a.date && 
-        new Date(a.date).getTime() > Date.now() - 10000);
-      
-      if (newlyUnlocked.length > 0) {
-        toast({
-          title: "Achievement Unlocked!",
-          description: `You've unlocked ${newlyUnlocked.length} new achievement${
-            newlyUnlocked.length !== 1 ? "s" : ""
-          }!`,
-        });
+      try {
+        const { error } = await supabase
+          .from('scores')
+          .insert([{
+            user_id: user.id,
+            score: calculatedScore,
+          }]);
+          
+        if (error) {
+          console.error("Error saving score:", error);
+          toast.error("Failed to save your score");
+        } else {
+          toast.success(`Score saved: ${calculatedScore} points!`);
+          
+          // Invalidate queries to refresh user stats
+          queryClient.invalidateQueries({ queryKey: ['scores', user.id] });
+          queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+        }
         
-        // Show achievements dialog with a slight delay
-        setTimeout(() => {
-          setShowAchievements(true);
-        }, 1500);
+        // Award achievements
+        const achievements = checkPuzzleCompletionAchievements(
+          user.id,
+          difficulty,
+          gameTime
+        );
+        
+        // Award no-hint achievement if applicable
+        if (!usedHint) {
+          checkNoHintAchievement(user.id);
+        }
+        
+        // Show achievement toast if any were unlocked
+        const newlyUnlocked = achievements.filter(a => a.unlocked && a.date && 
+          new Date(a.date).getTime() > Date.now() - 10000);
+        
+        if (newlyUnlocked.length > 0) {
+          toast({
+            title: "Achievement Unlocked!",
+            description: `You've unlocked ${newlyUnlocked.length} new achievement${
+              newlyUnlocked.length !== 1 ? "s" : ""
+            }!`,
+          });
+          
+          // Show achievements dialog with a slight delay
+          setTimeout(() => {
+            setShowAchievements(true);
+          }, 1500);
+        }
+      } catch (error) {
+        console.error("Error handling game won:", error);
       }
+    } else {
+      toast({
+        title: `Final Score: ${calculatedScore}`,
+        description: "Sign in to save your scores and appear on the leaderboard!",
+      });
     }
   };
 
@@ -662,6 +702,19 @@ const Game = () => {
                   ? "Congratulations! You've successfully solved the puzzle." 
                   : "Try a new puzzle?"}
               </p>
+              
+              {gameWon && (
+                <div className="mt-4 bg-gray-50 p-4 rounded-md">
+                  <h3 className="text-lg font-semibold text-center mb-2">Your Score</h3>
+                  <p className="text-3xl font-bold text-purple-600 text-center">{score}</p>
+                  
+                  {!user && (
+                    <p className="text-sm text-center mt-2 text-muted-foreground">
+                      Sign in to save your scores and appear on the leaderboard!
+                    </p>
+                  )}
+                </div>
+              )}
               
               {gameWon && user && (
                 <div className="mt-4 text-center">

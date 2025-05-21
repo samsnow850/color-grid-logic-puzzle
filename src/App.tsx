@@ -24,7 +24,8 @@ import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import AboutDev from './pages/AboutDev';
 import Index from './pages/Index';
-import PreviewFooter from './components/PreviewFooter';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 const queryClient = new QueryClient()
 
@@ -35,6 +36,7 @@ const App = () => {
         <AuthProvider>
           <Router>
             <div className="flex flex-col min-h-screen">
+              <Navbar />
               <div className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Preview />} />
@@ -55,7 +57,7 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
-              <PreviewFooter />
+              <Footer />
             </div>
             <Toaster position="top-center" expand={true} richColors />
           </Router>

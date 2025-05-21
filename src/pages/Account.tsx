@@ -8,17 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Save, TrendingUp, Award, Trophy, Medal } from "lucide-react";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import PageWrapper from "@/components/PageWrapper";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const Account = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const queryClient = useQueryClient();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,6 +47,89 @@ const Account = () => {
     lastPlayed: null
   });
   
+  // Use React Query to fetch user stats and profile
+  const { data: profileData } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  // Use React Query to fetch user scores
+  const { data: scoresData } = useQuery({
+    queryKey: ['scores', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('scores')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Use React Query to get user ranking
+  const { data: leaderboardData } = useQuery({
+    queryKey: ['leaderboard'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('scores')
+        .select('user_id, score')
+        .order('score', { ascending: false })
+        .limit(100);
+        
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  
+  // Process user stats whenever any relevant data changes
+  useEffect(() => {
+    if (!user || !scoresData) return;
+    
+    const totalGames = scoresData.length;
+    const totalScore = scoresData.reduce((sum, game) => sum + (game.score || 0), 0);
+    const highScore = scoresData.length > 0 ? Math.max(...scoresData.map(game => game.score || 0)) : 0;
+    const avgScore = totalGames > 0 ? Math.round(totalScore / totalGames) : 0;
+    const lastPlayed = scoresData.length > 0 ? new Date(scoresData[0].created_at) : null;
+    
+    // Calculate position
+    let position = 0;
+    if (leaderboardData) {
+      const userIndex = leaderboardData.findIndex(entry => entry.user_id === user.id);
+      position = userIndex !== -1 ? userIndex + 1 : 0; 
+    }
+    
+    // Update stats
+    setUserStats({
+      gamesPlayed: totalGames,
+      highScore: highScore,
+      averageScore: avgScore,
+      totalPlayTime: Math.floor(Math.random() * 300), // Mock data for play time in minutes
+      winRate: Math.min(Math.floor(Math.random() * 100), 100), // Mock data for win rate
+      achievements: Math.floor(Math.random() * 10), // Mock data for achievements
+      position: position,
+      lastPlayed: lastPlayed
+    });
+    
+  }, [user, scoresData, leaderboardData]);
+  
+  // Update form fields when profile data is loaded
   useEffect(() => {
     if (!user) {
       toast.error("Please sign in to view this page");
@@ -53,91 +137,22 @@ const Account = () => {
       return;
     }
     
-    setEmail(user.email || "");
-    
-    async function getProfile() {
-      try {
-        setLoading(true);
-        
-        // Get profile data
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) throw error;
-        
-        if (data) {
-          setDisplayName(data.display_name || "");
-          setBio(data.bio || "");
-          setAvatarUrl(data.avatar_url || "");
-          setLeaderboardOptIn(data.leaderboard_opt_in !== false); // Default to true if null
-        }
-        
-        // Fetch user stats from scores table
-        const { data: scoresData, error: scoresError } = await supabase
-          .from('scores')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        if (!scoresError && scoresData) {
-          // Calculate statistics from scores data
-          const totalGames = scoresData.length;
-          const totalScore = scoresData.reduce((sum, game) => sum + (game.score || 0), 0);
-          const highScore = scoresData.length > 0 ? Math.max(...scoresData.map(game => game.score || 0)) : 0;
-          const avgScore = totalGames > 0 ? Math.round(totalScore / totalGames) : 0;
-          const lastPlayed = scoresData.length > 0 ? new Date(scoresData[0].created_at) : null;
-          
-          // Get user ranking from leaderboard
-          const { data: leaderboardData, error: leaderboardError } = await supabase
-            .from('scores')
-            .select('user_id, score')
-            .order('score', { ascending: false })
-            .limit(100);
-            
-          let position = 0;
-          if (!leaderboardError && leaderboardData) {
-            const userIndex = leaderboardData.findIndex(entry => entry.user_id === user.id);
-            position = userIndex !== -1 ? userIndex + 1 : 0; 
-          }
-          
-          // Update stats state
-          setUserStats({
-            gamesPlayed: totalGames,
-            highScore: highScore,
-            averageScore: avgScore,
-            totalPlayTime: Math.floor(Math.random() * 300), // Mock data for play time in minutes
-            winRate: Math.min(Math.floor(Math.random() * 100), 100), // Mock data for win rate
-            achievements: Math.floor(Math.random() * 10), // Mock data for achievements
-            position: position,
-            lastPlayed: lastPlayed
-          });
-        }
-      } catch (error: any) {
-        console.error("Error fetching profile: ", error);
-        toast.error(error.message || "Error loading profile");
-      } finally {
-        setLoading(false);
-      }
+    if (profileData) {
+      setDisplayName(profileData.display_name || "");
+      setBio(profileData.bio || "");
+      setAvatarUrl(profileData.avatar_url || "");
+      setLeaderboardOptIn(profileData.leaderboard_opt_in !== false); // Default to true if null
+      setLoading(false);
     }
     
-    getProfile();
-  }, [user, navigate]);
+    setEmail(user.email || "");
+  }, [user, navigate, profileData]);
   
   async function updateProfile() {
     try {
       setSaving(true);
       
       if (!user) throw new Error("No user logged in");
-      
-      // Check if profile exists first
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
       
       // Prepare update data
       const updates = {
@@ -148,6 +163,13 @@ const Account = () => {
         leaderboard_opt_in: leaderboardOptIn,
         updated_at: new Date().toISOString(),
       };
+      
+      // Check if profile exists first
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
       
       let error;
       
@@ -169,6 +191,9 @@ const Account = () => {
       }
       
       if (error) throw error;
+      
+      // Refresh the profile data
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       
       toast.success("Profile updated successfully!");
     } catch (error: any) {
@@ -218,6 +243,10 @@ const Account = () => {
       if (updateError) throw updateError;
       
       setAvatarUrl(publicURL.publicUrl);
+      
+      // Refresh the profile data
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      
       toast.success("Avatar updated successfully");
       
     } catch (error: any) {
@@ -299,8 +328,6 @@ const Account = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Navbar />
-        
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -320,13 +347,11 @@ const Account = () => {
       loadingColor="pink"
     >
       <div className="min-h-screen flex flex-col">
-        <Navbar />
-        
-        <main className="flex-1 py-12 px-4 bg-white">
+        <div className="flex-1 py-12 px-4 bg-white">
           <div className="max-w-2xl mx-auto space-y-8">
             <h1 className="text-3xl font-bold mb-8">My Account</h1>
             
-            {/* New: Game Statistics Section */}
+            {/* Game Statistics Section */}
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
               <h2 className="text-xl font-semibold mb-4">My Game Statistics</h2>
               
@@ -622,7 +647,7 @@ const Account = () => {
               </Button>
             </div>
           </div>
-        </main>
+        </div>
         
         {/* Delete Account Confirmation */}
         <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
