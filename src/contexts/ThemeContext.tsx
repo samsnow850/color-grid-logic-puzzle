@@ -20,7 +20,7 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   // Fixed light theme implementation
-  const value = {
+  const value: ThemeProviderState = {
     theme: "light",
   };
 

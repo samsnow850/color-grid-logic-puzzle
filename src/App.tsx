@@ -18,6 +18,8 @@ import Contact from "./pages/Contact";
 import Leaderboard from "./pages/Leaderboard";
 import Account from "./pages/Account";
 import Settings from "./pages/Settings";
+import About from "./pages/About";
+import Sitemap from "./pages/Sitemap";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/account" element={<Account />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/sitemap" element={<Sitemap />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

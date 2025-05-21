@@ -19,6 +19,19 @@ const ColorGrid = ({
   // Calculate region size (sqrt of gridSize)
   const regionSize = Math.sqrt(gridSize);
   
+  // Ensure the grid is fully initialized with empty cells if needed
+  const ensureFullGrid = () => {
+    // If grid is incomplete, return a properly sized grid
+    if (!grid || grid.length < gridSize || grid.some(row => row.length < gridSize)) {
+      return Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
+    }
+    return grid;
+  };
+  
+  const displayGrid = ensureFullGrid();
+  const displayOriginal = originalGrid && originalGrid.length === gridSize ? 
+    originalGrid : Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
+  
   return (
     <div 
       className={cn(
@@ -30,13 +43,13 @@ const ColorGrid = ({
         gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
       }}
     >
-      {grid.map((row, rowIndex) => (
+      {displayGrid.map((row, rowIndex) => (
         row.map((cell, colIndex) => {
           // Calculate region boundaries for borders
           const isTopEdge = rowIndex % regionSize === 0;
           const isLeftEdge = colIndex % regionSize === 0;
           const isSelected = selectedCell?.[0] === rowIndex && selectedCell?.[1] === colIndex;
-          const isPrefilled = originalGrid[rowIndex][colIndex] !== "";
+          const isPrefilled = displayOriginal[rowIndex]?.[colIndex] !== "";
           
           return (
             <div

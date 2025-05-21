@@ -18,13 +18,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { Menu } from "lucide-react";
 
 const Navbar = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
-  const [showAbout, setShowAbout] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -40,6 +47,10 @@ const Navbar = () => {
   const getInitials = (email: string | undefined) => {
     if (!email) return "U";
     return email.charAt(0).toUpperCase();
+  };
+
+  const closeMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -76,15 +87,13 @@ const Navbar = () => {
           >
             Leaderboard
           </Link>
-          <button
-            onClick={() => {
-              setShowAbout(true);
-              window.scrollTo(0, 0);
-            }}
+          <Link
+            to="/about"
+            onClick={() => window.scrollTo(0, 0)}
             className="text-sm font-medium hover:underline underline-offset-4"
           >
             About
-          </button>
+          </Link>
         </nav>
         
         <div className="flex items-center gap-4">
@@ -127,11 +136,59 @@ const Navbar = () => {
             }}>Sign In</Button>
           )}
           
-          <Button className="sm:hidden" variant="outline" size="icon" asChild>
-            <Link to="/game" onClick={() => window.scrollTo(0, 0)}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" /></svg>
-            </Link>
-          </Button>
+          {/* Mobile menu button */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button className="sm:hidden" variant="outline" size="icon">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle mobile menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="py-6">
+              <div className="flex flex-col space-y-4 mt-4">
+                <SheetClose asChild>
+                  <Link to="/" className="text-lg font-medium py-2">Home</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/game" className="text-lg font-medium py-2">Play Game</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/leaderboard" className="text-lg font-medium py-2">Leaderboard</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/about" className="text-lg font-medium py-2">About</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/sitemap" className="text-lg font-medium py-2">Sitemap</Link>
+                </SheetClose>
+                {user && (
+                  <>
+                    <SheetClose asChild>
+                      <Link to="/account" className="text-lg font-medium py-2">Account</Link>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Link to="/settings" className="text-lg font-medium py-2">Settings</Link>
+                    </SheetClose>
+                    <Button 
+                      variant="ghost" 
+                      className="justify-start p-0 hover:bg-transparent"
+                      onClick={() => {
+                        handleSignOut();
+                        closeMenu();
+                      }}
+                    >
+                      <span className="text-lg font-medium py-2">Sign out</span>
+                    </Button>
+                  </>
+                )}
+                {!user && (
+                  <SheetClose asChild>
+                    <Link to="/auth" className="text-lg font-medium py-2">Sign In</Link>
+                  </SheetClose>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
           
           <div className="hidden sm:block">
             <Button asChild>
@@ -140,44 +197,8 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-      
-      <AboutModal open={showAbout} onOpenChange={setShowAbout} />
     </header>
   );
 };
-
-interface ModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-const AboutModal = ({ open, onOpenChange }: ModalProps) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-w-2xl">
-      <DialogHeader>
-        <DialogTitle className="text-2xl font-bold">About Color Grid Logic</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4 text-muted-foreground">
-        <p>
-          Color Grid Logic is a puzzle game inspired by Sudoku, but with colors instead of numbers. 
-          Fill the grid so that each row, column, and region contains each color exactly once.
-        </p>
-        <h3 className="font-semibold text-lg text-foreground">How to Play:</h3>
-        <ol className="list-decimal pl-6">
-          <li>Click on an empty cell to select it</li>
-          <li>Click on a color from the palette or use number keys (1-4, 1-6, or 1-9 depending on grid size) to fill the cell</li>
-          <li>Each row, column, and region must contain each color exactly once</li>
-          <li>The puzzle is solved when all cells are filled correctly</li>
-        </ol>
-        <h3 className="font-semibold text-lg text-foreground">Difficulty Levels:</h3>
-        <ul className="list-disc pl-6">
-          <li><strong>Easy:</strong> 4×4 grid with more pre-filled cells</li>
-          <li><strong>Medium:</strong> 6×6 grid with a moderate number of pre-filled cells</li>
-          <li><strong>Hard:</strong> 9×9 grid with fewer pre-filled cells</li>
-        </ul>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
 
 export default Navbar;
