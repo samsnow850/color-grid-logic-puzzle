@@ -18,9 +18,11 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import Contact from "./pages/Contact";
 import Leaderboard from "./pages/Leaderboard";
-import Settings from "./pages/Settings";
+import Account from "./pages/Account";
 import About from "./pages/About";
 import Sitemap from "./pages/Sitemap";
+import Developer from "./pages/Developer";
+import Achievements from "./pages/Achievements";
 
 const queryClient = new QueryClient();
 
@@ -43,11 +45,12 @@ const App = () => (
               <Route path="/terms-of-use" element={<PageWrapper><TermsOfUse /></PageWrapper>} />
               <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
               <Route path="/leaderboard" element={<PageWrapper><Leaderboard /></PageWrapper>} />
-              <Route path="/settings" element={<PageWrapper><Settings /></PageWrapper>} />
+              <Route path="/account" element={<PageWrapper><Account /></PageWrapper>} />
               <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
               <Route path="/sitemap" element={<PageWrapper><Sitemap /></PageWrapper>} />
-              {/* Redirect /account to /settings */}
-              <Route path="/account" element={<PageWrapper><Settings /></PageWrapper>} />
+              <Route path="/developer" element={<PageWrapper><Developer /></PageWrapper>} />
+              <Route path="/achievements" element={<PageWrapper><Achievements /></PageWrapper>} />
+              <Route path="/settings" element={<PageWrapper><Account /></PageWrapper>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
             </Routes>

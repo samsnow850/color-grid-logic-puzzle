@@ -41,3 +41,36 @@ export const throttle = (func: Function, limit: number) => {
   };
 };
 
+/**
+ * Convert seconds to a formatted time string (MM:SS)
+ */
+export const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+/**
+ * Get initial letters from a name for avatar fallback
+ */
+export const getInitials = (name: string | null): string => {
+  if (!name) return "U";
+  return name.split(' ')
+    .map(word => word.charAt(0).toUpperCase())
+    .join('')
+    .substring(0, 2);
+};
+
+/**
+ * Simple debounce function
+ */
+export const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return function(this: any, ...args: any[]) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+};
+
