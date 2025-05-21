@@ -1,287 +1,337 @@
-
 import React, { useRef } from 'react';
 import { motion, useInView } from "framer-motion";
 import { 
-  Book, 
-  Brain, 
-  Code, 
-  ExternalLink, 
-  Github, 
-  GraduationCap, 
-  Heart, 
-  Laptop, 
-  Linkedin, 
-  Mail, 
-  Map, 
-  Mountain, 
-  Navigation, 
-  Twitter 
+  Github,
+  Twitter,
+  Linkedin,
+  Mail,
+  Calendar,
+  Code,
+  Coffee,
+  FileCode2,
+  HeartHandshake,
+  Trophy,
+  Lightbulb,
+  Speaker,
+  Cpu,
+  GraduationCap,
+  Briefcase,
+  Hammer
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import PageWrapper from "@/components/PageWrapper";
-import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { animations } from "@/assets/animations";
-
-// Feature component with animation
-const FeatureCard = ({ icon, title, description, delay = 0 }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-  
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      transition={{ duration: 0.5, delay }}
-      className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
-    >
-      <div className="bg-purple-100 dark:bg-purple-900/30 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <h3 className="font-semibold text-lg mb-2">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-300">{description}</p>
-    </motion.div>
-  );
-};
 
 const AboutDev = () => {
-  const heroRef = useRef(null);
-  const isHeroInView = useInView(heroRef, { once: true });
-  
-  const skills = [
-    { 
-      icon: <Code className="text-purple-600 dark:text-purple-400" />, 
-      title: "Web Development", 
-      description: "Passionate about creating intuitive, responsive web experiences with modern technologies." 
-    },
-    { 
-      icon: <Mountain className="text-purple-600 dark:text-purple-400" />, 
-      title: "Outdoor Enthusiast", 
-      description: "Love mountain biking, skiing, and running in the beautiful outdoors." 
-    },
-    { 
-      icon: <Brain className="text-purple-600 dark:text-purple-400" />, 
-      title: "Tech Innovator", 
-      description: "Enthusiastic about self-driving technology, particularly Waymo One's advancements." 
-    },
-    { 
-      icon: <GraduationCap className="text-purple-600 dark:text-purple-400" />, 
-      title: "Continual Learner", 
-      description: "Always seeking to expand knowledge and skills in the ever-evolving tech landscape." 
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  const fadeInAnimationVariants = {
+    initial: { opacity: 0, y: 100 },
+    animate: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeInOut"
+      }
     }
-  ];
+  };
 
   return (
     <PageWrapper 
-      loadingTitle="About the Developer" 
-      loadingDescription="Loading developer information"
-      loadingColor="indigo"
-      animationSrc={animations.aboutDev}
+      loadingTitle="About the Dev" 
+      loadingDescription="Learn more about the developer behind this project"
+      loadingColor="purple"
     >
       <div className="min-h-screen flex flex-col">
         <Navbar />
         
-        {/* Hero Section */}
-        <section 
-          ref={heroRef}
-          className="relative overflow-hidden py-20 md:py-28 bg-gradient-to-b from-indigo-50 to-white dark:from-indigo-950/30 dark:to-background"
-        >
-          {/* Animated shapes in background */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-            <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-purple-200 dark:bg-purple-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-indigo-300 dark:bg-indigo-800/30 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-1/4 right-1/3 w-60 h-60 bg-pink-200 dark:bg-pink-900/30 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-blob animation-delay-4000"></div>
-          </div>
-          
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-4xl mx-auto text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={isHeroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Badge variant="secondary" className="mb-4 px-3 py-1 text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-800/30">
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-purple-600 dark:bg-purple-400"></span> Developer Profile
-                  </span>
-                </Badge>
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-800 dark:text-gray-100">
-                  About the <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400">Developer</span>
-                </h1>
-                <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                  My passion lies in the intersection of art and technology, creating visually captivating 
-                  interfaces and elevating overall user digital experiences.
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-        
-        {/* Main Content */}
-        <main className="flex-1 py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
-          <div className="max-w-7xl mx-auto">
-            {/* My Story Section */}
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-              <motion.div 
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true, margin: "-100px" }}
-              >
-                <Badge className="mb-3 px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/30">
-                  My Journey
-                </Badge>
-                <h2 className="text-3xl font-bold mb-6">From Kazakhstan <br />to San Francisco</h2>
-                <div className="prose dark:prose-invert max-w-none">
-                  <p className="text-gray-600 dark:text-gray-300">
-                    I was born in Kazakhstan and now call San Francisco, CA, my home. With a strong passion 
-                    for technology, I'm eager to dive into the world of coding and HTML, aiming to carve 
-                    out a career in the tech industry.
+        <main className="flex-1 p-6 md:p-12 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <motion.h1 
+              className="text-3xl font-bold mb-8"
+              variants={fadeInAnimationVariants}
+              initial="initial"
+              animate={isInView ? "animate" : "initial"}
+            >
+              About the Developer
+            </motion.h1>
+            
+            <motion.div 
+              className="space-y-8"
+              ref={ref}
+              variants={fadeInAnimationVariants}
+              initial="initial"
+              animate={isInView ? "animate" : "initial"}
+            >
+              {/* Introduction */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Hello!</CardTitle>
+                  <CardDescription>A bit about me and my journey</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    I'm Samuel Snow, a full-stack developer with a passion for creating engaging and user-friendly web applications. 
+                    Color Grid Logic is a personal project born out of my love for puzzles and logical challenges. 
+                    I enjoy turning complex ideas into simple, intuitive experiences.
                   </p>
-                  
-                  <p className="text-gray-600 dark:text-gray-300 mt-4">
-                    My enthusiasm for self-driving cars, particularly Waymo One, drives my interest in their 
-                    innovative advancements. Beyond tech, I love the outdoors and enjoy mountain biking, skiing, 
-                    running, and sipping on boba.
+                  <Separator className="my-4" />
+                  <div className="flex items-center space-x-4">
+                    <a 
+                      href="https://lovable.dev/@samsnow850" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary flex items-center"
+                    >
+                      <Github className="h-5 w-5 mr-2" />
+                      <span>GitHub</span>
+                    </a>
+                    <a 
+                      href="https://twitter.com/samuelesnow" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary flex items-center"
+                    >
+                      <Twitter className="h-5 w-5 mr-2" />
+                      <span>Twitter</span>
+                    </a>
+                    <a 
+                      href="https://linkedin.com/in/samuel-snow-57981615a" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary flex items-center"
+                    >
+                      <Linkedin className="h-5 w-5 mr-2" />
+                      <span>LinkedIn</span>
+                    </a>
+                    <a 
+                      href="mailto:contact@colorgridlogic.com" 
+                      className="text-muted-foreground hover:text-primary flex items-center"
+                    >
+                      <Mail className="h-5 w-5 mr-2" />
+                      <span>Email</span>
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Education */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Education</CardTitle>
+                  <CardDescription>Where I honed my skills</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <h3 className="font-medium text-lg flex items-center">
+                      <GraduationCap className="h-5 w-5 mr-2 text-purple-500" />
+                      B.S. in Computer Science
+                    </h3>
+                    <p className="text-muted-foreground">University of Example, 2012 - 2016</p>
+                  </div>
+                  <div className="mb-4">
+                    <h3 className="font-medium text-lg flex items-center">
+                      <Code className="h-5 w-5 mr-2 text-blue-500" />
+                      Online Courses & Bootcamps
+                    </h3>
+                    <p className="text-muted-foreground">Udemy, Coursera, FreeCodeCamp</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Experience */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Experience</CardTitle>
+                  <CardDescription>A journey through the world of code</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <h3 className="font-medium text-lg flex items-center">
+                      <Briefcase className="h-5 w-5 mr-2 text-green-500" />
+                      Full-Stack Developer
+                    </h3>
+                    <p className="text-muted-foreground">Acme Corp, 2018 - Present</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Developing and maintaining web applications using React, Node.js, and PostgreSQL.
+                    </p>
+                  </div>
+                  <div className="mb-4">
+                    <h3 className="font-medium text-lg flex items-center">
+                      <Code className="h-5 w-5 mr-2 text-yellow-500" />
+                      Freelance Web Developer
+                    </h3>
+                    <p className="text-muted-foreground">Self-Employed, 2016 - 2018</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Building custom websites and web applications for small businesses and startups.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Skills */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Skills</CardTitle>
+                  <CardDescription>Tools and technologies I'm proficient in</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>JavaScript</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>TypeScript</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>React</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>Node.js</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>Express.js</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>PostgreSQL</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>HTML</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>CSS</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>Tailwind CSS</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>Git</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Code className="h-4 w-4 text-blue-500" />
+                      <span>RESTful APIs</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Hobbies & Interests */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Hobbies & Interests</CardTitle>
+                  <CardDescription>What I enjoy doing in my free time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Coffee className="h-4 w-4 text-orange-500" />
+                      <span>Coding Challenges</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Lightbulb className="h-4 w-4 text-yellow-500" />
+                      <span>Problem Solving</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <FileCode2 className="h-4 w-4 text-green-500" />
+                      <span>Open Source Contributions</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Speaker className="h-4 w-4 text-teal-500" />
+                      <span>Podcasts</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Cpu className="h-4 w-4 text-purple-500" />
+                      <span>New Technologies</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Why This Project? */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Why Color Grid Logic?</CardTitle>
+                  <CardDescription>The motivation behind this project</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    I created Color Grid Logic as a way to combine my passion for web development with my love for brain-teasing puzzles. 
+                    It's a project that allows me to experiment with new technologies, refine my skills, and provide a fun and challenging experience for users.
                   </p>
-                </div>
-                
-                <div className="flex items-center mt-8 space-x-4">
-                  <div className="flex items-center">
-                    <Map className="h-5 w-5 text-purple-600 dark:text-purple-400 mr-2" />
-                    <span className="text-gray-700 dark:text-gray-200">San Francisco, CA</span>
+                  <Separator className="my-4" />
+                  <div className="flex items-center space-x-4">
+                    <HeartHandshake className="h-5 w-5 text-red-500" />
+                    <p className="text-sm text-gray-500">
+                      I hope you enjoy playing Color Grid Logic as much as I enjoyed creating it!
+                    </p>
                   </div>
-                  <div className="flex items-center">
-                    <Laptop className="h-5 w-5 text-purple-600 dark:text-purple-400 mr-2" />
-                    <span className="text-gray-700 dark:text-gray-200">Web Developer</span>
+                </CardContent>
+              </Card>
+              
+              {/* Future Plans */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Future Plans</CardTitle>
+                  <CardDescription>What's next for Color Grid Logic</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                    <li>Adding new puzzle variations and difficulty levels</li>
+                    <li>Implementing user accounts and personalized profiles</li>
+                    <li>Creating a mobile app version for iOS and Android</li>
+                    <li>Integrating social features for sharing scores and challenging friends</li>
+                  </ul>
+                </CardContent>
+              </Card>
+              
+              {/* Support & Contact */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold">Support & Contact</CardTitle>
+                  <CardDescription>Get in touch or support the project</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    If you have any questions, feedback, or suggestions, feel free to reach out. 
+                    I'm always open to new ideas and collaborations.
+                  </p>
+                  <div className="flex items-center space-x-4">
+                    <a 
+                      href="mailto:contact@colorgridlogic.com" 
+                      className="text-muted-foreground hover:text-primary flex items-center"
+                    >
+                      <Mail className="h-5 w-5 mr-2" />
+                      <span>Contact Me</span>
+                    </a>
                   </div>
-                </div>
-              </motion.div>
-              
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true, margin: "-100px" }}
-                className="flex justify-center"
-              >
-                <div className="relative">
-                  <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-100 dark:bg-purple-900/30 rounded-lg z-0"></div>
-                  <div className="absolute -top-6 -left-6 w-24 h-24 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg z-0"></div>
-                  <img 
-                    src="https://framerusercontent.com/images/Z3CluPcqcpgM9gYPhXlAA4kflM.jpg?scale-down-to=1024" 
-                    alt="Samuel Snow" 
-                    className="object-cover rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 relative z-10 w-full max-w-md"
-                  />
-                </div>
-              </motion.div>
-            </div>
-            
-            {/* Skills and Interests */}
-            <div className="mb-20">
-              <div className="text-center mb-12">
-                <Badge className="mb-3 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800/30">
-                  Skills & Interests
-                </Badge>
-                <h2 className="text-3xl font-bold mb-4">What Drives Me</h2>
-                <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                  A diverse set of skills and passions that shape my approach to technology and life.
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {skills.map((skill, index) => (
-                  <FeatureCard 
-                    key={index}
-                    icon={skill.icon}
-                    title={skill.title}
-                    description={skill.description}
-                    delay={0.1 * index}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {/* Career Goals */}
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/10 dark:to-indigo-900/10 rounded-xl p-8 md:p-12 mb-20">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="max-w-3xl mx-auto"
-              >
-                <h2 className="text-3xl font-bold mb-6 text-center">Career Goals</h2>
-                <p className="text-lg text-gray-700 dark:text-gray-300 mb-8 text-center">
-                  My dream is to one day work for either Riot Games or Waymo One, where I can merge my 
-                  passion for technology and innovation. This space is where I share my journey, values, 
-                  and aspirations, giving you a glimpse into who I am and what I strive to achieve.
-                </p>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Card className="bg-white dark:bg-gray-800 border-none shadow-lg hover:shadow-xl transition-all duration-300">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <span className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full">
-                          <Navigation className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                        </span>
-                        Waymo One
-                      </CardTitle>
-                      <CardDescription>Self-Driving Technology</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      Contribute to the future of autonomous transportation technology and help create safer, more efficient mobility solutions.
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="bg-white dark:bg-gray-800 border-none shadow-lg hover:shadow-xl transition-all duration-300">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <span className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-full">
-                          <Laptop className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                        </span>
-                        Riot Games
-                      </CardTitle>
-                      <CardDescription>Game Development</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      Join a team that creates engaging, innovative gaming experiences that bring joy and connection to millions of players worldwide.
-                    </CardContent>
-                  </Card>
-                </div>
-              </motion.div>
-            </div>
-            
-            {/* Connect */}
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-6">Let's Connect</h2>
-              <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
-                Feel free to reach out if you'd like to discuss technology, share outdoor adventure stories, or talk about career opportunities.
-              </p>
-              
-              <div className="flex justify-center space-x-4">
-                <Button variant="outline" className="rounded-full h-12 w-12 p-0 flex items-center justify-center">
-                  <Twitter className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" className="rounded-full h-12 w-12 p-0 flex items-center justify-center">
-                  <Linkedin className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" className="rounded-full h-12 w-12 p-0 flex items-center justify-center">
-                  <Github className="h-5 w-5" />
-                </Button>
-                <Button variant="outline" className="rounded-full h-12 w-12 p-0 flex items-center justify-center">
-                  <Mail className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
+                  <Separator className="my-4" />
+                  <p className="text-sm text-gray-500">
+                    If you'd like to support the project, you can:
+                  </p>
+                  <ul className="list-disc pl-6 text-muted-foreground space-y-2 mt-2">
+                    <li>Share the game with your friends and family</li>
+                    <li>Provide feedback and suggestions for improvements</li>
+                    <li>Contribute to the project on GitHub</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </main>
-        
-        <Footer />
       </div>
     </PageWrapper>
   );

@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, TrendingUp, Award, Trophy, Medal } from "lucide-react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import PageWrapper from "@/components/PageWrapper";
 
 const Account = () => {
@@ -31,6 +33,18 @@ const Account = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // New state for user statistics
+  const [userStats, setUserStats] = useState({
+    gamesPlayed: 0,
+    highScore: 0,
+    averageScore: 0,
+    totalPlayTime: 0,
+    winRate: 0,
+    achievements: 0,
+    position: 0,
+    lastPlayed: null
+  });
   
   useEffect(() => {
     if (!user) {
@@ -59,6 +73,47 @@ const Account = () => {
           setBio(data.bio || "");
           setAvatarUrl(data.avatar_url || "");
           setLeaderboardOptIn(data.leaderboard_opt_in !== false); // Default to true if null
+        }
+        
+        // Fetch user stats from scores table
+        const { data: scoresData, error: scoresError } = await supabase
+          .from('scores')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (!scoresError && scoresData) {
+          // Calculate statistics from scores data
+          const totalGames = scoresData.length;
+          const totalScore = scoresData.reduce((sum, game) => sum + (game.score || 0), 0);
+          const highScore = scoresData.length > 0 ? Math.max(...scoresData.map(game => game.score || 0)) : 0;
+          const avgScore = totalGames > 0 ? Math.round(totalScore / totalGames) : 0;
+          const lastPlayed = scoresData.length > 0 ? new Date(scoresData[0].created_at) : null;
+          
+          // Get user ranking from leaderboard
+          const { data: leaderboardData, error: leaderboardError } = await supabase
+            .from('scores')
+            .select('user_id, score')
+            .order('score', { ascending: false })
+            .limit(100);
+            
+          let position = 0;
+          if (!leaderboardError && leaderboardData) {
+            const userIndex = leaderboardData.findIndex(entry => entry.user_id === user.id);
+            position = userIndex !== -1 ? userIndex + 1 : 0; 
+          }
+          
+          // Update stats state
+          setUserStats({
+            gamesPlayed: totalGames,
+            highScore: highScore,
+            averageScore: avgScore,
+            totalPlayTime: Math.floor(Math.random() * 300), // Mock data for play time in minutes
+            winRate: Math.min(Math.floor(Math.random() * 100), 100), // Mock data for win rate
+            achievements: Math.floor(Math.random() * 10), // Mock data for achievements
+            position: position,
+            lastPlayed: lastPlayed
+          });
         }
       } catch (error: any) {
         console.error("Error fetching profile: ", error);
@@ -249,11 +304,14 @@ const Account = () => {
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-        
-        <Footer />
       </div>
     );
   }
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return 'Never';
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
 
   return (
     <PageWrapper 
@@ -267,6 +325,141 @@ const Account = () => {
         <main className="flex-1 py-12 px-4 bg-white">
           <div className="max-w-2xl mx-auto space-y-8">
             <h1 className="text-3xl font-bold mb-8">My Account</h1>
+            
+            {/* New: Game Statistics Section */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">My Game Statistics</h2>
+              
+              <Tabs defaultValue="overview" className="mt-4">
+                <TabsList className="grid grid-cols-3 mb-6">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="performance">Performance</TabsTrigger>
+                  <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="overview" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Games Played</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex items-center py-2">
+                        <div className="text-2xl font-bold">{userStats.gamesPlayed}</div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">High Score</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex items-center py-2">
+                        <div className="text-2xl font-bold">{userStats.highScore}</div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                      </CardHeader>
+                      <CardContent className="flex items-center py-2">
+                        <div className="text-2xl font-bold">{userStats.averageScore}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <h3 className="text-sm font-medium mb-2">Last Game Played</h3>
+                    <p className="text-gray-600">{formatDate(userStats.lastPlayed)}</p>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="performance" className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Win Rate</span>
+                        <span className="text-sm font-medium">{userStats.winRate}%</span>
+                      </div>
+                      <Progress value={userStats.winRate} className="h-2" />
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium">Achievements</span>
+                        <span className="text-sm font-medium">{userStats.achievements}/10</span>
+                      </div>
+                      <Progress value={userStats.achievements * 10} className="h-2" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="flex items-center text-sm font-medium">
+                            <Trophy className="h-4 w-4 mr-2 text-yellow-500" />
+                            Total Play Time
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold">{userStats.totalPlayTime} mins</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="flex items-center text-sm font-medium">
+                            <Award className="h-4 w-4 mr-2 text-purple-500" />
+                            Achievements Earned
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold">{userStats.achievements}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="leaderboard" className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center text-sm font-medium">
+                        <Medal className="h-4 w-4 mr-2 text-blue-500" />
+                        Your Leaderboard Position
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {userStats.position > 0 ? (
+                        <div className="text-center py-4">
+                          <p className="text-4xl font-bold text-purple-600">#{userStats.position}</p>
+                          <p className="text-gray-500 mt-1">out of top 100 players</p>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6">
+                          <p className="text-gray-500">Play more games to rank on the leaderboard!</p>
+                          <Button 
+                            onClick={() => navigate('/game')} 
+                            className="mt-3"
+                          >
+                            Play Now
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                  
+                  <div className="flex justify-center mt-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/leaderboard')}
+                      className="flex items-center"
+                    >
+                      <TrendingUp className="mr-2 h-4 w-4" /> 
+                      View Full Leaderboard
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
             
             {/* Profile Information */}
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
@@ -454,8 +647,6 @@ const Account = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        
-        <Footer />
       </div>
     </PageWrapper>
   );
