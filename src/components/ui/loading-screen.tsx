@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Progress } from "@/components/ui/progress";
 
 interface LoadingScreenProps {
   isLoading: boolean;
@@ -21,6 +22,7 @@ export const LoadingScreen = ({
 }: LoadingScreenProps) => {
   const [opacity, setOpacity] = useState(1);
   const [display, setDisplay] = useState(isLoading ? "flex" : "none");
+  const [progress, setProgress] = useState(0);
   
   // Define color classes based on the color prop
   const borderColorClasses = {
@@ -41,6 +43,15 @@ export const LoadingScreen = ({
     indigo: "bg-indigo-200",
   };
 
+  const progressColorClasses = {
+    purple: "bg-purple-600",
+    blue: "bg-blue-600",
+    green: "bg-green-600",
+    pink: "bg-pink-600",
+    orange: "bg-orange-600",
+    indigo: "bg-indigo-600",
+  };
+
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     if (!isLoading) {
@@ -51,6 +62,21 @@ export const LoadingScreen = ({
     } else {
       setDisplay("flex");
       setOpacity(1);
+      
+      // Reset progress
+      setProgress(0);
+      
+      // Animate progress
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          // Gradually increase progress, slow down towards the end
+          const increment = 100 - prev > 40 ? 3 : 1;
+          const newProgress = Math.min(prev + increment, 95);
+          return newProgress;
+        });
+      }, 100);
+      
+      return () => clearInterval(interval);
     }
 
     return () => {
@@ -58,8 +84,16 @@ export const LoadingScreen = ({
     };
   }, [isLoading]);
 
+  // Complete the progress when hiding
+  useEffect(() => {
+    if (opacity === 0) {
+      setProgress(100);
+    }
+  }, [opacity]);
+
   const borderColorClass = borderColorClasses[color as keyof typeof borderColorClasses] || borderColorClasses.purple;
   const skeletonColorClass = skeletonColorClasses[color as keyof typeof skeletonColorClasses] || skeletonColorClasses.purple;
+  const progressColorClass = progressColorClasses[color as keyof typeof progressColorClasses] || "bg-purple-600";
 
   return (
     <div 
@@ -94,11 +128,37 @@ export const LoadingScreen = ({
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       
-      <div className="mt-8 w-64">
+      <div className="mt-8 w-64 space-y-4">
+        {/* Progress bar */}
+        <Progress value={progress} className="h-2">
+          <div 
+            className={`h-full ${progressColorClass}`} 
+            style={{ width: `${progress}%`, transition: "width 0.3s ease-in-out" }} 
+          />
+        </Progress>
+        
         <div className="space-y-2">
-          <Skeleton className={`h-3 w-full ${skeletonColorClass}`} />
-          <Skeleton className={`h-3 w-5/6 ${skeletonColorClass}`} />
-          <Skeleton className={`h-3 w-4/6 ${skeletonColorClass}`} />
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: ["100%", "60%", "70%", "40%", "80%", "60%"] }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+          >
+            <Skeleton className={`h-3 w-full ${skeletonColorClass}`} />
+          </motion.div>
+          <motion.div
+            initial={{ width: "80%" }}
+            animate={{ width: ["80%", "40%", "60%", "30%", "50%"] }}
+            transition={{ duration: 2.2, repeat: Infinity, repeatType: "reverse" }}
+          >
+            <Skeleton className={`h-3 w-5/6 ${skeletonColorClass}`} />
+          </motion.div>
+          <motion.div
+            initial={{ width: "60%" }}
+            animate={{ width: ["60%", "30%", "40%", "20%", "50%"] }}
+            transition={{ duration: 1.8, repeat: Infinity, repeatType: "reverse" }}
+          >
+            <Skeleton className={`h-3 w-4/6 ${skeletonColorClass}`} />
+          </motion.div>
         </div>
       </div>
     </div>
