@@ -4,7 +4,7 @@ export type DifficultyLevel = "easy" | "medium" | "hard";
 export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
   try {
     // Validate grid size
-    if (gridSize !== 4 && gridSize !== 6 && gridSize !== 9) {
+    if (gridSize !== 4 && gridSize !== 9) {
       throw new Error(`Invalid grid size: ${gridSize}`);
     }
 
@@ -28,7 +28,7 @@ export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
     if (difficulty === "easy") {
       cellsToRemove = Math.floor(gridSize * gridSize * 0.4); // 40% cells removed
     } else if (difficulty === "medium") {
-      cellsToRemove = Math.floor(gridSize * gridSize * 0.5); // 50% cells removed (increased from 0.55)
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.55); // 55% cells removed for medium
     } else {
       cellsToRemove = Math.floor(gridSize * gridSize * 0.7); // 70% cells removed
     }
@@ -37,61 +37,14 @@ export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
     const maxAttempts = gridSize * gridSize * 2;
     createSolvablePuzzle(puzzle, solution, gridSize, cellsToRemove, maxAttempts);
     
-    // Specifically for medium difficulty (6x6), ensure we have enough pre-filled cells
-    if (difficulty === "medium" && gridSize === 6) {
-      console.log("Checking medium difficulty pre-filled cells");
-      
-      // Count filled cells
-      let filledCellCount = 0;
-      for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-          if (puzzle[r][c] !== "") {
-            filledCellCount++;
-          }
-        }
-      }
-      
-      console.log(`Current filled cells: ${filledCellCount} out of ${gridSize * gridSize}`);
-      
-      // If we don't have enough filled cells, add some more from the solution
-      const minFilledCells = Math.ceil(gridSize * gridSize * 0.35); // At least 35% should be filled
-      console.log(`Minimum required: ${minFilledCells}`);
-      
-      if (filledCellCount < minFilledCells) {
-        const additionalCellsNeeded = minFilledCells - filledCellCount;
-        console.log(`Need to add ${additionalCellsNeeded} more cells`);
-        
-        let addedCells = 0;
-        let attempts = 0;
-        const maxAddAttempts = gridSize * gridSize * 2;
-        
-        while (addedCells < additionalCellsNeeded && attempts < maxAddAttempts) {
-          attempts++;
-          const row = Math.floor(Math.random() * gridSize);
-          const col = Math.floor(Math.random() * gridSize);
-          
-          // If this cell is empty, fill it with the solution value
-          if (puzzle[row][col] === "") {
-            puzzle[row][col] = solution[row][col];
-            addedCells++;
-            console.log(`Added cell at [${row},${col}] with color ${solution[row][col]}`);
-          }
-        }
-        
-        console.log(`Added ${addedCells} cells after ${attempts} attempts`);
+    // Count filled cells for debugging
+    let filledCount = 0;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (puzzle[r][c] !== "") filledCount++;
       }
     }
-    
-    // Debugging: Verify the puzzle has filled cells
-    if (difficulty === "medium" && gridSize === 6) {
-      let filledCount = 0;
-      for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-          if (puzzle[r][c] !== "") filledCount++;
-        }
-      }
-      console.log(`Final puzzle has ${filledCount} filled cells out of ${gridSize * gridSize}`);
-    }
+    console.log(`Final puzzle has ${filledCount} filled cells out of ${gridSize * gridSize}`);
     
     return { puzzle, solution };
   } catch (error) {

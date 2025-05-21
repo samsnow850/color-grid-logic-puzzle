@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,11 +47,11 @@ const Game = () => {
     ];
     
     if (difficulty === "medium") {
-      colorCount = 6;
-      gridSizeValue = 6;
+      colorCount = 9; // Changed from 6 to 9
+      gridSizeValue = 9; // Changed from 6 to 9
       previewColors = [
         "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
-        "bg-purple-400", "bg-pink-400"
+        "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
       ];
     } else if (difficulty === "hard") {
       colorCount = 9;
@@ -121,10 +120,10 @@ const Game = () => {
       setError(null);
       scrollToTop();
       
-      // For medium difficulty, use 6x6 instead of 4x4
+      // For medium difficulty, use 9x9 instead of 6x6
       if (difficulty === "medium") {
-        newGridSize = 6;
-        colorCount = 6;
+        newGridSize = 9;
+        colorCount = 9;
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
@@ -250,7 +249,7 @@ const Game = () => {
                   </div>
                   <div className="flex items-center space-x-2 mb-2">
                     <RadioGroupItem value="medium" id="medium" />
-                    <Label htmlFor="medium">Medium (6×6)</Label>
+                    <Label htmlFor="medium">Medium (9×9 with fewer colors)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="hard" id="hard" />
