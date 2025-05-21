@@ -36,7 +36,10 @@ const ColorGrid = ({
     <div 
       className={cn(
         "grid gap-1 bg-white border border-gray-200 rounded-lg p-1.5 shadow-md",
-        gridSize === 9 && "max-w-[500px]"
+        gridSize === 10 && "max-w-[540px]",
+        gridSize === 9 && "max-w-[500px]",
+        gridSize === 6 && "max-w-[350px]",
+        gridSize === 4 && "max-w-[280px]"
       )}
       style={{
         gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
@@ -67,8 +70,8 @@ const ColorGrid = ({
               )}
               onClick={() => onCellClick(rowIndex, colIndex)}
               style={{
-                width: gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
-                height: gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
+                width: gridSize === 10 ? "40px" : gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
+                height: gridSize === 10 ? "40px" : gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
               }}
             >
               {isPrefilled && (

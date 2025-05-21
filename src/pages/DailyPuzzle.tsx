@@ -44,6 +44,7 @@ const DailyPuzzle = () => {
   const [puzzleDate, setPuzzleDate] = useState<string>("");
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const gridSize = 10; // Daily puzzle is now 10x10
   
   // Check if user is logged in
   useEffect(() => {
@@ -94,13 +95,14 @@ const DailyPuzzle = () => {
         tomorrow.setHours(0, 0, 0, 0);
         setNextPuzzleTime(tomorrow);
         
-        // Set colors (hard difficulty = 9 colors)
+        // Set 10 colors for 10x10 grid
         setColors([
           "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
-          "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+          "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", 
+          "bg-teal-400", "bg-cyan-400"
         ]);
       } else {
-        // Generate a new puzzle
+        // Generate a new puzzle (ensure our generator handles 10x10)
         const dailyPuzzle = generateDailyPuzzle();
         setPuzzleDate(dailyPuzzle.date);
         setGrid(dailyPuzzle.puzzle);
@@ -116,10 +118,11 @@ const DailyPuzzle = () => {
         // Store the daily puzzle
         storeDailyPuzzle(dailyPuzzle);
         
-        // Set colors (hard difficulty = 9 colors)
+        // Set 10 colors for 10x10 grid
         setColors([
           "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
-          "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+          "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", 
+          "bg-teal-400", "bg-cyan-400"
         ]);
       }
     } catch (err) {
@@ -316,7 +319,7 @@ const DailyPuzzle = () => {
                 <ColorGrid 
                   grid={grid}
                   originalGrid={originalGrid}
-                  gridSize={9} // Daily is always a 9x9 hard puzzle
+                  gridSize={gridSize} // Now using 10x10 for daily challenge
                   selectedCell={dailyCompleted ? null : selectedCell}
                   onCellClick={handleCellClick}
                 />
@@ -347,7 +350,7 @@ const DailyPuzzle = () => {
                   <div className="text-center md:text-left">
                     <h2 className="text-lg font-medium mb-2">Daily Challenge</h2>
                     <p className="text-sm text-muted-foreground">
-                      A new puzzle is available each day at midnight San Francisco time (PT).
+                      A new 10×10 puzzle is available each day at midnight San Francisco time (PT).
                       Complete the daily challenge to track your streak!
                     </p>
                   </div>

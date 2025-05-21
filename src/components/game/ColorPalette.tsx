@@ -1,4 +1,6 @@
 
+import { cn } from "@/lib/utils";
+
 interface ColorPaletteProps {
   colors: string[];
   onColorSelect: (color: string) => void;
@@ -6,17 +8,21 @@ interface ColorPaletteProps {
 
 const ColorPalette = ({ colors, onColorSelect }: ColorPaletteProps) => {
   return (
-    <div className="flex flex-wrap justify-center gap-3 pt-2">
+    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
       {colors.map((color, index) => (
-        <div
+        <button
           key={index}
-          className={`${color} w-12 h-12 rounded-full cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center`}
+          className={cn(
+            color,
+            "w-12 h-12 rounded-md shadow-md hover:brightness-110 transition-all relative"
+          )}
           onClick={() => onColorSelect(color)}
+          aria-label={`Select color ${index + 1}`}
         >
-          <span className="font-bold text-white text-shadow bg-black bg-opacity-20 w-6 h-6 flex items-center justify-center rounded-full">
+          <span className="absolute top-0.5 left-1 text-xs bg-white bg-opacity-60 rounded-full w-5 h-5 flex items-center justify-center text-gray-800 font-bold">
             {index + 1}
           </span>
-        </div>
+        </button>
       ))}
     </div>
   );

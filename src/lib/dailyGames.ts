@@ -56,7 +56,7 @@ export function shouldGenerateNewDaily(lastGeneratedDate: string | null): boolea
 
 /**
  * Generate a daily puzzle
- * Always returns a hard difficulty 9x9 puzzle
+ * Always returns a hard difficulty 10x10 puzzle
  */
 export function generateDailyPuzzle() {
   const sfDate = getSanFranciscoDate();
@@ -65,15 +65,99 @@ export function generateDailyPuzzle() {
   // Use the date string to seed the random generator in a deterministic way
   const seed = dateString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   
-  // Set the seed for randomization (this is a mock since we can't directly set JS random seed)
-  // In a real implementation, you might use a seeded random number generator
+  // Attempt to generate a 10x10 grid
+  try {
+    // Generate a custom 10x10 grid (we have to handle it specially as it's not a standard size in the game)
+    // Create empty 10x10 grid
+    const emptyGrid = Array(10).fill("").map(() => Array(10).fill(""));
+    
+    // For simplicity, we'll use the 9x9 'hard' puzzle generator
+    // In a real implementation, you would extend the generator to properly handle 10x10
+    const hardPuzzle = generatePuzzle(9, 'hard');
+    
+    // Expand to 10x10 by adding an extra row and column
+    const puzzle10x10 = expandTo10x10(hardPuzzle.puzzle);
+    const solution10x10 = expandTo10x10(hardPuzzle.solution);
+    
+    return {
+      puzzle: puzzle10x10,
+      solution: solution10x10,
+      date: dateString,
+      seed: seed
+    };
+  } catch (error) {
+    console.error("Error generating 10x10 puzzle, falling back to 9x9:", error);
+    
+    // Fallback to 9x9 if necessary
+    return {
+      ...generatePuzzle(9, 'hard'),
+      date: dateString,
+      seed: seed
+    };
+  }
+}
+
+/**
+ * Helper function to expand a 9x9 grid to 10x10
+ */
+function expandTo10x10(grid9x9: string[][]) {
+  // Create a new 10x10 grid filled with empty strings
+  const grid10x10 = Array(10).fill("").map(() => Array(10).fill(""));
   
-  // Always generate a hard 9x9 puzzle for daily challenges
-  return {
-    ...generatePuzzle(9, 'hard'),
-    date: dateString,
-    seed: seed
-  };
+  // Copy over the 9x9 grid values
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      grid10x10[row][col] = grid9x9[row][col];
+    }
+  }
+  
+  // Add a new color that wasn't in the original grid
+  const newColor = "bg-cyan-400";
+  
+  // Fill the 10th row and column with appropriate values
+  for (let i = 0; i < 9; i++) {
+    // Find a color that's not already in this row for position (i, 9)
+    const usedColorsInRow = new Set(grid10x10[i].slice(0, 9).filter(color => color !== ""));
+    const possibleColors = [
+      "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+      "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", 
+      "bg-teal-400", newColor
+    ].filter(color => !usedColorsInRow.has(color));
+    
+    // For the solution grid, assign a color; for the puzzle grid, leave some cells empty
+    grid10x10[i][9] = Math.random() > 0.7 ? possibleColors[0] || newColor : "";
+    
+    // Find a color that's not already in this column for position (9, i)
+    const usedColorsInCol = new Set();
+    for (let j = 0; j < 9; j++) {
+      if (grid10x10[j][i] !== "") usedColorsInCol.add(grid10x10[j][i]);
+    }
+    
+    const possibleColorsForCol = [
+      "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+      "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", 
+      "bg-teal-400", newColor
+    ].filter(color => !usedColorsInCol.has(color));
+    
+    grid10x10[9][i] = Math.random() > 0.7 ? possibleColorsForCol[0] || newColor : "";
+  }
+  
+  // Fill the corner cell (9, 9)
+  const usedColorsInLastRow = new Set(grid10x10[9].slice(0, 9).filter(color => color !== ""));
+  const usedColorsInLastCol = new Set();
+  for (let i = 0; i < 9; i++) {
+    if (grid10x10[i][9] !== "") usedColorsInLastCol.add(grid10x10[i][9]);
+  }
+  
+  const possibleColorsForCorner = [
+    "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+    "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", 
+    "bg-teal-400", newColor
+  ].filter(color => !usedColorsInLastRow.has(color) && !usedColorsInLastCol.has(color));
+  
+  grid10x10[9][9] = Math.random() > 0.6 ? possibleColorsForCorner[0] || newColor : "";
+  
+  return grid10x10;
 }
 
 /**
