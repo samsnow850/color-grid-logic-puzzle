@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { motion, useInView } from "framer-motion";
 import { 
@@ -18,7 +17,6 @@ import {
   Twitter 
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import PageWrapper from "@/components/PageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -172,17 +170,11 @@ const AboutDev = () => {
                 <div className="relative">
                   <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-100 dark:bg-purple-900/30 rounded-lg z-0"></div>
                   <div className="absolute -top-6 -left-6 w-24 h-24 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg z-0"></div>
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 relative z-10">
-                    <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg p-8">
-                      <div className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400">
-                        SD
-                      </div>
-                    </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="font-semibold text-xl">Samuel Snow</h3>
-                      <p className="text-gray-600 dark:text-gray-300">Web Developer & Designer</p>
-                    </div>
-                  </div>
+                  <img 
+                    src="https://framerusercontent.com/images/Z3CluPcqcpgM9gYPhXlAA4kflM.jpg?scale-down-to=1024" 
+                    alt="Samuel Snow" 
+                    className="object-cover rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 relative z-10 w-full max-w-md"
+                  />
                 </div>
               </motion.div>
             </div>
