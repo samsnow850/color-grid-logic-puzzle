@@ -38,6 +38,37 @@ export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
     const maxAttempts = gridSize * gridSize * 2;
     createSolvablePuzzle(puzzle, solution, gridSize, cellsToRemove, maxAttempts);
     
+    // Specifically for medium difficulty (6x6), ensure we have enough pre-filled cells
+    if (difficulty === "medium" && gridSize === 6) {
+      // Check if we have enough filled cells (non-empty cells)
+      let filledCellCount = 0;
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          if (puzzle[r][c] !== "") {
+            filledCellCount++;
+          }
+        }
+      }
+      
+      // If we don't have enough filled cells, add some more from the solution
+      const minFilledCells = Math.floor(gridSize * gridSize * 0.3); // At least 30% should be filled
+      if (filledCellCount < minFilledCells) {
+        const additionalCellsNeeded = minFilledCells - filledCellCount;
+        let addedCells = 0;
+        
+        while (addedCells < additionalCellsNeeded) {
+          const row = Math.floor(Math.random() * gridSize);
+          const col = Math.floor(Math.random() * gridSize);
+          
+          // If this cell is empty, fill it with the solution value
+          if (puzzle[row][col] === "") {
+            puzzle[row][col] = solution[row][col];
+            addedCells++;
+          }
+        }
+      }
+    }
+    
     return { puzzle, solution };
   } catch (error) {
     console.error("Error generating puzzle:", error);
