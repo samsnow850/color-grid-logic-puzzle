@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,8 +48,12 @@ const Game = () => {
     ];
     
     if (difficulty === "medium") {
-      colorCount = 4;
-      gridSizeValue = 4;
+      colorCount = 6;
+      gridSizeValue = 6;
+      previewColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400"
+      ];
     } else if (difficulty === "hard") {
       colorCount = 9;
       gridSizeValue = 9;
@@ -98,8 +103,8 @@ const Game = () => {
         style={{
           gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
-          width: gridSizeValue === 9 ? "210px" : "180px",
-          height: gridSizeValue === 9 ? "210px" : "180px",
+          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "180px" : "160px",
+          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "180px" : "160px",
         }}
       >
         {previewElements}
@@ -116,10 +121,10 @@ const Game = () => {
       setError(null);
       scrollToTop();
       
-      // For medium difficulty, use same size as easy
+      // For medium difficulty, use 6x6 instead of 4x4
       if (difficulty === "medium") {
-        newGridSize = 4;
-        colorCount = 4;
+        newGridSize = 6;
+        colorCount = 6;
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
@@ -245,7 +250,7 @@ const Game = () => {
                   </div>
                   <div className="flex items-center space-x-2 mb-2">
                     <RadioGroupItem value="medium" id="medium" />
-                    <Label htmlFor="medium">Medium (4×4 - More challenging)</Label>
+                    <Label htmlFor="medium">Medium (6×6)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="hard" id="hard" />
