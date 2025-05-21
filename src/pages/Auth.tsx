@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,26 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Separator } from "@/components/ui/separator";
 
+// Define Google API types
+interface GoogleCredentialResponse {
+  credential: string;
+}
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement | null, options: any) => void;
+        }
+      }
+    }
+  }
+}
+
+const GOOGLE_CLIENT_ID = "631765203877-09ko5kuh9gnufa2dcl595ip4q4ll1da9.apps.googleusercontent.com";
+
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +39,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   // Load the Google Sign-In script
-  useState(() => {
+  useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
@@ -30,7 +50,7 @@ const Auth = () => {
     script.onload = () => {
       if (window.google) {
         window.google.accounts.id.initialize({
-          client_id: "YOUR_GOOGLE_CLIENT_ID", // Replace with your actual Google Client ID
+          client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
         });
         
@@ -51,7 +71,7 @@ const Auth = () => {
     };
   }, []);
 
-  const handleGoogleSignIn = async (response) => {
+  const handleGoogleSignIn = async (response: GoogleCredentialResponse) => {
     try {
       if (response.credential) {
         setLoading(true);
@@ -75,7 +95,7 @@ const Auth = () => {
     }
   };
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -108,7 +128,7 @@ const Auth = () => {
     }
   };
 
-  const handleSignIn = async (e) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
