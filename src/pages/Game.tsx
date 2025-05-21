@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from 'react-router-dom';
@@ -120,12 +121,12 @@ const Game = () => {
     setSelectedColor(null);
     setTime(0);
     setIsRunning(false);
-    setAvailableHints(hintCount);
     setAnimationKey(prevKey => prevKey + 1);
 
+    // Initialize these values before using them
     let newGridSize = 4;
     let colorCount = 4;
-    let hintCount = 2;
+    let hintsForDifficulty = 2;
 
     if (difficulty === "medium") {
       // Show medium difficulty warning
@@ -134,13 +135,13 @@ const Game = () => {
     } else if (difficulty === "hard") {
       newGridSize = 9;
       colorCount = 9;
-      hintCount = 3;
+      hintsForDifficulty = 3;
     }
 
     setNewGridSize(newGridSize);
     setColorCount(colorCount);
-    setHintCount(hintCount);
-    setAvailableHints(hintCount);
+    setHintCount(hintsForDifficulty);
+    setAvailableHints(hintsForDifficulty);
 
     setTimeout(() => {
       const newGrid = generateGrid(newGridSize, difficulty as any);
