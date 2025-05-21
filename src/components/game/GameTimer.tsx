@@ -33,8 +33,8 @@ const GameTimer = ({ isRunning, onPause, onResume }: GameTimerProps) => {
   };
   
   return (
-    <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 px-4 py-2 rounded-full">
-      <Timer size={18} className="text-purple-600 dark:text-purple-400" />
+    <div className="flex items-center gap-2 bg-neutral-100 px-4 py-2 rounded-full border border-gray-200">
+      <Timer size={18} className="text-purple-600" />
       <span className="font-mono text-lg">{formatTime(seconds)}</span>
       
       <Button 
@@ -44,9 +44,9 @@ const GameTimer = ({ isRunning, onPause, onResume }: GameTimerProps) => {
         onClick={isRunning ? onPause : onResume}
       >
         {isRunning ? (
-          <Pause size={18} className="text-purple-600 dark:text-purple-400" />
+          <Pause size={18} className="text-purple-600" />
         ) : (
-          <Play size={18} className="text-purple-600 dark:text-purple-400" />
+          <Play size={18} className="text-purple-600" />
         )}
       </Button>
     </div>

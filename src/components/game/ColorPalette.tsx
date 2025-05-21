@@ -13,7 +13,9 @@ const ColorPalette = ({ colors, onColorSelect }: ColorPaletteProps) => {
           className={`${color} w-12 h-12 rounded-full cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center`}
           onClick={() => onColorSelect(color)}
         >
-          <span className="sr-only">Color {index + 1}</span>
+          <span className="font-bold text-white text-shadow bg-black bg-opacity-20 w-6 h-6 flex items-center justify-center rounded-full">
+            {index + 1}
+          </span>
         </div>
       ))}
     </div>

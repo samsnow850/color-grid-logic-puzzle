@@ -9,10 +9,10 @@ interface PauseOverlayProps {
 
 const PauseOverlay = ({ onResume }: PauseOverlayProps) => {
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl text-center max-w-md mx-auto">
+    <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200 text-center max-w-md mx-auto">
         <h2 className="text-2xl font-bold mb-6">Game Paused</h2>
-        <p className="mb-6 text-gray-600 dark:text-gray-300">
+        <p className="mb-6 text-gray-600">
           Take your time! When you're ready to continue, click the button below.
         </p>
         <Button

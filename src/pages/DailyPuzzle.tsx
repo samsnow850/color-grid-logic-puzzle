@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -260,15 +259,15 @@ const DailyPuzzle = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-background to-purple-50">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-4xl">
           <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
             <div>
               <h1 className="text-2xl font-bold text-primary">Daily Challenge</h1>
-              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+              <div className="flex items-center gap-1 text-sm text-gray-600">
                 <Calendar className="text-primary" size={16} />
                 <span>{puzzleDate}</span>
               </div>
@@ -286,8 +285,8 @@ const DailyPuzzle = () => {
           </div>
           
           {nextPuzzleTime && (
-            <div className="mb-4 py-2 px-4 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <Clock className="mr-2 text-purple-800 dark:text-purple-300" size={18} />
+            <div className="mb-4 py-2 px-4 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Clock className="mr-2 text-purple-800" size={18} />
               <span className="font-medium">
                 Puzzle resets in: <span className="font-mono font-bold">{timeUntilNextPuzzle}</span>
               </span>
@@ -299,8 +298,8 @@ const DailyPuzzle = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : dailyCompleted ? (
-            <Alert className="mb-6 bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-300">
-              <Info className="h-4 w-4 text-purple-800 dark:text-purple-300" />
+            <Alert className="mb-6 bg-purple-100 text-purple-800 border-purple-200">
+              <Info className="h-4 w-4 text-purple-800" />
               <AlertDescription className="flex items-center gap-2">
                 You've completed today's puzzle! Next puzzle in{" "}
                 <span className="font-mono font-bold flex items-center">
@@ -311,7 +310,7 @@ const DailyPuzzle = () => {
             </Alert>
           ) : null}
           
-          <div className="bg-white dark:bg-gray-800 p-4 md:p-8 rounded-lg shadow-lg">
+          <div className="bg-white p-4 md:p-8 rounded-lg shadow-md border border-gray-200">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
               <div className="flex flex-col items-center gap-4">
                 <ColorGrid 
