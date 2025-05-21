@@ -9,13 +9,15 @@ interface PageWrapperProps {
   loadingTitle?: string;
   loadingDescription?: string;
   loadingColor?: string;
+  animationSrc?: string;
 }
 
 const PageWrapper = ({ 
   children, 
   loadingTitle = "Loading...", 
   loadingDescription = "Preparing your content", 
-  loadingColor = "purple" 
+  loadingColor = "purple",
+  animationSrc
 }: PageWrapperProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
@@ -42,6 +44,7 @@ const PageWrapper = ({
         title={loadingTitle} 
         description={loadingDescription}
         color={loadingColor}
+        animationSrc={animationSrc}
       />
       <div className={isLoading ? "invisible" : "visible"}>
         {children}

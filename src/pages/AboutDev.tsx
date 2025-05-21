@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import PageWrapper from "@/components/PageWrapper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { animations } from "@/assets/animations";
 
 const AboutDev = () => {
   return (
@@ -12,6 +13,7 @@ const AboutDev = () => {
       loadingTitle="About the Developer" 
       loadingDescription="Loading developer information"
       loadingColor="indigo"
+      animationSrc={animations.aboutDev}
     >
       <div className="min-h-screen flex flex-col">
         <Navbar />

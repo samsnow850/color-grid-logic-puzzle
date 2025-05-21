@@ -1,6 +1,8 @@
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageWrapper from "@/components/PageWrapper";
+import { animations } from "@/assets/animations";
 
 const About = () => {
   return (
@@ -8,6 +10,7 @@ const About = () => {
       loadingTitle="About" 
       loadingDescription="Loading game information"
       loadingColor="orange"
+      animationSrc={animations.about}
     >
       <div className="min-h-screen flex flex-col">
         <Navbar />
