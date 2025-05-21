@@ -2,7 +2,6 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 // Define Google API types
 interface GoogleCredentialResponse {
@@ -17,8 +16,8 @@ interface GoogleAuthButtonProps {
 const GOOGLE_CLIENT_ID = "631765203877-09ko5kuh9gnufa2dcl595ip4q4ll1da9.apps.googleusercontent.com";
 
 const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
-  const buttonRef = useRef<HTMLDivElement>(null);
-
+  const buttonContainerRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     // Load the Google Sign-In script if not already loaded
     if (!window.google) {
@@ -40,21 +39,32 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
-          auto_select: false,
-          cancel_on_tap_outside: true,
         });
         
         // Render the button
-        if (buttonRef.current) {
-          window.google.accounts.id.renderButton(
-            buttonRef.current,
-            { 
-              type: "icon",
-              shape: "circle",
-              theme: "outline",
-              size: "large"
-            }
-          );
+        if (buttonContainerRef.current) {
+          // Clear previous content
+          buttonContainerRef.current.innerHTML = '';
+          
+          // Create custom Google button
+          const customButton = document.createElement('button');
+          customButton.className = "flex items-center justify-center gap-2 w-full bg-white border border-gray-300 rounded-md px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-colors";
+          customButton.onclick = () => window.google.accounts.id.prompt();
+          
+          // Create logo image
+          const logoImg = document.createElement('img');
+          logoImg.src = "https://static.dezeen.com/uploads/2025/05/sq-google-g-logo-update_dezeen_2364_col_0.jpg";
+          logoImg.className = "w-5 h-5 rounded-full";
+          logoImg.alt = "Google logo";
+          
+          // Create text span
+          const textSpan = document.createElement('span');
+          textSpan.textContent = buttonType === "signin_with" ? "Sign in with Google" : "Sign up with Google";
+          
+          // Append elements
+          customButton.appendChild(logoImg);
+          customButton.appendChild(textSpan);
+          buttonContainerRef.current.appendChild(customButton);
         }
       } else {
         // If not available yet, try again in a moment
@@ -90,7 +100,7 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
     }
   };
 
-  return <div ref={buttonRef} className="google-signin-button"></div>;
+  return <div ref={buttonContainerRef} className="google-signin-button w-full"></div>;
 };
 
 export default GoogleAuthButton;

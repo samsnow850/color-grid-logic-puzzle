@@ -27,7 +27,7 @@ const Contact = () => {
     const body = encodeURIComponent(
       `Name: ${data.name}\nEmail: ${data.email}\n\n${data.message}`
     );
-    const mailtoUrl = `mailto:ssnow@sterneschool.org?subject=${subject}&body=${body}`;
+    const mailtoUrl = `mailto:support@color-grid-logic-puzzle.com?subject=${subject}&body=${body}`;
     
     // Open email client
     window.location.href = mailtoUrl;
@@ -120,8 +120,8 @@ const Contact = () => {
         <div className="text-center">
           <p className="text-muted-foreground">
             You can also reach us directly at:{" "}
-            <a href="mailto:ssnow@sterneschool.org" className="text-blue-600 hover:underline">
-              ssnow@sterneschool.org
+            <a href="mailto:support@color-grid-logic-puzzle.com" className="text-blue-600 hover:underline">
+              support@color-grid-logic-puzzle.com
             </a>
           </p>
         </div>

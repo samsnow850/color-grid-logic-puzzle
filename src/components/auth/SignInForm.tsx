@@ -5,9 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import GoogleAuthButton from "./GoogleAuthButton";
-import { Facebook, Twitter, Mail, User, Lock } from "lucide-react";
+import { User, Lock } from "lucide-react";
 
 const SignInForm = () => {
   const [email, setEmail] = useState("");
@@ -101,17 +100,8 @@ const SignInForm = () => {
         Or Sign in using
       </div>
       
-      <div className="flex justify-center space-x-4">
+      <div className="flex justify-center w-full">
         <GoogleAuthButton buttonType="signin_with" onSuccess={() => navigate("/account")} />
-      </div>
-      
-      <div className="text-center text-sm">
-        <span className="text-gray-500">Or Sign Up using</span>
-        <div className="mt-1">
-          <Link to="/auth?tab=signup" className="text-blue-500 hover:underline font-medium">
-            SIGN UP
-          </Link>
-        </div>
       </div>
     </div>
   );
