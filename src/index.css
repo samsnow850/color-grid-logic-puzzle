@@ -1,6 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -47,70 +45,10 @@
   body {
     @apply bg-background text-foreground transition-colors duration-300;
   }
-  
-  .font-poppins {
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  .font-inter {
-    font-family: 'Inter', sans-serif;
-  }
 }
 
 @layer utilities {
   .text-shadow {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  }
-  
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-500;
-  }
-  
-  .text-gradient-pink {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-500;
-  }
-  
-  .bg-gradient-primary {
-    @apply bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100;
-  }
-  
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-  
-  .animate-float-slow {
-    animation: float 8s ease-in-out infinite;
-  }
-  
-  .animate-float-fast {
-    animation: float 4s ease-in-out infinite;
-  }
-  
-  .animate-pulse-subtle {
-    animation: pulse-subtle 3s ease-in-out infinite;
-  }
-  
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-15px); }
-    100% { transform: translateY(0px); }
-  }
-  
-  @keyframes pulse-subtle {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-  }
-  
-  .button-hover-effect {
-    @apply relative overflow-hidden transition-all duration-300;
-  }
-  
-  .button-hover-effect::after {
-    @apply content-[''] absolute inset-0 bg-white opacity-0 transition-opacity duration-300 ease-out;
-  }
-  
-  .button-hover-effect:hover::after {
-    @apply opacity-20;
   }
 }

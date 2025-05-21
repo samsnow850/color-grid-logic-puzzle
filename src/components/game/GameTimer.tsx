@@ -1,61 +1,53 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Pause, Play } from "lucide-react";
+import { Timer, Pause, Play } from "lucide-react";
 
 interface GameTimerProps {
   isRunning: boolean;
   onPause: () => void;
   onResume: () => void;
-  onTimeUpdate?: (seconds: number) => void;
-  time?: number;
-  setTime?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate, time: externalTime, setTime: setExternalTime }: GameTimerProps) => {
-  const [seconds, setSeconds] = useState(0);
+const GameTimer = ({ isRunning, onPause, onResume }: GameTimerProps) => {
+  const [seconds, setSeconds] = useState<number>(0);
   
-  // Use external time state if provided, otherwise use internal state
-  const time = externalTime !== undefined ? externalTime : seconds;
-  const setTime = setExternalTime || setSeconds;
-
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
+    let timer: number | undefined;
+    
     if (isRunning) {
-      interval = setInterval(() => {
-        setTime((prevTime) => {
-          const newTime = prevTime + 1;
-          // Call the optional callback with the updated time
-          if (onTimeUpdate) onTimeUpdate(newTime);
-          return newTime;
-        });
+      timer = window.setInterval(() => {
+        setSeconds((prevSeconds) => prevSeconds + 1);
       }, 1000);
     }
-
+    
     return () => {
-      if (interval) clearInterval(interval);
+      if (timer) clearInterval(timer);
     };
-  }, [isRunning, onTimeUpdate, setTime]);
-
-  const formatTime = (timeInSeconds: number) => {
-    const minutes = Math.floor(timeInSeconds / 60);
-    const remainingSeconds = timeInSeconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  }, [isRunning]);
+  
+  const formatTime = (totalSeconds: number): string => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
+  
   return (
-    <div className="flex items-center gap-2">
-      <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-md font-mono text-lg">
-        {formatTime(time)}
-      </div>
-      <Button
+    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+      <Timer size={18} className="text-purple-600" />
+      <span className="font-mono text-lg">{formatTime(seconds)}</span>
+      
+      <Button 
+        variant="ghost" 
         size="icon"
-        variant="outline"
+        className="ml-1 rounded-full"
         onClick={isRunning ? onPause : onResume}
-        className="h-8 w-8"
       >
-        {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        {isRunning ? (
+          <Pause size={18} className="text-purple-600" />
+        ) : (
+          <Play size={18} className="text-purple-600" />
+        )}
       </Button>
     </div>
   );

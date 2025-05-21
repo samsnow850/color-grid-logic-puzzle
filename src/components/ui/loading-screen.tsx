@@ -2,63 +2,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { Loader } from "lucide-react";
 
 interface LoadingScreenProps {
   isLoading: boolean;
-  title?: string;
-  description?: string;
-  color?: string;
-  animationSrc?: string;
 }
 
-export const LoadingScreen = ({ 
-  isLoading, 
-  title = "Loading...", 
-  description = "Preparing your content",
-  color = "purple",
-  animationSrc
-}: LoadingScreenProps) => {
+export const LoadingScreen = ({ isLoading }: LoadingScreenProps) => {
   const [opacity, setOpacity] = useState(1);
   const [display, setDisplay] = useState(isLoading ? "flex" : "none");
-  
-  // Define color classes based on the color prop
-  const borderColorClasses = {
-    purple: "border-t-purple-600 border-r-purple-300 border-b-purple-600 border-l-purple-300",
-    blue: "border-t-blue-600 border-r-blue-300 border-b-blue-600 border-l-blue-300",
-    green: "border-t-green-600 border-r-green-300 border-b-green-600 border-l-green-300",
-    pink: "border-t-pink-600 border-r-pink-300 border-b-pink-600 border-l-pink-300",
-    orange: "border-t-orange-600 border-r-orange-300 border-b-orange-600 border-l-orange-300",
-    indigo: "border-t-indigo-600 border-r-indigo-300 border-b-indigo-600 border-l-indigo-300",
-  };
-
-  const skeletonColorClasses = {
-    purple: "bg-purple-200",
-    blue: "bg-blue-200",
-    green: "bg-green-200",
-    pink: "bg-pink-200",
-    orange: "bg-orange-200",
-    indigo: "bg-indigo-200",
-  };
-
-  const textColorClasses = {
-    purple: "text-purple-600",
-    blue: "text-blue-600",
-    green: "text-green-600",
-    pink: "text-pink-600",
-    orange: "text-orange-600",
-    indigo: "text-indigo-600",
-  };
-
-  const bgColorClasses = {
-    purple: "bg-purple-50",
-    blue: "bg-blue-50",
-    green: "bg-green-50",
-    pink: "bg-pink-50",
-    orange: "bg-orange-50",
-    indigo: "bg-indigo-50",
-  };
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -77,51 +28,35 @@ export const LoadingScreen = ({
     };
   }, [isLoading]);
 
-  const borderColorClass = borderColorClasses[color as keyof typeof borderColorClasses] || borderColorClasses.purple;
-  const skeletonColorClass = skeletonColorClasses[color as keyof typeof skeletonColorClasses] || skeletonColorClasses.purple;
-  const textColorClass = textColorClasses[color as keyof typeof textColorClasses] || textColorClasses.purple;
-  const bgColorClass = bgColorClasses[color as keyof typeof bgColorClasses] || bgColorClasses.purple;
-
   return (
     <div 
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center ${bgColorClass} backdrop-blur-sm`}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background"
       style={{
         opacity: opacity,
         transition: "opacity 0.5s ease-in-out",
         display: display
       }}
     >
-      {animationSrc ? (
-        <div className="w-36 h-36 mb-4">
-          <DotLottieReact
-            src={animationSrc}
-            autoplay
-            loop
-          />
-        </div>
-      ) : (
-        <motion.div
-          initial={{ rotate: 0 }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="w-20 h-20 mb-6"
-        >
-          <div className={`w-full h-full rounded-full border-4 ${borderColorClass} shadow-lg`}></div>
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ rotate: 0 }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        className="w-16 h-16 mb-4"
+      >
+        <div className="w-full h-full rounded-full border-4 border-t-purple-600 border-r-purple-300 border-b-purple-600 border-l-purple-300"></div>
+      </motion.div>
       
-      <div className="text-center space-y-2 mb-8">
-        <h2 className={`text-2xl font-bold ${textColorClass}`}>{title}</h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
+      <div className="text-center space-y-2">
+        <h2 className="text-xl font-bold text-primary">Loading...</h2>
+        <p className="text-sm text-muted-foreground">Preparing your color puzzle</p>
       </div>
       
-      <div className="w-64 overflow-hidden rounded-lg">
-        <motion.div
-          initial={{ x: "-100%" }}
-          animate={{ x: "100%" }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className={`h-1.5 ${skeletonColorClass.replace('bg', 'bg-opacity-70 bg')}`}
-        ></motion.div>
+      <div className="mt-8 w-64">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-full bg-purple-200" />
+          <Skeleton className="h-3 w-5/6 bg-purple-200" />
+          <Skeleton className="h-3 w-4/6 bg-purple-200" />
+        </div>
       </div>
     </div>
   );
