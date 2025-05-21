@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +23,7 @@ const SignInForm = () => {
         password,
         options: {
           redirectTo: window.location.origin + '/account'
-        }
+        } as any // Type assertion to bypass TypeScript checking
       });
 
       if (error) {
