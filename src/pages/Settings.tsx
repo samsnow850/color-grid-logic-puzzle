@@ -1,29 +1,32 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/contexts/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { HelpCircle, Mail, Lock, User, Shield } from "lucide-react";
+import { HelpCircle, Mail, Lock, User, Shield, Paintbrush, Bell, Laptop, Moon, Sun, Monitor } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const profileFormSchema = z.object({
   display_name: z.string().min(2, "Name must be at least 2 characters").max(30, "Name cannot exceed 30 characters"),
-  bio: z.string().max(160, "Bio cannot exceed 160 characters").optional(),
+  bio: z.string().max(160, "Bio cannot exceed 160 characters").optional().nullable(),
   leaderboard_opt_in: z.boolean().default(true),
 });
 
@@ -55,7 +58,8 @@ interface Profile {
 }
 
 const Settings = () => {
-  const { user, session, signOut, loading } = useAuth();
+  const { user, signOut, loading } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -64,6 +68,7 @@ const Settings = () => {
   const [showHelpFAQ, setShowHelpFAQ] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
@@ -149,6 +154,7 @@ const Settings = () => {
   async function updateProfile(values: z.infer<typeof profileFormSchema>) {
     try {
       if (!user) return;
+      setIsSaving(true);
       
       const { error } = await supabase
         .from("profiles")
@@ -163,9 +169,17 @@ const Settings = () => {
       if (error) throw error;
       
       toast.success("Profile updated successfully");
+      setProfile({
+        ...profile!,
+        display_name: values.display_name,
+        bio: values.bio,
+        leaderboard_opt_in: values.leaderboard_opt_in,
+      });
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -176,6 +190,7 @@ const Settings = () => {
         return;
       }
       
+      setIsSaving(true);
       const { error } = await supabase.auth.updateUser({ email: values.email });
       
       if (error) throw error;
@@ -184,11 +199,14 @@ const Settings = () => {
     } catch (error: any) {
       console.error("Error updating email:", error);
       toast.error(error.message || "Failed to update email");
+    } finally {
+      setIsSaving(false);
     }
   }
 
   async function updatePassword(values: z.infer<typeof passwordFormSchema>) {
     try {
+      setIsSaving(true);
       const { error } = await supabase.auth.updateUser({ password: values.password });
       
       if (error) throw error;
@@ -198,6 +216,8 @@ const Settings = () => {
     } catch (error: any) {
       console.error("Error updating password:", error);
       toast.error(error.message || "Failed to update password");
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -241,6 +261,15 @@ const Settings = () => {
       
       setAvatarUrl(publicURL.publicUrl);
       toast.success("Avatar updated successfully");
+      
+      // Update the profile state to reflect the change
+      if (profile) {
+        setProfile({
+          ...profile,
+          avatar_url: publicURL.publicUrl
+        });
+      }
+      
     } catch (error: any) {
       console.error("Error uploading avatar:", error);
       toast.error(error.message || "Error uploading avatar");
@@ -251,7 +280,9 @@ const Settings = () => {
 
   async function deleteAccount() {
     try {
-      const { error } = await supabase.auth.admin?.deleteUser(user!.id);
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: user!.id }
+      });
       
       if (error) throw error;
       
@@ -286,7 +317,7 @@ const Settings = () => {
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
-    return name.charAt(0).toUpperCase();
+    return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').substring(0, 2);
   };
 
   if (loading) {
@@ -305,7 +336,7 @@ const Settings = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 p-6 md:p-12 bg-gradient-to-b from-background to-purple-50">
+      <main className="flex-1 p-6 md:p-12 bg-gradient-to-b from-background to-purple-50 dark:from-background dark:to-background">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
           <p className="text-muted-foreground mb-8">Manage your account and preferences</p>
@@ -314,8 +345,8 @@ const Settings = () => {
             <TabsList className="grid grid-cols-4 mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="appearance">Appearance</TabsTrigger>
               <TabsTrigger value="preferences">Preferences</TabsTrigger>
-              <TabsTrigger value="help">Help & Support</TabsTrigger>
             </TabsList>
             
             {/* Profile Tab */}
@@ -332,7 +363,7 @@ const Settings = () => {
                         {avatarUrl ? (
                           <AvatarImage src={avatarUrl} alt={profile?.display_name || "Profile"} />
                         ) : (
-                          <AvatarFallback className="text-xl">
+                          <AvatarFallback className="text-xl bg-primary text-primary-foreground">
                             {getInitials(profile?.display_name)}
                           </AvatarFallback>
                         )}
@@ -403,9 +434,9 @@ const Settings = () => {
                               <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                                 <div className="space-y-0.5">
                                   <FormLabel className="text-base">Leaderboard Visibility</FormLabel>
-                                  <CardDescription>
+                                  <FormDescription>
                                     Show your profile on the public leaderboard
-                                  </CardDescription>
+                                  </FormDescription>
                                 </div>
                                 <FormControl>
                                   <Switch
@@ -417,7 +448,13 @@ const Settings = () => {
                             )}
                           />
                           
-                          <Button type="submit" className="w-full">Save Profile</Button>
+                          <Button 
+                            type="submit" 
+                            className="w-full"
+                            disabled={isSaving}
+                          >
+                            {isSaving ? "Saving..." : "Save Profile"}
+                          </Button>
                         </form>
                       </Form>
                     </div>
@@ -454,7 +491,9 @@ const Settings = () => {
                             </FormItem>
                           )}
                         />
-                        <Button type="submit">Update Email</Button>
+                        <Button type="submit" disabled={isSaving}>
+                          {isSaving ? "Updating..." : "Update Email"}
+                        </Button>
                       </form>
                     </Form>
                   </CardContent>
@@ -498,7 +537,9 @@ const Settings = () => {
                             </FormItem>
                           )}
                         />
-                        <Button type="submit">Change Password</Button>
+                        <Button type="submit" disabled={isSaving}>
+                          {isSaving ? "Updating..." : "Change Password"}
+                        </Button>
                       </form>
                     </Form>
                   </CardContent>
@@ -523,6 +564,110 @@ const Settings = () => {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+            
+            {/* Appearance Tab */}
+            <TabsContent value="appearance">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Theme Settings</CardTitle>
+                      <CardDescription>Customize the appearance of the application</CardDescription>
+                    </div>
+                    <Paintbrush className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Color Theme</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Select the theme appearance for the application.
+                    </p>
+                    
+                    <RadioGroup 
+                      defaultValue={theme}
+                      onValueChange={(value) => setTheme(value as "light" | "dark" | "system")}
+                      className="mt-3"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Light Theme Option */}
+                        <div>
+                          <RadioGroupItem value="light" id="light" className="sr-only" />
+                          <label
+                            htmlFor="light"
+                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                          >
+                            <Sun className="mb-3 h-6 w-6" />
+                            <div className="font-medium">Light</div>
+                          </label>
+                        </div>
+                        
+                        {/* Dark Theme Option */}
+                        <div>
+                          <RadioGroupItem value="dark" id="dark" className="sr-only" />
+                          <label
+                            htmlFor="dark"
+                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                          >
+                            <Moon className="mb-3 h-6 w-6" />
+                            <div className="font-medium">Dark</div>
+                          </label>
+                        </div>
+                        
+                        {/* System Theme Option */}
+                        <div>
+                          <RadioGroupItem value="system" id="system" className="sr-only" />
+                          <label
+                            htmlFor="system"
+                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                          >
+                            <Monitor className="mb-3 h-6 w-6" />
+                            <div className="font-medium">System</div>
+                          </label>
+                        </div>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">UI Density</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Choose how compact you want the interface to appear.
+                    </p>
+                    
+                    <RadioGroup defaultValue="comfortable" className="mt-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="compact" id="compact" />
+                          <label htmlFor="compact" className="text-sm font-medium cursor-pointer">
+                            Compact
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="comfortable" id="comfortable" />
+                          <label htmlFor="comfortable" className="text-sm font-medium cursor-pointer">
+                            Comfortable
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="spacious" id="spacious" />
+                          <label htmlFor="spacious" className="text-sm font-medium cursor-pointer">
+                            Spacious
+                          </label>
+                        </div>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full" onClick={() => toast.success("Appearance settings saved")}>
+                    Save Appearance Settings
+                  </Button>
+                </CardFooter>
+              </Card>
             </TabsContent>
             
             {/* Preferences Tab */}
@@ -607,6 +752,28 @@ const Settings = () => {
                       
                       <Separator />
                       
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-sm">Notifications</h3>
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <label className="text-base font-medium">Game Reminders</label>
+                            <p className="text-sm text-muted-foreground">
+                              Receive daily reminders to play
+                            </p>
+                          </div>
+                          <Switch />
+                        </div>
+                        <div className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <label className="text-base font-medium">New Achievements</label>
+                            <p className="text-sm text-muted-foreground">
+                              Get notified about new achievements
+                            </p>
+                          </div>
+                          <Switch defaultChecked />
+                        </div>
+                      </div>
+                      
                       <div className="flex justify-between">
                         <Button
                           type="button"
@@ -621,93 +788,6 @@ const Settings = () => {
                   </Form>
                 </CardContent>
               </Card>
-              
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Language & Theme (Coming Soon)</CardTitle>
-                  <CardDescription>These features will be available in a future update</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 opacity-70">
-                    <div className="flex items-center justify-between">
-                      <span>Language</span>
-                      <Button disabled variant="outline">English</Button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Theme</span>
-                      <Button disabled variant="outline">Light / Dark</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            {/* Help & Support Tab */}
-            <TabsContent value="help">
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <HelpCircle className="h-5 w-5 text-primary" />
-                      <CardTitle>Help & FAQs</CardTitle>
-                    </div>
-                    <CardDescription>Frequently asked questions and game instructions</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => setShowHelpFAQ(true)}
-                    >
-                      View FAQ & Game Instructions
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => setShowBugReport(true)}
-                    >
-                      Report a Bug
-                    </Button>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-primary" />
-                      <CardTitle>Legal Resources</CardTitle>
-                    </div>
-                    <CardDescription>Important legal information</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button asChild variant="outline" className="w-full">
-                      <a href="/privacy-policy">Privacy Policy</a>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                      <a href="/terms-of-use">Terms of Use</a>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                      <a href="/contact">Contact Us</a>
-                    </Button>
-                  </CardContent>
-                </Card>
-                
-                <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Coming Soon</CardTitle>
-                    <CardDescription>Check out these exciting features coming to Color Grid Logic</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => setShowComingSoon(true)}
-                    >
-                      Preview Upcoming Features
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
             </TabsContent>
           </Tabs>
         </div>
@@ -733,147 +813,6 @@ const Settings = () => {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
             <Button variant="destructive" onClick={deleteAccount}>Delete Account</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Help & FAQ Modal */}
-      <Dialog open={showHelpFAQ} onOpenChange={setShowHelpFAQ}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Help & FAQs</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">How to Play</h3>
-              <ol className="list-decimal pl-6 space-y-2 text-muted-foreground">
-                <li>Select a difficulty level (Easy, Medium, or Hard)</li>
-                <li>Fill the grid so that each row, column, and region contains each color exactly once</li>
-                <li>Click on an empty cell to select it, then click on a color from the palette or use number keys</li>
-                <li>The game is complete when all cells are correctly filled</li>
-              </ol>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Troubleshooting Login</h3>
-              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li>If you can't login, try resetting your password</li>
-                <li>Make sure to check your spam folder for verification emails</li>
-                <li>Clear your browser cache and cookies if you're experiencing persistent issues</li>
-                <li>If problems persist, contact support</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-2">What to do if the puzzle won't load?</h3>
-              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li>Refresh the page</li>
-                <li>Try using a different browser</li>
-                <li>Check your internet connection</li>
-                <li>Disable any ad-blockers or extensions that might interfere</li>
-                <li>If the issue continues, report it using the bug report form</li>
-              </ul>
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button>Close</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Bug Report Modal */}
-      <Dialog open={showBugReport} onOpenChange={setShowBugReport}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Report a Bug</DialogTitle>
-            <DialogDescription>
-              Please describe the issue you're experiencing in detail.
-            </DialogDescription>
-          </DialogHeader>
-          <form 
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const description = formData.get("description") as string;
-              const timestamp = new Date().toISOString();
-              const subject = `Bug Report: Color Grid Logic (${timestamp})`;
-              const body = `
-                Bug Description:
-                ${description}
-                
-                App Version: 1.0.0
-                Time: ${timestamp}
-                User Agent: ${navigator.userAgent}
-              `;
-              window.location.href = `mailto:support@colorgridlogic.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-              setShowBugReport(false);
-              toast.success("Bug report email prepared");
-            }}
-          >
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">
-                  Bug Description
-                </label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Please describe what happened and what you expected to happen"
-                  required
-                  rows={5}
-                  className="resize-none"
-                />
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <p>This will generate an email with automatically included technical information to help us diagnose the issue.</p>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setShowBugReport(false)}>Cancel</Button>
-              <Button type="submit">Send Report</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Coming Soon Modal */}
-      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Coming Soon to Color Grid Logic</DialogTitle>
-            <DialogDescription>
-              Check out these exciting features we're working on
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="border rounded-lg p-4 bg-muted/20">
-              <h3 className="font-bold mb-2">Multiplayer Mode</h3>
-              <p className="text-sm text-muted-foreground mb-4">Challenge your friends to races or collaborate on harder puzzles.</p>
-              <div className="text-xs text-primary">Coming Summer 2025</div>
-            </div>
-            <div className="border rounded-lg p-4 bg-muted/20">
-              <h3 className="font-bold mb-2">Puzzle of the Day</h3>
-              <p className="text-sm text-muted-foreground mb-4">A new daily challenge with special rewards and a dedicated leaderboard.</p>
-              <div className="text-xs text-primary">Coming June 2025</div>
-            </div>
-            <div className="border rounded-lg p-4 bg-muted/20">
-              <h3 className="font-bold mb-2">Custom Puzzle Creator</h3>
-              <p className="text-sm text-muted-foreground mb-4">Design your own puzzles and share them with the community.</p>
-              <div className="text-xs text-primary">Coming Fall 2025</div>
-            </div>
-            <div className="border rounded-lg p-4 bg-muted/20">
-              <h3 className="font-bold mb-2">Timed Challenge Mode</h3>
-              <p className="text-sm text-muted-foreground mb-4">Test your speed against the clock with escalating difficulty.</p>
-              <div className="text-xs text-primary">Coming July 2025</div>
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button>Close Preview</Button>
-            </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
