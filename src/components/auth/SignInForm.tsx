@@ -97,7 +97,7 @@ const SignInForm = () => {
       </form>
       
       <div className="text-center text-sm text-gray-500">
-        Or Sign in using
+        Or Sign in with
       </div>
       
       <div className="flex justify-center w-full">
