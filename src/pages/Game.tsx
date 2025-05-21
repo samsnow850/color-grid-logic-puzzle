@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,12 +13,12 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/supabaseClient";
-import PageWrapper from "@/components/PageWrapper";
+import { PageWrapper } from "@/components/PageWrapper";
 import { formatTime } from "@/lib/utils";
 import {
   Trophy,
   Lightbulb,
-  GraduationCap, // Replacing Confetti with GraduationCap
+  Confetti,
   Pause,
   Play,
   HelpCircle,
@@ -562,7 +561,7 @@ const Game = () => {
 
               <div className="border rounded-md p-4">
                 <div className="flex items-center space-x-3 mb-2">
-                  <GraduationCap className="h-5 w-5 text-red-500" />
+                  <Confetti className="h-5 w-5 text-red-500" />
                   <h3 className="text-lg font-semibold">Hardcore Solver</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
