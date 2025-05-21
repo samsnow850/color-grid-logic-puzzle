@@ -1,8 +1,8 @@
 
 export interface GridHistory<T> {
-  past: T[][];
+  past: T[][][];
   present: T[][];
-  future: T[][];
+  future: T[][][];
 }
 
 export function createHistory<T>(initialState: T[][]): GridHistory<T> {

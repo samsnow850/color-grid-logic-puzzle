@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -195,7 +194,8 @@ const Game = () => {
       setSolution(solution);
       
       // Initialize undo/redo history
-      setGridHistory(createHistory(puzzle));
+      const newHistory = createHistory<string>(puzzle);
+      setGridHistory(newHistory);
       
       // Reset game state
       setShowTitleScreen(false);
@@ -291,7 +291,7 @@ const Game = () => {
     if (isPaused) return;
     
     if (gridHistory) {
-      const newHistory = createHistory(JSON.parse(JSON.stringify(originalGrid)));
+      const newHistory = createHistory<string>(JSON.parse(JSON.stringify(originalGrid)));
       setGridHistory(newHistory);
       setGrid(JSON.parse(JSON.stringify(originalGrid)));
     } else {
@@ -348,7 +348,7 @@ const Game = () => {
     if (!gridHistory || isPaused) return;
     
     if (canUndo(gridHistory)) {
-      const newHistory = undo(gridHistory);
+      const newHistory = undo<string>(gridHistory);
       setGridHistory(newHistory);
       setGrid(newHistory.present);
       
@@ -366,7 +366,7 @@ const Game = () => {
     if (!gridHistory || isPaused) return;
     
     if (canRedo(gridHistory)) {
-      const newHistory = redo(gridHistory);
+      const newHistory = redo<string>(gridHistory);
       setGridHistory(newHistory);
       setGrid(newHistory.present);
       
