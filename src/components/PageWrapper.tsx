@@ -29,10 +29,10 @@ const PageWrapper = ({
     // Scroll to top of page
     scrollToTop();
     
-    // Simulate loading time (you can remove this in production if not needed)
+    // Simulate loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+    }, 1200);
     
     return () => clearTimeout(timer);
   }, [location.pathname]);

@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/useAuth";
 
-import Preview from './pages/Preview'; // Using Preview as the home page
 import Game from './pages/Game';
 import About from './pages/About';
 import Auth from './pages/Auth';
@@ -39,7 +38,7 @@ const App = () => {
               <Navbar />
               <div className="flex-grow">
                 <Routes>
-                  <Route path="/" element={<Preview />} />
+                  <Route path="/" element={<Index />} />
                   <Route path="/classic" element={<Index />} />
                   <Route path="/game" element={<Game />} />
                   <Route path="/about" element={<About />} />
@@ -53,7 +52,6 @@ const App = () => {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/about-dev" element={<AboutDev />} />
-                  <Route path="/preview" element={<Preview />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>
