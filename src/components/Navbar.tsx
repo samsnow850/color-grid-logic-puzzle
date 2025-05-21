@@ -115,13 +115,7 @@ const Navbar = () => {
                   navigate("/account");
                   window.scrollTo(0, 0);
                 }}>
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  navigate("/settings");
-                  window.scrollTo(0, 0);
-                }}>
-                  Settings
+                  Account Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
@@ -165,9 +159,6 @@ const Navbar = () => {
                   <>
                     <SheetClose asChild>
                       <Link to="/account" className="text-lg font-medium py-2">Account</Link>
-                    </SheetClose>
-                    <SheetClose asChild>
-                      <Link to="/settings" className="text-lg font-medium py-2">Settings</Link>
                     </SheetClose>
                     <Button 
                       variant="ghost" 
