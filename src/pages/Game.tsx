@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageWrapper from "@/components/PageWrapper";
 import ColorGrid from "@/components/game/ColorGrid";
 import ColorPalette from "@/components/game/ColorPalette";
 import GameTimer from "@/components/game/GameTimer";
@@ -220,162 +220,168 @@ const Game = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Navbar />
+    <PageWrapper 
+      loadingTitle="Game Loading" 
+      loadingDescription="Preparing your color puzzle"
+      loadingColor="green"
+    >
+      <div className="min-h-screen flex flex-col bg-white">
+        <Navbar />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-        {showTitleScreen ? (
-          <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
-            <p className="mb-6 text-center text-muted-foreground">
-              Fill the grid with colors following Sudoku-style rules.
-            </p>
-            
-            <div className="mb-6">
-              <h2 className="text-lg font-medium mb-2">Select Difficulty:</h2>
-              <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
-                <div className="flex items-center space-x-2 mb-2">
-                  <RadioGroupItem value="easy" id="easy" />
-                  <Label htmlFor="easy">Easy (4×4)</Label>
-                </div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <RadioGroupItem value="medium" id="medium" />
-                  <Label htmlFor="medium">Medium (4×4 - More challenging)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="hard" id="hard" />
-                  <Label htmlFor="hard">Hard (9×9)</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            {/* Preview of the selected grid */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Preview:</h3>
-              <div className="flex justify-center">
-                {previewGrid}
-              </div>
-            </div>
-            
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
-              size="lg"
-              onClick={startNewGame}
-            >
-              Start Game
-            </Button>
-          </div>
-        ) : (
-          <div className="w-full max-w-4xl">
-            <div className="mb-4 flex justify-between items-center">
-              <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+          {showTitleScreen ? (
+            <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
+              <p className="mb-6 text-center text-muted-foreground">
+                Fill the grid with colors following Sudoku-style rules.
+              </p>
               
-              {!showTitleScreen && !showGameOverScreen && (
-                <GameTimer 
-                  isRunning={isTimerRunning} 
-                  onPause={handlePauseGame} 
-                  onResume={handleResumeGame} 
-                />
-              )}
-            </div>
-            
-            <div className="bg-white p-4 md:p-8 rounded-lg shadow-md border border-gray-200">
-              <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                <div className="flex flex-col items-center gap-4">
-                  <ColorGrid 
-                    grid={grid}
-                    originalGrid={originalGrid}
-                    gridSize={gridSize}
-                    selectedCell={selectedCell}
-                    onCellClick={handleCellClick}
-                  />
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleReset}
-                      disabled={isPaused}
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleGiveUp}
-                      disabled={isPaused}
-                    >
-                      Give Up
-                    </Button>
+              <div className="mb-6">
+                <h2 className="text-lg font-medium mb-2">Select Difficulty:</h2>
+                <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <RadioGroupItem value="easy" id="easy" />
+                    <Label htmlFor="easy">Easy (4×4)</Label>
                   </div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <RadioGroupItem value="medium" id="medium" />
+                    <Label htmlFor="medium">Medium (4×4 - More challenging)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hard" id="hard" />
+                    <Label htmlFor="hard">Hard (9×9)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              {/* Preview of the selected grid */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Preview:</h3>
+                <div className="flex justify-center">
+                  {previewGrid}
                 </div>
+              </div>
+              
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
+                size="lg"
+                onClick={startNewGame}
+              >
+                Start Game
+              </Button>
+            </div>
+          ) : (
+            <div className="w-full max-w-4xl">
+              <div className="mb-4 flex justify-between items-center">
+                <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+                
+                {!showTitleScreen && !showGameOverScreen && (
+                  <GameTimer 
+                    isRunning={isTimerRunning} 
+                    onPause={handlePauseGame} 
+                    onResume={handleResumeGame} 
+                  />
+                )}
+              </div>
+              
+              <div className="bg-white p-4 md:p-8 rounded-lg shadow-md border border-gray-200">
+                <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                  <div className="flex flex-col items-center gap-4">
+                    <ColorGrid 
+                      grid={grid}
+                      originalGrid={originalGrid}
+                      gridSize={gridSize}
+                      selectedCell={selectedCell}
+                      onCellClick={handleCellClick}
+                    />
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={handleReset}
+                        disabled={isPaused}
+                      >
+                        Reset
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleGiveUp}
+                        disabled={isPaused}
+                      >
+                        Give Up
+                      </Button>
+                    </div>
+                  </div>
 
-                <div className="w-full md:w-auto">
-                  <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
-                  <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
-                  
-                  <div className="mt-8">
-                    <h2 className="text-lg font-medium mb-4 text-center md:text-left">Instructions</h2>
-                    <ul className="list-disc pl-5 text-sm text-muted-foreground">
-                      <li>Click on an empty cell to select it</li>
-                      <li>Click on a color or press 1-{colors.length} to place it</li>
-                      <li>Each row, column, and region must contain each color exactly once</li>
-                      <li>Press pause to take a break and hide the puzzle</li>
-                    </ul>
+                  <div className="w-full md:w-auto">
+                    <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
+                    <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
+                    
+                    <div className="mt-8">
+                      <h2 className="text-lg font-medium mb-4 text-center md:text-left">Instructions</h2>
+                      <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                        <li>Click on an empty cell to select it</li>
+                        <li>Click on a color or press 1-{colors.length} to place it</li>
+                        <li>Each row, column, and region must contain each color exactly once</li>
+                        <li>Press pause to take a break and hide the puzzle</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
-      
-      {/* Pause Overlay */}
-      {isPaused && <PauseOverlay onResume={handleResumeGame} />}
-      
-      <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              {gameWon ? "Puzzle Solved!" : "Puzzle Unfinished"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p className="text-center text-muted-foreground">
-              {gameWon 
-                ? "Congratulations! You've successfully solved the puzzle." 
-                : "Try a new puzzle?"}
-            </p>
-          </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              onClick={startNewGame}
-            >
-              {gameWon ? "Play Again" : "New Puzzle"}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                setShowGameOverScreen(false);
-                setShowTitleScreen(true);
-                scrollToTop();
-              }}
-            >
-              Main Menu
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Footer />
-    </div>
+          )}
+        </main>
+        
+        {/* Pause Overlay */}
+        {isPaused && <PauseOverlay onResume={handleResumeGame} />}
+        
+        <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                {gameWon ? "Puzzle Solved!" : "Puzzle Unfinished"}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <p className="text-center text-muted-foreground">
+                {gameWon 
+                  ? "Congratulations! You've successfully solved the puzzle." 
+                  : "Try a new puzzle?"}
+              </p>
+            </div>
+            
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={startNewGame}
+              >
+                {gameWon ? "Play Again" : "New Puzzle"}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setShowGameOverScreen(false);
+                  setShowTitleScreen(true);
+                  scrollToTop();
+                }}
+              >
+                Main Menu
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Footer />
+      </div>
+    </PageWrapper>
   );
 };
 
