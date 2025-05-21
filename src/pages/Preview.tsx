@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { useInView } from "framer-motion";
 import { 
   BarChart3, 
@@ -26,7 +26,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Footer from "@/components/Footer";
+import Footer from "@/components/PreviewFooter";
 import PageWrapper from "@/components/PageWrapper";
 import { useAuth } from "@/hooks/useAuth";
 import { scrollToTop } from "@/lib/utils";
@@ -98,12 +98,10 @@ const TestimonialCard = ({ quote, name, title, delay = 0 }) => {
       className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
     >
       <div className="flex flex-col h-full">
-        <div className="mb-4">
-          <Star className="text-yellow-400 h-5 w-5" />
-          <Star className="text-yellow-400 h-5 w-5" />
-          <Star className="text-yellow-400 h-5 w-5" />
-          <Star className="text-yellow-400 h-5 w-5" />
-          <Star className="text-yellow-400 h-5 w-5" />
+        <div className="mb-4 flex">
+          {[1, 2, 3, 4, 5].map((_, index) => (
+            <Star key={index} className="text-yellow-400 h-5 w-5" />
+          ))}
         </div>
         <p className="text-gray-700 italic mb-4 flex-1">"{quote}"</p>
         <div className="flex items-center mt-auto">
@@ -169,10 +167,22 @@ const StatItem = ({ value, label, icon, delay = 0 }) => {
 // Main Preview Component
 const Preview = () => {
   const { user } = useAuth();
+  const { scrollY } = useScroll();
+  const [isScrolled, setIsScrolled] = useState(false);
   
   // Create animated references
   const heroRef = React.useRef(null);
   const isHeroInView = useInView(heroRef, { once: true });
+  
+  // Effect for navbar scroll behavior
+  useEffect(() => {
+    const updateScrollState = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener('scroll', updateScrollState);
+    return () => window.removeEventListener('scroll', updateScrollState);
+  }, []);
   
   // Random stats for visualization
   const stats = [
@@ -275,10 +285,10 @@ const Preview = () => {
       loadingColor="purple"
     >
       <div className="min-h-screen font-poppins">
-        {/* Navbar */}
-        <header className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 items-center justify-between">
+        {/* Navbar - updated with scroll behavior */}
+        <header className={`fixed top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300 ${isScrolled ? 'h-14' : 'h-16'}`}>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-full">
+            <div className="flex h-full items-center justify-between">
               <div className="flex items-center">
                 <Link to="/" className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-md bg-purple-600 flex items-center justify-center">
@@ -289,7 +299,7 @@ const Preview = () => {
                       <div className="w-2 h-2 bg-white rounded-sm"></div>
                     </div>
                   </div>
-                  <span className="font-bold text-xl">Color Grid Logic</span>
+                  <span className={`font-bold transition-all duration-300 ${isScrolled ? 'text-lg' : 'text-xl'}`}>Color Grid Logic</span>
                 </Link>
               </div>
               
@@ -311,13 +321,13 @@ const Preview = () => {
               <div className="flex items-center space-x-4">
                 {user ? (
                   <Link to="/account">
-                    <Button className="bg-purple-600 hover:bg-purple-700 button-hover-effect">
+                    <Button className="bg-purple-600 hover:bg-purple-700">
                       My Account
                     </Button>
                   </Link>
                 ) : (
                   <Link to="/auth">
-                    <Button className="bg-purple-600 hover:bg-purple-700 button-hover-effect">
+                    <Button className="bg-purple-600 hover:bg-purple-700">
                       Sign In
                     </Button>
                   </Link>
@@ -326,6 +336,9 @@ const Preview = () => {
             </div>
           </div>
         </header>
+        
+        {/* Spacer to account for fixed header */}
+        <div className="h-16"></div>
         
         {/* Hero Section with animated elements */}
         <section 
@@ -368,7 +381,7 @@ const Preview = () => {
                       </Button>
                     </Link>
                     <Link to="/about">
-                      <Button size="lg" variant="outline" className="border-purple-300 hover:bg-purple-100 hover:text-purple-800">
+                      <Button size="lg" variant="outline" className="border-purple-300 hover:bg-purple-100 text-gray-800 hover:text-purple-800">
                         Learn More
                       </Button>
                     </Link>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -85,6 +86,12 @@ const Navbar = () => {
             >
               About Dev
             </Link>
+            <Link
+              to="/preview"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Preview
+            </Link>
           </nav>
         </div>
         
@@ -143,6 +150,9 @@ const Navbar = () => {
                 </SheetClose>
                 <SheetClose asChild>
                   <Link to="/about" className="text-lg font-medium py-2">About</Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link to="/preview" className="text-lg font-medium py-2">Preview</Link>
                 </SheetClose>
                 <SheetClose asChild>
                   <Link to="/sitemap" className="text-lg font-medium py-2">Sitemap</Link>
