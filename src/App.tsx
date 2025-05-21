@@ -23,6 +23,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import AboutDev from './pages/AboutDev';
+import Preview from './pages/Preview';
 
 const queryClient = new QueryClient()
 
@@ -46,6 +47,7 @@ const App = () => {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/about-dev" element={<AboutDev />} />
+              <Route path="/preview" element={<Preview />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster position="top-center" expand={true} richColors />
