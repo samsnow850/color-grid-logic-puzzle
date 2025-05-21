@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,12 +46,8 @@ const Game = () => {
     ];
     
     if (difficulty === "medium") {
-      colorCount = 6;
-      gridSizeValue = 6;
-      previewColors = [
-        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
-        "bg-purple-400", "bg-pink-400"
-      ];
+      colorCount = 4;
+      gridSizeValue = 4;
     } else if (difficulty === "hard") {
       colorCount = 9;
       gridSizeValue = 9;
@@ -62,7 +57,7 @@ const Game = () => {
       ];
     }
     
-    setColors(previewColors);
+    setColors(previewColors.slice(0, colorCount));
     
     // Create preview grid with actual colored cells
     const previewElements = [];
@@ -102,8 +97,8 @@ const Game = () => {
         style={{
           gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
-          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "210px" : "180px",
-          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "210px" : "180px",
+          width: gridSizeValue === 9 ? "210px" : "180px",
+          height: gridSizeValue === 9 ? "210px" : "180px",
         }}
       >
         {previewElements}
@@ -120,10 +115,10 @@ const Game = () => {
       setError(null);
       scrollToTop();
       
-      // For medium difficulty, we'll just make a bigger easy grid (4x4 -> 6x6)
+      // For medium difficulty, use same size as easy
       if (difficulty === "medium") {
-        newGridSize = 6;
-        colorCount = 6;
+        newGridSize = 4;
+        colorCount = 4;
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
@@ -244,7 +239,7 @@ const Game = () => {
                 </div>
                 <div className="flex items-center space-x-2 mb-2">
                   <RadioGroupItem value="medium" id="medium" />
-                  <Label htmlFor="medium">Medium (6×6)</Label>
+                  <Label htmlFor="medium">Medium (4×4 - More challenging)</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="hard" id="hard" />
