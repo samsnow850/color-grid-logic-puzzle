@@ -8,11 +8,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, ArrowDown, Star, Award, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDate, scrollToTop } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const [showAbout, setShowAbout] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user } = useAuth();
   
   // Check scroll position
   useEffect(() => {
@@ -126,25 +129,31 @@ const Index = () => {
           </motion.p>
           
           <motion.div 
-            className="grid gap-4 sm:grid-cols-3 max-w-md mx-auto"
+            className="grid gap-4 sm:flex sm:flex-wrap sm:justify-center max-w-lg mx-auto"
             variants={itemVariants}
           >
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6" asChild>
-              <a href="/game">Play Game</a>
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 hover:text-white" asChild>
+              <Link to="/game">Play Game</Link>
             </Button>
+            
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 hover:text-white" asChild>
+              <Link to="/daily-puzzle">Daily Challenge</Link>
+            </Button>
+            
             <Button 
               variant="outline" 
               size="lg" 
               onClick={() => setShowAbout(true)}
-              className="border-purple-300 hover:bg-purple-100"
+              className="border-purple-300 hover:bg-purple-100 hover:text-purple-800"
             >
               About
             </Button>
+            
             <Button 
               variant="outline" 
               size="lg" 
               onClick={() => setShowChangelog(true)}
-              className="border-purple-300 hover:bg-purple-100"
+              className="border-purple-300 hover:bg-purple-100 hover:text-purple-800"
             >
               Changelog
             </Button>
@@ -207,9 +216,9 @@ const Index = () => {
               <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
                 <Award className="text-blue-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Leaderboard System</h3>
+              <h3 className="text-xl font-bold mb-2">Daily Challenges</h3>
               <p className="text-gray-600">
-                Compete with other players and track your progress on our global leaderboard.
+                Complete a new puzzle every day to track your progress and challenge yourself.
               </p>
             </motion.div>
             
@@ -224,9 +233,9 @@ const Index = () => {
               <div className="bg-pink-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
                 <Clock className="text-pink-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Daily Challenges</h3>
+              <h3 className="text-xl font-bold mb-2">Timed Gameplay</h3>
               <p className="text-gray-600">
-                New puzzles every day to keep your brain sharp and your skills improving.
+                Race against the clock to solve puzzles as quickly as possible and improve your skills.
               </p>
             </motion.div>
           </div>
@@ -318,12 +327,20 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
       </DialogHeader>
       <div className="space-y-6">
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date())} - Beta 2.5</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date())} - Beta 2.6</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Added daily puzzle challenge feature</li>
+            <li>Fixed Medium (6×6) grid color display issues</li>
+            <li>Improved button hover states for better visibility</li>
+            <li>Enhanced sitemap with clickable navigation buttons</li>
+            <li>Added developer information to footer</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 86400000))} - Beta 2.5</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Added animated hero section to homepage</li>
             <li>Implemented loading screens for all pages</li>
-            <li>Fixed Medium (6×6) grid color display issues</li>
-            <li>Added developer information to footer</li>
             <li>Enhanced scroll-to-top functionality for better navigation</li>
             <li>Improved sitemap with clickable navigation buttons</li>
           </ul>

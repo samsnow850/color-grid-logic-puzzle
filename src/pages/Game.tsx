@@ -38,7 +38,9 @@ const Game = () => {
   useEffect(() => {
     let colorCount = 4;
     let gridSizeValue = 4;
-    let previewColors: string[] = [];
+    let previewColors: string[] = [
+      "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
+    ];
     
     if (difficulty === "medium") {
       colorCount = 6;
@@ -54,29 +56,36 @@ const Game = () => {
         "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
         "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
       ];
-    } else {
-      gridSizeValue = 4;
-      previewColors = [
-        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
-      ];
     }
     
     setColors(previewColors);
     
-    // Create preview grid
+    // Create preview grid with actual colored cells
     const previewElements = [];
-    for (let i = 0; i < gridSizeValue * gridSizeValue; i++) {
-      const colorIndex = i % colorCount;
-      previewElements.push(
-        <div 
-          key={`preview-${i}`} 
-          className={`rounded-md ${previewColors[colorIndex]}`}
-          style={{
-            width: gridSizeValue === 9 ? "20px" : gridSizeValue === 6 ? "30px" : "40px",
-            height: gridSizeValue === 9 ? "20px" : gridSizeValue === 6 ? "30px" : "40px",
-          }}
-        />
-      );
+    for (let i = 0; i < gridSizeValue; i++) {
+      for (let j = 0; j < gridSizeValue; j++) {
+        // Calculate region boundaries for borders
+        const regionSize = Math.sqrt(gridSizeValue);
+        const isTopEdge = i % regionSize === 0;
+        const isLeftEdge = j % regionSize === 0;
+        const isBottomEdge = i === gridSizeValue - 1;
+        const isRightEdge = j === gridSizeValue - 1;
+        
+        // Assign colors in a pattern to make it look like a puzzle
+        const colorIndex = (i + j) % colorCount;
+        
+        previewElements.push(
+          <div 
+            key={`preview-${i}-${j}`}
+            className={`${previewColors[colorIndex]} rounded-sm
+              ${isTopEdge ? "border-t-2 border-gray-500" : ""}
+              ${isLeftEdge ? "border-l-2 border-gray-500" : ""}
+              ${isBottomEdge ? "border-b-2 border-gray-500" : ""}
+              ${isRightEdge ? "border-r-2 border-gray-500" : ""}`
+            }
+          />
+        );
+      }
     }
     
     setPreviewGrid(

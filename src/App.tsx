@@ -9,6 +9,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import PageWrapper from "./components/PageWrapper";
 import Index from "./pages/Index";
 import Game from "./pages/Game";
+import DailyPuzzle from "./pages/DailyPuzzle";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -35,6 +36,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
               <Route path="/game" element={<PageWrapper><Game /></PageWrapper>} />
+              <Route path="/daily-puzzle" element={<PageWrapper><DailyPuzzle /></PageWrapper>} />
               <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
               <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
               <Route path="/reset-password" element={<PageWrapper><ResetPassword /></PageWrapper>} />
