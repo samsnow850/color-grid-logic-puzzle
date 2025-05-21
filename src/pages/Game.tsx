@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -219,12 +220,12 @@ const Game = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-background to-purple-50">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
         {showTitleScreen ? (
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
             <p className="mb-6 text-center text-muted-foreground">
               Fill the grid with colors following Sudoku-style rules.
@@ -284,7 +285,7 @@ const Game = () => {
               )}
             </div>
             
-            <div className="bg-white dark:bg-gray-800 p-4 md:p-8 rounded-lg shadow-lg">
+            <div className="bg-white p-4 md:p-8 rounded-lg shadow-md border border-gray-200">
               <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                 <div className="flex flex-col items-center gap-4">
                   <ColorGrid 
