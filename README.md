@@ -1,10 +1,10 @@
 # Welcome to Color Grid Logic
 
 **🎮 Play now at:**  
-[![Play the Game](https://img.shields.io/badge/-🎮%20Play%20Color%20Grid%20Logic-blueviolet?style=for-the-badge)](https://color-grid-logic-puzzle.lovable.app)
+[![Play the Game](https://img.shields.io/badge/-🎮%20Play%20Color%20Grid%20Logic-blueviolet?style=for-the-badge)](color-grid-logic-puzzle.com)
 
 **🔐 Log In / Sign Up:**  
-[![Log In or Sign Up](https://img.shields.io/badge/-🔐%20Access%20Your%20Account-gray?style=for-the-badge)](https://color-grid-logic-puzzle.lovable.app/auth)
+[![Log In or Sign Up](https://img.shields.io/badge/-🔐%20Access%20Your%20Account-gray?style=for-the-badge)](https://color-grid-logic-puzzle.com/auth)
 
 ---
 
