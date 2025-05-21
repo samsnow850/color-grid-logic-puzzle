@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { scrollToTop } from "@/lib/utils";
+import { Github, Globe } from "lucide-react";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -8,7 +9,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-100 py-6 px-6 md:px-12 mt-auto">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="font-semibold text-lg mb-2">Color Grid Logic</h3>
             <p className="text-sm text-gray-600">
@@ -35,6 +36,35 @@ const Footer = () => {
               <li><Link to="/contact" className="text-sm text-gray-600 hover:text-purple-600" onClick={scrollToTop}>Contact</Link></li>
               <li><Link to="/sitemap" className="text-sm text-gray-600 hover:text-purple-600" onClick={scrollToTop}>Sitemap</Link></li>
             </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-lg mb-2">Developer</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              Developed by Samuel Snow
+            </p>
+            <div className="flex gap-4">
+              <a 
+                href="https://lovable.dev/@samsnow850" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-purple-600 flex items-center gap-1"
+              >
+                <Github size={16} />
+                <span className="text-sm">Lovable Profile</span>
+              </a>
+            </div>
+            <div className="flex gap-4 mt-2">
+              <a 
+                href="https://samuelesnow.co" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-600 hover:text-purple-600 flex items-center gap-1"
+              >
+                <Globe size={16} />
+                <span className="text-sm">Personal Website</span>
+              </a>
+            </div>
           </div>
         </div>
         

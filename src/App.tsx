@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import PageWrapper from "./components/PageWrapper";
 import Index from "./pages/Index";
 import Game from "./pages/Game";
 import Auth from "./pages/Auth";
@@ -32,21 +33,21 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/game" element={<Game />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-use" element={<TermsOfUse />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/sitemap" element={<Sitemap />} />
+              <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
+              <Route path="/game" element={<PageWrapper><Game /></PageWrapper>} />
+              <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
+              <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
+              <Route path="/reset-password" element={<PageWrapper><ResetPassword /></PageWrapper>} />
+              <Route path="/privacy-policy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
+              <Route path="/terms-of-use" element={<PageWrapper><TermsOfUse /></PageWrapper>} />
+              <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
+              <Route path="/leaderboard" element={<PageWrapper><Leaderboard /></PageWrapper>} />
+              <Route path="/account" element={<PageWrapper><Account /></PageWrapper>} />
+              <Route path="/settings" element={<PageWrapper><Settings /></PageWrapper>} />
+              <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
+              <Route path="/sitemap" element={<PageWrapper><Sitemap /></PageWrapper>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

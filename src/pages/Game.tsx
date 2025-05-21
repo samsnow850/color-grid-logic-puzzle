@@ -32,28 +32,67 @@ const Game = () => {
     "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
   ]);
   const [error, setError] = useState<string | null>(null);
+  const [previewGrid, setPreviewGrid] = useState<JSX.Element | null>(null);
 
   // Initialize with preview colors based on difficulty
   useEffect(() => {
     let colorCount = 4;
+    let gridSizeValue = 4;
+    let previewColors: string[] = [];
     
     if (difficulty === "medium") {
       colorCount = 6;
-      setColors([
+      gridSizeValue = 6;
+      previewColors = [
         "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
         "bg-purple-400", "bg-pink-400"
-      ]);
+      ];
     } else if (difficulty === "hard") {
       colorCount = 9;
-      setColors([
+      gridSizeValue = 9;
+      previewColors = [
         "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
         "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
-      ]);
+      ];
     } else {
-      setColors([
+      gridSizeValue = 4;
+      previewColors = [
         "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
-      ]);
+      ];
     }
+    
+    setColors(previewColors);
+    
+    // Create preview grid
+    const previewElements = [];
+    for (let i = 0; i < gridSizeValue * gridSizeValue; i++) {
+      const colorIndex = i % colorCount;
+      previewElements.push(
+        <div 
+          key={`preview-${i}`} 
+          className={`rounded-md ${previewColors[colorIndex]}`}
+          style={{
+            width: gridSizeValue === 9 ? "20px" : gridSizeValue === 6 ? "30px" : "40px",
+            height: gridSizeValue === 9 ? "20px" : gridSizeValue === 6 ? "30px" : "40px",
+          }}
+        />
+      );
+    }
+    
+    setPreviewGrid(
+      <div 
+        className="grid gap-1 p-2 bg-gray-100 rounded-lg mx-auto"
+        style={{
+          gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
+          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "210px" : "180px",
+          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "210px" : "180px",
+        }}
+      >
+        {previewElements}
+      </div>
+    );
+    
   }, [difficulty]);
 
   const startNewGame = () => {
@@ -173,6 +212,14 @@ const Game = () => {
                   <Label htmlFor="hard">Hard (9×9)</Label>
                 </div>
               </RadioGroup>
+            </div>
+            
+            {/* Preview of the selected grid */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Preview:</h3>
+              <div className="flex justify-center">
+                {previewGrid}
+              </div>
             </div>
             
             {error && (
