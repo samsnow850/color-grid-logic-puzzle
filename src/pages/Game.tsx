@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,8 @@ import Footer from "@/components/Footer";
 import ColorGrid from "@/components/game/ColorGrid";
 import ColorPalette from "@/components/game/ColorPalette";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const Game = () => {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("easy");
@@ -26,35 +27,45 @@ const Game = () => {
   const [originalGrid, setOriginalGrid] = useState<string[][]>([]);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
   const [colors, setColors] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const startNewGame = () => {
     let newGridSize = 4;
     let colorCount = 4;
     
-    if (difficulty === "medium") {
-      newGridSize = 6;
-      colorCount = 6;
-    } else if (difficulty === "hard") {
-      newGridSize = 9;
-      colorCount = 9;
+    try {
+      setError(null);
+      
+      if (difficulty === "medium") {
+        newGridSize = 6;
+        colorCount = 6;
+      } else if (difficulty === "hard") {
+        newGridSize = 9;
+        colorCount = 9;
+      }
+      
+      setGridSize(newGridSize);
+      
+      // Generate colors
+      const generatedColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+      ].slice(0, colorCount);
+      
+      setColors(generatedColors);
+      
+      const { puzzle, solution } = generatePuzzle(newGridSize, difficulty);
+      setGrid(puzzle);
+      setOriginalGrid(JSON.parse(JSON.stringify(puzzle)));
+      
+      setShowTitleScreen(false);
+      setShowGameOverScreen(false);
+    } catch (err) {
+      console.error("Error starting game:", err);
+      setError("There was a problem starting the game. Please try a different difficulty level.");
+      // Default to easy mode if an error occurs
+      setDifficulty("easy");
     }
-    
-    setGridSize(newGridSize);
-    
-    // Generate colors
-    const generatedColors = [
-      "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
-      "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
-    ].slice(0, colorCount);
-    
-    setColors(generatedColors);
-    
-    const { puzzle, solution } = generatePuzzle(newGridSize, difficulty);
-    setGrid(puzzle);
-    setOriginalGrid(JSON.parse(JSON.stringify(puzzle)));
-    
-    setShowTitleScreen(false);
-    setShowGameOverScreen(false);
   };
 
   const handleCellClick = (row: number, col: number) => {
@@ -135,6 +146,12 @@ const Game = () => {
                 </div>
               </RadioGroup>
             </div>
+            
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             
             <Button 
               className="w-full bg-purple-600 hover:bg-purple-700" 

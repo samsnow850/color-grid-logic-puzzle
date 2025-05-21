@@ -1,39 +1,71 @@
-
 export type DifficultyLevel = "easy" | "medium" | "hard";
 
 // Function to generate a new puzzle
 export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
-  // Create an empty grid
-  const emptyGrid = Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
-  
-  // Generate a solved grid
-  const solution = generateSolution(emptyGrid, gridSize);
-  
-  // Create a copy of the solution
-  const puzzle = JSON.parse(JSON.stringify(solution));
-  
-  // Determine how many cells to remove based on difficulty
-  let cellsToRemove: number;
-  if (difficulty === "easy") {
-    cellsToRemove = Math.floor(gridSize * gridSize * 0.4); // 40% cells removed
-  } else if (difficulty === "medium") {
-    cellsToRemove = Math.floor(gridSize * gridSize * 0.6); // 60% cells removed
-  } else {
-    cellsToRemove = Math.floor(gridSize * gridSize * 0.75); // 75% cells removed
-  }
-  
-  // Remove cells randomly
-  for (let i = 0; i < cellsToRemove; i++) {
-    let row: number, col: number;
-    do {
-      row = Math.floor(Math.random() * gridSize);
-      col = Math.floor(Math.random() * gridSize);
-    } while (puzzle[row][col] === ""); // Find a cell that hasn't been emptied yet
+  try {
+    // Validate grid size
+    if (gridSize !== 4 && gridSize !== 6 && gridSize !== 9) {
+      throw new Error(`Invalid grid size: ${gridSize}`);
+    }
+
+    // Ensure the grid size has a valid square root for region calculations
+    const regionSize = Math.sqrt(gridSize);
+    if (Math.floor(regionSize) !== regionSize) {
+      throw new Error(`Grid size must have an integer square root: ${gridSize}`);
+    }
+
+    // Create an empty grid
+    const emptyGrid = Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
     
-    puzzle[row][col] = "";
+    // Generate a solved grid
+    const solution = generateSolution(emptyGrid, gridSize);
+    
+    // Create a copy of the solution
+    const puzzle = JSON.parse(JSON.stringify(solution));
+    
+    // Determine how many cells to remove based on difficulty
+    let cellsToRemove: number;
+    if (difficulty === "easy") {
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.4); // 40% cells removed
+    } else if (difficulty === "medium") {
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.55); // 55% cells removed (slightly easier than before)
+    } else {
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.7); // 70% cells removed (slightly easier than before)
+    }
+    
+    // Remove cells randomly with a maximum number of attempts
+    const maxAttempts = gridSize * gridSize * 2;
+    let attempts = 0;
+    let removed = 0;
+    
+    while (removed < cellsToRemove && attempts < maxAttempts) {
+      attempts++;
+      const row = Math.floor(Math.random() * gridSize);
+      const col = Math.floor(Math.random() * gridSize);
+      
+      if (puzzle[row][col] !== "") {
+        puzzle[row][col] = "";
+        removed++;
+      }
+    }
+    
+    return { puzzle, solution };
+  } catch (error) {
+    console.error("Error generating puzzle:", error);
+    // Fall back to a simple 4×4 puzzle in case of errors
+    const fallbackGrid = Array(4).fill("").map(() => Array(4).fill(""));
+    const fallbackSolution = generateSolution(fallbackGrid, 4);
+    const fallbackPuzzle = JSON.parse(JSON.stringify(fallbackSolution));
+    
+    // Remove a small number of cells for the fallback puzzle
+    for (let i = 0; i < 6; i++) {
+      const row = Math.floor(Math.random() * 4);
+      const col = Math.floor(Math.random() * 4);
+      fallbackPuzzle[row][col] = "";
+    }
+    
+    return { puzzle: fallbackPuzzle, solution: fallbackSolution };
   }
-  
-  return { puzzle, solution };
 }
 
 // Generate a valid solution for the grid

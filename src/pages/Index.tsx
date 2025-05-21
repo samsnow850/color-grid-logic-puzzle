@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const Index = () => {
   const [showAbout, setShowAbout] = useState(false);
@@ -12,6 +14,16 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      
+      {/* Beta Banner */}
+      <div className="bg-primary py-3 px-6">
+        <Alert className="max-w-4xl mx-auto bg-transparent border-none shadow-none">
+          <Info className="h-5 w-5 text-primary-foreground" />
+          <AlertDescription className="text-primary-foreground font-medium">
+            This game is currently in beta. We appreciate your patience as we continue to improve the experience. Thank you for your support!
+          </AlertDescription>
+        </Alert>
+      </div>
       
       <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 bg-gradient-to-b from-background to-purple-50">
         <div className="w-full max-w-4xl text-center">

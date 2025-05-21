@@ -13,6 +13,8 @@ import {
   CardContent, 
   CardFooter 
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -23,11 +25,14 @@ import {
   User, 
   Mail,
   Star,
-  Award
+  Award,
+  Save
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Profile {
   id: string;
@@ -46,10 +51,14 @@ interface GameStat {
 }
 
 const Account = () => {
-  const { user, session, loading } = useAuth();
+  const { user, session, loading, updateUserProfile } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [leaderboardOptIn, setLeaderboardOptIn] = useState(true);
   const [gameStats, setGameStats] = useState<GameStat>({
     played: 0,
     won: 0,
@@ -80,6 +89,11 @@ const Account = () => {
         }
 
         setProfile(data);
+        if (data) {
+          setDisplayName(data.display_name || "");
+          setBio(data.bio || "");
+          setLeaderboardOptIn(data.leaderboard_opt_in !== false);
+        }
         
         // Mock game stats - in a real app, these would come from the database
         const mockStats = {
@@ -100,6 +114,49 @@ const Account = () => {
 
     getProfile();
   }, [user, loading, navigate]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    try {
+      setIsSaving(true);
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          display_name: displayName,
+          bio: bio,
+          leaderboard_opt_in: leaderboardOptIn,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", user.id);
+      
+      if (error) throw error;
+      
+      // Update the profile state
+      setProfile(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          display_name: displayName,
+          bio: bio,
+          leaderboard_opt_in: leaderboardOptIn
+        };
+      });
+      
+      // Also update in Auth context if applicable
+      if (updateUserProfile) {
+        await updateUserProfile(displayName);
+      }
+      
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -143,10 +200,20 @@ const Account = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
             <div>
               <h1 className="text-3xl font-bold">My Account</h1>
-              <p className="text-muted-foreground">Welcome back, {profile?.display_name || 'Player'}!</p>
+              <p className="text-muted-foreground">Welcome back, {profile?.display_name || displayName || 'Player'}!</p>
             </div>
-            <Button onClick={() => navigate("/settings")} className="w-full md:w-auto">
-              <Edit2Icon className="mr-2 h-4 w-4" /> Edit Profile
+            <Button 
+              onClick={handleSaveProfile} 
+              disabled={isSaving}
+              className="w-full md:w-auto"
+            >
+              {isSaving ? (
+                "Saving..."
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" /> Save Changes
+                </>
+              )}
             </Button>
           </div>
           
@@ -160,22 +227,33 @@ const Account = () => {
                       <AvatarImage src={profile.avatar_url} alt={profile.display_name || "Profile"} />
                     ) : (
                       <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                        {getInitials(profile?.display_name)}
+                        {getInitials(displayName || profile?.display_name)}
                       </AvatarFallback>
                     )}
                   </Avatar>
                 </div>
-                <CardTitle className="text-2xl">{profile?.display_name || "User"}</CardTitle>
+                <CardTitle className="text-2xl">
+                  <Input
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                    className="text-center text-xl font-semibold"
+                  />
+                </CardTitle>
                 <CardDescription className="flex items-center justify-center gap-1">
                   <User className="h-3 w-3" /> 
                   {user?.id && user.id.substring(0, 8)}
                 </CardDescription>
                 
-                {profile?.bio && (
-                  <div className="mt-4 text-sm text-center">
-                    "{profile.bio}"
-                  </div>
-                )}
+                <div className="mt-4 text-sm text-center">
+                  <Textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Add a short bio..."
+                    className="text-center"
+                    rows={3}
+                  />
+                </div>
               </CardHeader>
               
               <CardContent className="space-y-4">
@@ -199,14 +277,19 @@ const Account = () => {
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Trophy className="mr-2 h-4 w-4" />
-                    Leaderboard
+                    Leaderboard Visibility
                   </div>
-                  <Badge variant={profile?.leaderboard_opt_in ? "default" : "outline"}>
-                    {profile?.leaderboard_opt_in ? "Visible" : "Hidden"}
-                  </Badge>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="leaderboard-visibility" 
+                    checked={leaderboardOptIn}
+                    onCheckedChange={setLeaderboardOptIn}
+                  />
+                  <Label htmlFor="leaderboard-visibility">{leaderboardOptIn ? "Visible" : "Hidden"}</Label>
                 </div>
               </CardContent>
               
