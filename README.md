@@ -45,6 +45,8 @@ The game supports **multiple input methods**, features a responsive and accessib
 - **Achievements**: Unlock achievements as you solve puzzles of different difficulties, achieve time milestones, and develop your skills.
 - **Tutorial Mode**: New to the game? Check out our step-by-step tutorial explaining the rules and strategies.
 - **Undo/Redo**: Made a mistake? Use the undo/redo buttons to step back and forth through your moves.
+- **Custom Loading Screens**: Enjoy beautiful, animated loading screens while the game prepares each puzzle.
+- **Responsive Design**: Play on any device with our fully responsive and adaptive user interface.
 
 ## Release Date
 
@@ -52,6 +54,14 @@ The game supports **multiple input methods**, features a responsive and accessib
 🚀 **Full Launch**: May 23, 2025
 
 ## Changelog
+
+### May 23, 2025
+- Enhanced preview page with modern layout and interactive animations
+- Added custom loading screens with progress indicators for all pages
+- Implemented scroll-responsive animated navbar 
+- Fixed testimonial display issues and improved visual consistency
+- Enhanced mobile responsiveness across all pages
+- Added more comprehensive sitemap with recent updates section
 
 ### May 22, 2025
 - Added achievements system with multiple unlockable rewards
