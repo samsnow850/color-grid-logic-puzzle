@@ -22,13 +22,16 @@ const SignInForm = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          redirectTo: window.location.origin + '/account'
+        }
       });
 
       if (error) {
         toast.error(error.message);
       } else {
         toast.success("Signed in successfully!");
-        navigate("/");
+        navigate("/account");
       }
     } catch (error) {
       console.error("Error signing in:", error);
@@ -82,7 +85,7 @@ const SignInForm = () => {
       </div>
       
       <div className="flex justify-center">
-        <GoogleAuthButton buttonType="signin_with" onSuccess={() => navigate("/")} />
+        <GoogleAuthButton buttonType="signin_with" onSuccess={() => navigate("/account")} />
       </div>
     </form>
   );

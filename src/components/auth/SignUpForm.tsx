@@ -26,7 +26,8 @@ const SignUpForm = () => {
         data: {
           first_name: firstName,
           last_name: lastName,
-        }
+        },
+        redirectTo: window.location.origin + '/account'
       };
 
       const { data, error } = await supabase.auth.signUp({
@@ -114,7 +115,7 @@ const SignUpForm = () => {
       </div>
       
       <div className="flex justify-center">
-        <GoogleAuthButton buttonType="signup_with" onSuccess={() => navigate("/")} />
+        <GoogleAuthButton buttonType="signup_with" onSuccess={() => navigate("/account")} />
       </div>
     </form>
   );

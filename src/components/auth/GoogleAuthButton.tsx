@@ -39,6 +39,8 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
+          auto_select: false,
+          cancel_on_tap_outside: true,
         });
         
         // Render the button
@@ -60,9 +62,13 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
   const handleGoogleSignIn = async (response: GoogleCredentialResponse) => {
     try {
       if (response.credential) {
+        // The redirect will be handled by Supabase based on settings in the Supabase dashboard
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: response.credential,
+          options: {
+            redirectTo: 'https://color-grid-logic-puzzle.lovable.app/account'
+          }
         });
 
         if (error) {
