@@ -84,6 +84,12 @@ const DailyPuzzle = () => {
         setOriginalGrid(JSON.parse(JSON.stringify(storedPuzzle.puzzle)));
         setSolution(storedPuzzle.solution);
         
+        // Calculate time until next puzzle even if not completed
+        const tomorrow = new Date(sfDate);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        setNextPuzzleTime(tomorrow);
+        
         // Set colors (hard difficulty = 9 colors)
         setColors([
           "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
@@ -96,6 +102,12 @@ const DailyPuzzle = () => {
         setGrid(dailyPuzzle.puzzle);
         setOriginalGrid(JSON.parse(JSON.stringify(dailyPuzzle.puzzle)));
         setSolution(dailyPuzzle.solution);
+        
+        // Calculate time until next puzzle
+        const tomorrow = new Date(sfDate);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        setNextPuzzleTime(tomorrow);
         
         // Store the daily puzzle
         storeDailyPuzzle(dailyPuzzle);
@@ -244,13 +256,22 @@ const DailyPuzzle = () => {
             </div>
           </div>
           
+          {nextPuzzleTime && (
+            <div className="mb-4 py-2 px-4 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+              <Clock className="mr-2 text-purple-800 dark:text-purple-300" size={18} />
+              <span className="font-medium">
+                Puzzle resets in: <span className="font-mono font-bold">{timeUntilNextPuzzle}</span>
+              </span>
+            </div>
+          )}
+          
           {error ? (
             <Alert variant="destructive" className="mb-6">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : dailyCompleted ? (
-            <Alert className="mb-6 bg-purple-100 text-purple-800 border-purple-200">
-              <Info className="h-4 w-4 text-purple-800" />
+            <Alert className="mb-6 bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-300">
+              <Info className="h-4 w-4 text-purple-800 dark:text-purple-300" />
               <AlertDescription className="flex items-center gap-2">
                 You've completed today's puzzle! Next puzzle in{" "}
                 <span className="font-mono font-bold flex items-center">
@@ -261,7 +282,7 @@ const DailyPuzzle = () => {
             </Alert>
           ) : null}
           
-          <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg">
+          <div className="bg-white dark:bg-gray-800 p-4 md:p-8 rounded-lg shadow-lg">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
               <ColorGrid 
                 grid={grid}

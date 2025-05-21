@@ -18,7 +18,6 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import Contact from "./pages/Contact";
 import Leaderboard from "./pages/Leaderboard";
-import Account from "./pages/Account";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import Sitemap from "./pages/Sitemap";
@@ -44,10 +43,11 @@ const App = () => (
               <Route path="/terms-of-use" element={<PageWrapper><TermsOfUse /></PageWrapper>} />
               <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
               <Route path="/leaderboard" element={<PageWrapper><Leaderboard /></PageWrapper>} />
-              <Route path="/account" element={<PageWrapper><Account /></PageWrapper>} />
               <Route path="/settings" element={<PageWrapper><Settings /></PageWrapper>} />
               <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
               <Route path="/sitemap" element={<PageWrapper><Sitemap /></PageWrapper>} />
+              {/* Redirect /account to /settings */}
+              <Route path="/account" element={<PageWrapper><Settings /></PageWrapper>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
             </Routes>

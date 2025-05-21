@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, ArrowDown, Star, Award, Clock } from "lucide-react";
+import { Info, Star, Award, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatDate, scrollToTop } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -132,11 +132,11 @@ const Index = () => {
             className="grid gap-4 sm:flex sm:flex-wrap sm:justify-center max-w-lg mx-auto"
             variants={itemVariants}
           >
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 hover:text-white" asChild>
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white hover:text-white" asChild>
               <Link to="/game">Play Game</Link>
             </Button>
             
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 hover:text-white" asChild>
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white" asChild>
               <Link to="/daily-puzzle">Daily Challenge</Link>
             </Button>
             
@@ -156,27 +156,6 @@ const Index = () => {
               className="border-purple-300 hover:bg-purple-100 hover:text-purple-800"
             >
               Changelog
-            </Button>
-          </motion.div>
-
-          <motion.div 
-            className="mt-16 absolute bottom-10 left-1/2 transform -translate-x-1/2"
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            variants={itemVariants}
-          >
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => {
-                window.scrollTo({
-                  top: window.innerHeight,
-                  behavior: "smooth"
-                });
-              }}
-            >
-              <ArrowDown className="w-6 h-6 text-purple-600" />
-              <span className="sr-only">Scroll Down</span>
             </Button>
           </motion.div>
         </motion.div>
@@ -327,7 +306,17 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
       </DialogHeader>
       <div className="space-y-6">
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date())} - Beta 2.6</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date())} - Beta 2.7</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Combined Settings and Account pages into a single page</li>
+            <li>Added improved theme selector with button choices</li>
+            <li>Enhanced Daily Challenge page with permanent reset timer display</li>
+            <li>Fixed button hover states for better visibility</li>
+            <li>Updated footer with developer information</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 86400000))} - Beta 2.6</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Added daily puzzle challenge feature</li>
             <li>Fixed Medium (6×6) grid color display issues</li>
@@ -337,7 +326,7 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
           </ul>
         </div>
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 86400000))} - Beta 2.5</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 172800000))} - Beta 2.5</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Added animated hero section to homepage</li>
             <li>Implemented loading screens for all pages</li>
@@ -377,53 +366,6 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
             <li>Implemented avatar upload functionality</li>
             <li>Introduced bio section for user profiles</li>
             <li>Enhanced leaderboard with profile integration</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 14, 2025 - Beta 2.1</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Added sound effects for game interactions</li>
-            <li>Implemented background music toggle feature</li>
-            <li>Enhanced grid number visibility options</li>
-            <li>Fixed several UI/UX issues reported by beta testers</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 12, 2025 - Beta 2.0</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Launched comprehensive user settings page</li>
-            <li>Added leaderboard opt-in/out feature</li>
-            <li>Implemented "Coming Soon" feature previews</li>
-            <li>Created Help & FAQ section with troubleshooting guides</li>
-            <li>Added bug reporting system</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 10, 2025 - Beta 1.2</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Implemented user account management</li>
-            <li>Added email and password change functionality</li>
-            <li>Created account deletion process</li>
-            <li>Enhanced security for user data</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 8, 2025 - Beta 1.1</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Released leaderboard system</li>
-            <li>Added score tracking and persistence</li>
-            <li>Implemented user authentication requirements</li>
-            <li>Fixed several critical gameplay bugs</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 5, 2025 - Alpha Release</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Initial alpha release with core gameplay mechanics</li>
-            <li>Implemented three difficulty levels (Easy, Medium, Hard)</li>
-            <li>Added basic user interface and responsive design</li>
-            <li>Released tutorial for new players</li>
-            <li>Created puzzle generation algorithm</li>
           </ul>
         </div>
       </div>
