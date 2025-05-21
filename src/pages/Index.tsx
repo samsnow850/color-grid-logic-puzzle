@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -127,6 +126,15 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
         <DialogTitle className="text-2xl font-bold">Changelog</DialogTitle>
       </DialogHeader>
       <div className="space-y-6">
+        <div>
+          <h3 className="font-bold text-lg">May 21, 2025 - Beta 2.4</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Improved sitemap with clickable navigation buttons</li>
+            <li>Fixed Medium (6×6) grid color display issues</li>
+            <li>Added scroll-to-top functionality for better navigation</li>
+            <li>Enhanced mobile experience with hamburger menu</li>
+          </ul>
+        </div>
         <div>
           <h3 className="font-bold text-lg">May 20, 2025 - Security Update</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">

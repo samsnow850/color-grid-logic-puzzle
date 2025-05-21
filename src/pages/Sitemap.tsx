@@ -2,6 +2,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { scrollToTop } from "@/lib/utils";
 
 const Sitemap = () => {
   const sitePages = [
@@ -34,11 +36,19 @@ const Sitemap = () => {
           {sitePages.map((page) => (
             <div key={page.path} className="border rounded-lg p-4 hover:border-primary transition-colors">
               <h2 className="text-xl font-semibold mb-2">
-                <Link to={page.path} className="hover:text-primary transition-colors">
-                  {page.title}
-                </Link>
+                {page.title}
               </h2>
-              <p className="text-gray-600">{page.description}</p>
+              <p className="text-gray-600 mb-3">{page.description}</p>
+              <Button 
+                variant="outline" 
+                asChild 
+                className="w-full"
+                onClick={scrollToTop}
+              >
+                <Link to={page.path}>
+                  Go to {page.title}
+                </Link>
+              </Button>
             </div>
           ))}
         </div>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import ColorPalette from "@/components/game/ColorPalette";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { scrollToTop } from "@/lib/utils";
 
 const Game = () => {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("easy");
@@ -26,8 +28,33 @@ const Game = () => {
   const [grid, setGrid] = useState<string[][]>([]);
   const [originalGrid, setOriginalGrid] = useState<string[][]>([]);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
-  const [colors, setColors] = useState<string[]>([]);
+  const [colors, setColors] = useState<string[]>([
+    "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
+  ]);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize with preview colors based on difficulty
+  useEffect(() => {
+    let colorCount = 4;
+    
+    if (difficulty === "medium") {
+      colorCount = 6;
+      setColors([
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400"
+      ]);
+    } else if (difficulty === "hard") {
+      colorCount = 9;
+      setColors([
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+      ]);
+    } else {
+      setColors([
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
+      ]);
+    }
+  }, [difficulty]);
 
   const startNewGame = () => {
     let newGridSize = 4;
@@ -35,6 +62,7 @@ const Game = () => {
     
     try {
       setError(null);
+      scrollToTop();
       
       if (difficulty === "medium") {
         newGridSize = 6;
@@ -240,6 +268,7 @@ const Game = () => {
               onClick={() => {
                 setShowGameOverScreen(false);
                 setShowTitleScreen(true);
+                scrollToTop();
               }}
             >
               Main Menu
