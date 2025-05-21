@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,7 +85,7 @@ const BenefitCard = ({ icon, title, items, gradientFrom, gradientTo, delay = 0 }
 };
 
 // Testimonial card component
-const TestimonialCard = ({ quote, name, title, image, delay = 0 }) => {
+const TestimonialCard = ({ quote, name, title, delay = 0 }) => {
   const ref = React.useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   
@@ -108,8 +107,8 @@ const TestimonialCard = ({ quote, name, title, image, delay = 0 }) => {
         </div>
         <p className="text-gray-700 italic mb-4 flex-1">"{quote}"</p>
         <div className="flex items-center mt-auto">
-          <div className="w-10 h-10 rounded-full bg-gray-200 mr-3 overflow-hidden">
-            {image && <img src={image} alt={name} className="w-full h-full object-cover" />}
+          <div className="w-10 h-10 rounded-full bg-gray-200 mr-3 overflow-hidden flex items-center justify-center text-gray-500">
+            {name.charAt(0)}
           </div>
           <div>
             <p className="font-semibold">{name}</p>
@@ -670,7 +669,6 @@ const Preview = () => {
                   quote={testimonial.quote}
                   name={testimonial.name}
                   title={testimonial.title}
-                  image={testimonial.image}
                   delay={testimonial.delay}
                 />
               ))}
