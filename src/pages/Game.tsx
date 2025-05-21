@@ -36,9 +36,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronsUpDown, Confetti, HelpCircle, RefreshCw, Settings, Timer, User2, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronsUpDown, HelpCircle, RefreshCw, Settings, Timer, User2, XCircle } from "lucide-react";
 import PageWrapper from "@/components/PageWrapper";
 import ColorPalette from "@/components/game/ColorPalette";
+import ColorGrid from "@/components/game/ColorGrid";
 
 const Game = () => {
   const [grid, setGrid] = useState<string[][]>([]);
@@ -53,7 +54,7 @@ const Game = () => {
   const [showSolution, setShowSolution] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-	const [showMediumWarning, setShowMediumWarning] = useState(false);
+  const [showMediumWarning, setShowMediumWarning] = useState(false);
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
@@ -66,7 +67,7 @@ const Game = () => {
   const { user } = useAuth();
 
   const colors = ["bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400", "bg-purple-400", "bg-orange-400", "bg-teal-400", "bg-pink-400", "bg-indigo-400"];
-
+  
   // Function to handle difficulty changes
   const handleDifficultyChange = (value: "easy" | "medium" | "hard") => {
     setDifficulty(value);
@@ -142,7 +143,7 @@ const Game = () => {
     setAvailableHints(hintCount);
 
     setTimeout(() => {
-      const newGrid = generateGrid(newGridSize, colorCount);
+      const newGrid = generateGrid(newGridSize, difficulty as any);
       setGrid(newGrid);
       const solvedGrid = solvePuzzle(newGrid);
       setSolution(solvedGrid);
@@ -153,7 +154,7 @@ const Game = () => {
   // Cell selection
   const handleCellClick = (row: number, col: number) => {
     if (selectedColor && grid[row][col] === "") {
-      if (isValidPlacement(grid, solution, row, col, selectedColor)) {
+      if (isValidPlacement(grid, row, col, selectedColor, newGridSize)) {
         const newGrid = grid.map((rowArray, rowIndex) =>
           rowIndex === row
             ? rowArray.map((cellValue, colIndex) =>
@@ -162,7 +163,7 @@ const Game = () => {
             : rowArray
         );
         setGrid(newGrid);
-        if (checkWin(newGrid, solution)) {
+        if (checkWin(newGrid)) {
           setIsSolved(true);
           setIsRunning(false);
           toast({
@@ -199,7 +200,7 @@ const Game = () => {
       setGrid(newGrid);
       setAvailableHints(availableHints - 1);
 
-      if (checkWin(newGrid, solution)) {
+      if (checkWin(newGrid)) {
         setIsSolved(true);
         setIsRunning(false);
         toast({

@@ -45,7 +45,8 @@ const DailyPuzzle = () => {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const gridSize = 10; // Daily puzzle is now 10x10
-  
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
   // Check if user is logged in
   useEffect(() => {
     if (!user) {
@@ -327,7 +328,11 @@ const DailyPuzzle = () => {
 
               <div className="w-full md:w-auto">
                 <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
-                <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
+                <ColorPalette 
+                  colors={colors.slice(0, gridSize)} 
+                  selectedColor={selectedColor} 
+                  onColorSelect={setSelectedColor} 
+                />
                 
                 <div className="mt-8 space-y-4">
                   <div className="flex gap-2 justify-center md:justify-start">
