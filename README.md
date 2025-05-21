@@ -1,73 +1,44 @@
-# Welcome to your Lovable project
+# Welcome to Color Grid Logic
 
-## Project info
+**🎮 Play now at:**  
+[![Play the Game](https://img.shields.io/badge/-🎮%20Play%20Color%20Grid%20Logic-blueviolet?style=for-the-badge)](https://color-grid-logic-puzzle.lovable.app)
 
-**URL**: https://lovable.dev/projects/4fd330dc-52da-41ac-aa62-8a40b1aed642
+**🔐 Log In / Sign Up:**  
+[![Log In or Sign Up](https://img.shields.io/badge/-🔐%20Access%20Your%20Account-gray?style=for-the-badge)](https://color-grid-logic-puzzle.lovable.app/auth)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## About the Game
 
-**Use Lovable**
+**Color Grid Logic** is a modern, browser-based puzzle game inspired by Sudoku — but with a twist.  
+Instead of numbers, you solve colorful logic grids using shapes and colors. Each puzzle requires you to fill a grid where:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4fd330dc-52da-41ac-aa62-8a40b1aed642) and start prompting.
+- Each row, column, and sub-grid must contain **each color or shape exactly once**
+- Puzzles range in difficulty and size: 4×4, 6×6, or 9×9
+- Hints are provided, but solving the puzzle is up to your logic skills!
 
-Changes made via Lovable will be committed automatically to this repo.
+The game supports **multiple input methods**, features a responsive and accessible design, and includes:
 
-**Use your preferred IDE**
+- Multiple difficulty levels
+- Mouse and keyboard input
+- Custom puzzle generation logic
+- Leaderboard with user profiles
+- Light/dark mode toggle
+- Fully functional account system
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## How to Play
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Select a difficulty from the main menu.
+2. Click on any grid cell to highlight it.
+3. Input a color or shape using either:
+   - Your keyboard (keys 1–N)
+   - The on-screen palette
+4. Make sure each row, column, and box has no repeating values.
+5. Solve the entire puzzle to win — or reset to try again!
 
-Follow these steps:
+💡 Tip: Use logic, not guessing — it’s all solvable with reasoning!
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Release Date
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/4fd330dc-52da-41ac-aa62-8a40b1aed642) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+🟢 **Public Beta**: May 20, 2025  
+🚀 **Full Launch**: May 23, 2025
