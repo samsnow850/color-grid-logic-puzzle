@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,18 +14,15 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/supabaseClient";
-import { PageWrapper } from "@/components/PageWrapper";
+import PageWrapper from "@/components/PageWrapper";
 import { formatTime } from "@/lib/utils";
 import {
   Trophy,
   Lightbulb,
-  History,
-  GraduationCap,
-  Confetti,
+  GraduationCap, // Replacing Confetti with GraduationCap
   Pause,
   Play,
   HelpCircle,
-  ChevronsLeft,
 } from "lucide-react";
 
 interface Cell {
@@ -49,6 +47,94 @@ const Game = () => {
   const [totalTime, setTotalTime] = useState(180);
   const [timeLeft, setTimeLeft] = useState(totalTime);
   const [paused, setPaused] = useState(false);
+
+  // Define handleGameOver before it's used in useEffect
+  const handleGameOver = useCallback(async (success: boolean, score: number, timeLeft: number) => {
+    setIsGameOver(true);
+    setPaused(false);
+    
+    const finalScore = success ? score + Math.floor(timeLeft) : score;
+    setScore(finalScore);
+    
+    // Save score to Supabase if user is logged in
+    if (user) {
+      try {
+        const { error } = await supabase
+          .from('game_scores')
+          .insert([
+            { 
+              user_id: user.id, 
+              score: finalScore,
+              difficulty: difficulty,
+              completed: success,
+              time_taken: totalTime - timeLeft
+            }
+          ]);
+          
+        if (error) {
+          console.error("Error saving score:", error);
+          toast({
+            title: "Failed to save score",
+            description: "There was an error saving your score",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Score saved",
+            description: "Your score was saved successfully!",
+          });
+          
+          // Update user stats
+          const { data: statsData, error: statsError } = await supabase
+            .from('user_stats')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (statsError && statsError.code !== 'PGRST116') {
+            console.error("Error fetching stats:", statsError);
+          }
+          
+          const stats = statsData || {
+            user_id: user.id,
+            games_played: 0,
+            games_won: 0,
+            total_score: 0,
+            average_score: 0,
+            highest_score: 0
+          };
+          
+          const newStats = {
+            games_played: stats.games_played + 1,
+            games_won: stats.games_won + (success ? 1 : 0),
+            total_score: stats.total_score + finalScore,
+            average_score: Math.round((stats.total_score + finalScore) / (stats.games_played + 1)),
+            highest_score: Math.max(stats.highest_score, finalScore)
+          };
+          
+          const { error: updateError } = await supabase
+            .from('user_stats')
+            .upsert([
+              { 
+                user_id: user.id,
+                ...newStats
+              }
+            ]);
+            
+          if (updateError) {
+            console.error("Error updating stats:", updateError);
+          }
+        }
+      } catch (err) {
+        console.error("Error in score saving process:", err);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive"
+        });
+      }
+    }
+  }, [difficulty, totalTime, user, toast]);
 
   useEffect(() => {
     if (isGameStarted && !isGameOver && timeLeft > 0 && !paused) {
@@ -189,82 +275,6 @@ const Game = () => {
       });
     }
   }, [grid, score, timeLeft, handleGameOver, toast]);
-
-  const handleGameOver = useCallback(async (success: boolean, score: number, timeLeft: number) => {
-    setIsGameOver(true);
-    setPaused(false);
-    
-    const finalScore = success ? score + Math.floor(timeLeft) : score;
-    setScore(finalScore);
-    
-    // Save score to Supabase if user is logged in
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('game_scores')
-          .insert([
-            { 
-              user_id: user.id, 
-              score: finalScore,
-              difficulty: difficulty,
-              completed: success,
-              time_taken: totalTime - timeLeft
-            }
-          ]);
-          
-        if (error) {
-          console.error("Error saving score:", error);
-          toast.error("Failed to save your score");
-        } else {
-          toast.success("Score saved successfully!");
-          
-          // Update user stats
-          const { data: statsData, error: statsError } = await supabase
-            .from('user_stats')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-            
-          if (statsError && statsError.code !== 'PGRST116') {
-            console.error("Error fetching stats:", statsError);
-          }
-          
-          const stats = statsData || {
-            user_id: user.id,
-            games_played: 0,
-            games_won: 0,
-            total_score: 0,
-            average_score: 0,
-            highest_score: 0
-          };
-          
-          const newStats = {
-            games_played: stats.games_played + 1,
-            games_won: stats.games_won + (success ? 1 : 0),
-            total_score: stats.total_score + finalScore,
-            average_score: Math.round((stats.total_score + finalScore) / (stats.games_played + 1)),
-            highest_score: Math.max(stats.highest_score, finalScore)
-          };
-          
-          const { error: updateError } = await supabase
-            .from('user_stats')
-            .upsert([
-              { 
-                user_id: user.id,
-                ...newStats
-              }
-            ]);
-            
-          if (updateError) {
-            console.error("Error updating stats:", updateError);
-          }
-        }
-      } catch (err) {
-        console.error("Error in score saving process:", err);
-        toast.error("An unexpected error occurred");
-      }
-    }
-  }, [difficulty, totalTime, user, toast]);
 
   const handlePlayAgain = () => {
     setIsGameOver(false);
@@ -522,7 +532,7 @@ const Game = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="border rounded-md p-4">
                 <div className="flex items-center space-x-3 mb-2">
-                  <Confetti className="h-5 w-5 text-green-500" />
+                  <Trophy className="h-5 w-5 text-green-500" />
                   <h3 className="text-lg font-semibold">First Game</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -552,7 +562,7 @@ const Game = () => {
 
               <div className="border rounded-md p-4">
                 <div className="flex items-center space-x-3 mb-2">
-                  <Brain className="h-5 w-5 text-red-500" />
+                  <GraduationCap className="h-5 w-5 text-red-500" />
                   <h3 className="text-lg font-semibold">Hardcore Solver</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
