@@ -7,9 +7,10 @@ interface GameTimerProps {
   isRunning: boolean;
   onPause: () => void;
   onResume: () => void;
+  onUpdate?: (seconds: number) => void; // Make this optional to avoid breaking changes
 }
 
-const GameTimer = ({ isRunning, onPause, onResume }: GameTimerProps) => {
+const GameTimer = ({ isRunning, onPause, onResume, onUpdate }: GameTimerProps) => {
   const [seconds, setSeconds] = useState<number>(0);
   
   useEffect(() => {
@@ -17,14 +18,21 @@ const GameTimer = ({ isRunning, onPause, onResume }: GameTimerProps) => {
     
     if (isRunning) {
       timer = window.setInterval(() => {
-        setSeconds((prevSeconds) => prevSeconds + 1);
+        setSeconds((prevSeconds) => {
+          const newValue = prevSeconds + 1;
+          // Call onUpdate if provided
+          if (onUpdate) {
+            onUpdate(newValue);
+          }
+          return newValue;
+        });
       }, 1000);
     }
     
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isRunning]);
+  }, [isRunning, onUpdate]);
   
   const formatTime = (totalSeconds: number): string => {
     const minutes = Math.floor(totalSeconds / 60);

@@ -34,7 +34,8 @@ export const saveGameResult = async (
   difficulty: string,
   timeTaken: number,
   errorCount: number = 0,
-  completed: boolean = true
+  completed: boolean = true,
+  usedHint: boolean = false
 ): Promise<number> => {
   if (!userId) return 0;
   
@@ -45,7 +46,8 @@ export const saveGameResult = async (
     score,
     difficulty,
     timeTaken,
-    completed
+    completed,
+    usedHint
   );
   
   return score;

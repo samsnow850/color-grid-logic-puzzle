@@ -18,7 +18,7 @@ import GameTimer from "@/components/game/GameTimer";
 import PauseOverlay from "@/components/game/PauseOverlay";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, Trophy, ChevronRight, HelpCircle } from "lucide-react";
+import { Info, Trophy, ChevronRight, HelpCircle, Party } from "lucide-react";
 import { scrollToTop } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -222,7 +222,8 @@ const Game = () => {
         difficulty === "medium" ? "easy" : difficulty, 
         timeTaken,
         errorCount,
-        true
+        true,
+        usedHint
       );
       setFinalScore(score);
       
@@ -276,7 +277,8 @@ const Game = () => {
         difficulty === "medium" ? "easy" : difficulty,
         timeTaken,
         errorCount,
-        false
+        false,
+        usedHint
       );
     }
   };
@@ -635,7 +637,7 @@ const Game = () => {
             <div className="py-6">
               <div className="text-center space-y-4">
                 <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Trophy className="h-10 w-10 text-primary" />
+                  <Party className="h-10 w-10 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold">{latestAchievement.name}</h3>
                 <p className="text-muted-foreground">

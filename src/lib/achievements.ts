@@ -3,299 +3,131 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface Achievement {
-  id: string;
+  id?: string;
   type: string;
   name: string;
   description: string;
-  progress?: number;
-  progressTarget?: number;
   achieved: boolean;
+  achieved_at?: string | null;
+  progress?: number;
+  goal?: number;
 }
 
 export const ACHIEVEMENT_TYPES = {
-  FIRST_VICTORY: "first_victory",
-  EASY_MASTER: "easy_master",
-  HARD_MASTER: "hard_master",
-  SPEED_DEMON: "speed_demon",
-  NO_HELP: "no_help",
-  DAILY_CHALLENGER: "daily_challenger"
+  first_victory: "first_victory",
+  easy_master: "easy_master",
+  hard_master: "hard_master",
+  speed_demon: "speed_demon",
+  no_help: "no_help",
+  daily_challenger: "daily_challenger",
 };
 
-export const ACHIEVEMENTS: Achievement[] = [
-  {
-    id: "first_victory",
-    type: ACHIEVEMENT_TYPES.FIRST_VICTORY,
-    name: "First Victory",
-    description: "Complete your first puzzle",
-    achieved: false
-  },
-  {
-    id: "easy_master",
-    type: ACHIEVEMENT_TYPES.EASY_MASTER,
-    name: "Easy Master",
-    description: "Complete 5 Easy puzzles",
-    progress: 0,
-    progressTarget: 5,
-    achieved: false
-  },
-  {
-    id: "hard_master",
-    type: ACHIEVEMENT_TYPES.HARD_MASTER,
-    name: "Hard Master",
-    description: "Complete 3 Hard puzzles",
-    progress: 0,
-    progressTarget: 3,
-    achieved: false
-  },
-  {
-    id: "speed_demon",
-    type: ACHIEVEMENT_TYPES.SPEED_DEMON,
-    name: "Speed Demon",
-    description: "Complete a puzzle in under 2 minutes",
-    achieved: false
-  },
-  {
-    id: "no_help",
-    type: ACHIEVEMENT_TYPES.NO_HELP,
-    name: "No Help Needed",
-    description: "Complete a puzzle without using hints",
-    achieved: false
-  },
-  {
-    id: "daily_challenger",
-    type: ACHIEVEMENT_TYPES.DAILY_CHALLENGER,
-    name: "Daily Challenger",
-    description: "Complete 3 daily puzzles",
-    progress: 0,
-    progressTarget: 3,
-    achieved: false
-  }
-];
-
 export const getUserAchievements = async (userId: string): Promise<Achievement[]> => {
-  if (!userId) return [...ACHIEVEMENTS];
+  const achievements: Achievement[] = [
+    {
+      type: ACHIEVEMENT_TYPES.first_victory,
+      name: "First Victory",
+      description: "Complete your first puzzle",
+      achieved: false,
+    },
+    {
+      type: ACHIEVEMENT_TYPES.easy_master,
+      name: "Easy Master",
+      description: "Complete 5 Easy puzzles",
+      achieved: false,
+      progress: 0,
+      goal: 5,
+    },
+    {
+      type: ACHIEVEMENT_TYPES.hard_master,
+      name: "Hard Master",
+      description: "Complete 3 Hard puzzles",
+      achieved: false,
+      progress: 0,
+      goal: 3,
+    },
+    {
+      type: ACHIEVEMENT_TYPES.speed_demon,
+      name: "Speed Demon",
+      description: "Complete a puzzle in under 2 minutes",
+      achieved: false,
+    },
+    {
+      type: ACHIEVEMENT_TYPES.no_help,
+      name: "No Help Needed",
+      description: "Complete a puzzle without using hints",
+      achieved: false,
+    },
+    {
+      type: ACHIEVEMENT_TYPES.daily_challenger,
+      name: "Daily Challenger",
+      description: "Complete 3 daily puzzles",
+      achieved: false,
+      progress: 0,
+      goal: 3,
+    },
+  ];
+  
+  if (!userId) return achievements;
   
   try {
-    const { data: achievementData, error } = await supabase
-      .from('achievements')
-      .select('*')
-      .eq('user_id', userId);
+    // Get user's unlocked achievements from the database
+    const { data: unlockedAchievements, error } = await supabase
+      .from("achievements")
+      .select("*")
+      .eq("user_id", userId);
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching achievements:", error);
+      return achievements;
+    }
     
-    // Copy the achievements list and mark those that have been achieved
-    const achievements = [...ACHIEVEMENTS];
+    // Mark achievements as achieved if they are in the database
+    if (unlockedAchievements && unlockedAchievements.length > 0) {
+      unlockedAchievements.forEach((achievement) => {
+        const index = achievements.findIndex((a) => a.type === achievement.achievement_type);
+        if (index >= 0) {
+          achievements[index].achieved = true;
+          achievements[index].achieved_at = achievement.achieved_at;
+          achievements[index].id = achievement.id;
+        }
+      });
+    }
     
-    // Create a map of achievement types that the user has earned
-    const earnedAchievements = new Map();
-    achievementData?.forEach(item => {
-      earnedAchievements.set(item.achievement_type, true);
-    });
-    
-    // Update achievements with user progress
-    for (let achievement of achievements) {
-      achievement.achieved = earnedAchievements.has(achievement.type);
+    // Calculate progress for achievements that have progress tracking
+    const { data: gameScores } = await supabase
+      .from("game_scores")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("completed", true);
       
-      // Update progress for specific achievements
-      if (achievement.type === ACHIEVEMENT_TYPES.EASY_MASTER) {
-        achievement.progress = await getGameCountByDifficulty(userId, 'easy');
-      } else if (achievement.type === ACHIEVEMENT_TYPES.HARD_MASTER) {
-        achievement.progress = await getGameCountByDifficulty(userId, 'hard');
-      } else if (achievement.type === ACHIEVEMENT_TYPES.DAILY_CHALLENGER) {
-        achievement.progress = await getDailyPuzzleCount(userId);
+    if (gameScores) {
+      // Easy Master progress
+      const easyGames = gameScores.filter((score) => score.difficulty === "easy").length;
+      const easyMasterAchievement = achievements.find((a) => a.type === ACHIEVEMENT_TYPES.easy_master);
+      if (easyMasterAchievement) {
+        easyMasterAchievement.progress = Math.min(easyGames, easyMasterAchievement.goal || 5);
+      }
+      
+      // Hard Master progress
+      const hardGames = gameScores.filter((score) => score.difficulty === "hard").length;
+      const hardMasterAchievement = achievements.find((a) => a.type === ACHIEVEMENT_TYPES.hard_master);
+      if (hardMasterAchievement) {
+        hardMasterAchievement.progress = Math.min(hardGames, hardMasterAchievement.goal || 3);
+      }
+      
+      // Daily Challenger progress
+      const dailyGames = gameScores.filter((score) => score.difficulty === "daily").length;
+      const dailyChallengerAchievement = achievements.find((a) => a.type === ACHIEVEMENT_TYPES.daily_challenger);
+      if (dailyChallengerAchievement) {
+        dailyChallengerAchievement.progress = Math.min(dailyGames, dailyChallengerAchievement.goal || 3);
       }
     }
     
     return achievements;
-    
   } catch (error) {
-    console.error('Error fetching achievements:', error);
-    return [...ACHIEVEMENTS];
-  }
-};
-
-export const getGameCountByDifficulty = async (userId: string, difficulty: string): Promise<number> => {
-  try {
-    const { count, error } = await supabase
-      .from('game_scores')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('difficulty', difficulty)
-      .eq('completed', true);
-      
-    if (error) throw error;
-    
-    return count || 0;
-  } catch (error) {
-    console.error(`Error getting ${difficulty} games count:`, error);
-    return 0;
-  }
-};
-
-export const getDailyPuzzleCount = async (userId: string): Promise<number> => {
-  try {
-    const { count, error } = await supabase
-      .from('game_scores')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('difficulty', 'daily')
-      .eq('completed', true);
-      
-    if (error) throw error;
-    
-    return count || 0;
-  } catch (error) {
-    console.error('Error getting daily puzzle count:', error);
-    return 0;
-  }
-};
-
-export const unlockAchievement = async (userId: string, achievementType: string): Promise<boolean> => {
-  if (!userId) return false;
-  
-  try {
-    // First check if achievement already exists
-    const { data: existing } = await supabase
-      .from('achievements')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('achievement_type', achievementType)
-      .maybeSingle();
-      
-    if (existing) return false; // Already unlocked
-    
-    // Insert new achievement
-    const { error } = await supabase
-      .from('achievements')
-      .insert({
-        user_id: userId,
-        achievement_type: achievementType
-      });
-      
-    if (error) throw error;
-    
-    // Find the achievement details to display in toast
-    const achievementDetails = ACHIEVEMENTS.find(a => a.type === achievementType);
-    
-    if (achievementDetails) {
-      toast.success(`Achievement Unlocked: ${achievementDetails.name}`, {
-        description: achievementDetails.description,
-        duration: 5000
-      });
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error unlocking achievement:', error);
-    return false;
-  }
-};
-
-export const checkAndUnlockAchievements = async (
-  userId: string,
-  difficulty: string, 
-  timeTaken: number, 
-  usedHints: boolean
-): Promise<void> => {
-  if (!userId) return;
-  
-  try {
-    // First Victory
-    await unlockAchievement(userId, ACHIEVEMENT_TYPES.FIRST_VICTORY);
-    
-    // Easy Master
-    if (difficulty === 'easy') {
-      const easyGames = await getGameCountByDifficulty(userId, 'easy');
-      if (easyGames >= 5) {
-        await unlockAchievement(userId, ACHIEVEMENT_TYPES.EASY_MASTER);
-      }
-    }
-    
-    // Hard Master
-    if (difficulty === 'hard') {
-      const hardGames = await getGameCountByDifficulty(userId, 'hard');
-      if (hardGames >= 3) {
-        await unlockAchievement(userId, ACHIEVEMENT_TYPES.HARD_MASTER);
-      }
-    }
-    
-    // Daily Challenger
-    if (difficulty === 'daily') {
-      const dailyGames = await getDailyPuzzleCount(userId);
-      if (dailyGames >= 3) {
-        await unlockAchievement(userId, ACHIEVEMENT_TYPES.DAILY_CHALLENGER);
-      }
-    }
-    
-    // Speed Demon (under 2 minutes = 120 seconds)
-    if (timeTaken <= 120) {
-      await unlockAchievement(userId, ACHIEVEMENT_TYPES.SPEED_DEMON);
-    }
-    
-    // No Help Needed
-    if (!usedHints) {
-      await unlockAchievement(userId, ACHIEVEMENT_TYPES.NO_HELP);
-    }
-  } catch (error) {
-    console.error('Error checking achievements:', error);
-  }
-};
-
-export const updateUserStats = async (
-  userId: string,
-  score: number,
-  won: boolean
-): Promise<void> => {
-  if (!userId) return;
-  
-  try {
-    // First check if user already has stats
-    const { data: existingStats, error: fetchError } = await supabase
-      .from('user_stats')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-      
-    if (fetchError) throw fetchError;
-    
-    if (existingStats) {
-      // Update existing stats
-      const gamesPlayed = existingStats.games_played + 1;
-      const gamesWon = won ? existingStats.games_won + 1 : existingStats.games_won;
-      const totalScore = existingStats.total_score + score;
-      const averageScore = Math.round(totalScore / gamesPlayed);
-      const highestScore = Math.max(existingStats.highest_score, score);
-      
-      const { error: updateError } = await supabase
-        .from('user_stats')
-        .update({
-          games_played: gamesPlayed,
-          games_won: gamesWon,
-          total_score: totalScore,
-          average_score: averageScore,
-          highest_score: highestScore,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
-        
-      if (updateError) throw updateError;
-    } else {
-      // Create new stats record
-      const { error: insertError } = await supabase
-        .from('user_stats')
-        .insert({
-          user_id: userId,
-          games_played: 1,
-          games_won: won ? 1 : 0,
-          total_score: score,
-          average_score: score,
-          highest_score: score
-        });
-        
-      if (insertError) throw insertError;
-    }
-  } catch (error) {
-    console.error('Error updating user stats:', error);
+    console.error("Error processing achievements:", error);
+    return achievements;
   }
 };
 
@@ -304,29 +136,158 @@ export const recordGameScore = async (
   score: number,
   difficulty: string,
   timeTaken: number,
-  completed: boolean = true
+  completed: boolean = true,
+  usedHint: boolean = false
 ): Promise<void> => {
-  if (!userId) return;
-  
   try {
-    const { error } = await supabase
-      .from('game_scores')
+    // Add game score to the database
+    const { data: scoreData, error: scoreError } = await supabase
+      .from("game_scores")
       .insert({
         user_id: userId,
         score,
         difficulty,
         time_taken: timeTaken,
         completed
-      });
+      })
+      .select("*")
+      .single();
       
-    if (error) throw error;
-    
-    // If game was completed successfully, check achievements and update stats
-    if (completed) {
-      await updateUserStats(userId, score, true);
-      await checkAndUnlockAchievements(userId, difficulty, timeTaken, false);
+    if (scoreError) {
+      console.error("Error recording game score:", scoreError);
+      return;
     }
+    
+    // No need to check for achievements if game is not completed
+    if (!completed) return;
+    
+    // Check for achievements
+    const userAchievements = await getUserAchievements(userId);
+    const newAchievements = [];
+    
+    // First Victory
+    const firstVictory = userAchievements.find((a) => a.type === ACHIEVEMENT_TYPES.first_victory);
+    if (firstVictory && !firstVictory.achieved) {
+      newAchievements.push({
+        user_id: userId,
+        achievement_type: ACHIEVEMENT_TYPES.first_victory,
+      });
+    }
+    
+    // Speed Demon - Complete in under 2 minutes (120 seconds)
+    const speedDemon = userAchievements.find((a) => a.type === ACHIEVEMENT_TYPES.speed_demon);
+    if (speedDemon && !speedDemon.achieved && timeTaken < 120) {
+      newAchievements.push({
+        user_id: userId,
+        achievement_type: ACHIEVEMENT_TYPES.speed_demon,
+      });
+    }
+    
+    // No Help Needed
+    const noHelp = userAchievements.find((a) => a.type === ACHIEVEMENT_TYPES.no_help);
+    if (noHelp && !noHelp.achieved && !usedHint) {
+      newAchievements.push({
+        user_id: userId,
+        achievement_type: ACHIEVEMENT_TYPES.no_help,
+      });
+    }
+    
+    // Easy Master - 5 easy puzzles
+    const easyMaster = userAchievements.find((a) => a.type === ACHIEVEMENT_TYPES.easy_master);
+    if (easyMaster && !easyMaster.achieved && difficulty === "easy" && 
+        (easyMaster.progress || 0) >= 4) { // Already completed 4, this is the 5th
+      newAchievements.push({
+        user_id: userId,
+        achievement_type: ACHIEVEMENT_TYPES.easy_master,
+      });
+    }
+    
+    // Hard Master - 3 hard puzzles
+    const hardMaster = userAchievements.find((a) => a.type === ACHIEVEMENT_TYPES.hard_master);
+    if (hardMaster && !hardMaster.achieved && difficulty === "hard" && 
+        (hardMaster.progress || 0) >= 2) { // Already completed 2, this is the 3rd
+      newAchievements.push({
+        user_id: userId,
+        achievement_type: ACHIEVEMENT_TYPES.hard_master,
+      });
+    }
+    
+    // Daily Challenger - 3 daily puzzles
+    const dailyChallenger = userAchievements.find((a) => a.type === ACHIEVEMENT_TYPES.daily_challenger);
+    if (dailyChallenger && !dailyChallenger.achieved && difficulty === "daily" && 
+        (dailyChallenger.progress || 0) >= 2) { // Already completed 2, this is the 3rd
+      newAchievements.push({
+        user_id: userId,
+        achievement_type: ACHIEVEMENT_TYPES.daily_challenger,
+      });
+    }
+    
+    // Record new achievements
+    if (newAchievements.length > 0) {
+      const { error: achievementsError } = await supabase
+        .from("achievements")
+        .insert(newAchievements);
+        
+      if (achievementsError) {
+        console.error("Error recording achievements:", achievementsError);
+      } else {
+        toast.success(`Achievement${newAchievements.length > 1 ? 's' : ''} unlocked!`, {
+          description: "Check your achievements page to see what you've earned."
+        });
+      }
+    }
+    
+    // Update user stats
+    try {
+      // First, get current user stats
+      const { data: currentStats, error: statsError } = await supabase
+        .from("user_stats")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+        
+      if (statsError) {
+        console.error("Error fetching user stats:", statsError);
+        return;
+      }
+      
+      if (currentStats) {
+        // Update existing stats
+        const gamesPlayed = currentStats.games_played + 1;
+        const gamesWon = currentStats.games_won + 1;
+        const totalScore = currentStats.total_score + score;
+        const averageScore = Math.round(totalScore / gamesWon);
+        const highestScore = Math.max(currentStats.highest_score, score);
+        
+        await supabase
+          .from("user_stats")
+          .update({
+            games_played: gamesPlayed,
+            games_won: gamesWon,
+            total_score: totalScore,
+            average_score: averageScore,
+            highest_score: highestScore,
+            updated_at: new Date().toISOString()
+          })
+          .eq("user_id", userId);
+      } else {
+        // Create new stats record
+        await supabase
+          .from("user_stats")
+          .insert({
+            user_id: userId,
+            games_played: 1,
+            games_won: 1,
+            total_score: score,
+            average_score: score,
+            highest_score: score
+          });
+      }
+    } catch (error) {
+      console.error("Error updating user stats:", error);
+    }
+    
   } catch (error) {
-    console.error('Error recording game score:', error);
+    console.error("Error in recordGameScore:", error);
   }
 };

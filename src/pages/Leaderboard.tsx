@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,7 +63,7 @@ const Leaderboard = () => {
           difficulty,
           time_taken,
           created_at,
-          profiles (
+          profiles:user_id(
             display_name,
             avatar_url,
             leaderboard_opt_in
@@ -97,16 +96,22 @@ const Leaderboard = () => {
       
       if (error) throw error;
       
+      if (!data) return [];
+      
       // Filter out entries where user has opted out of leaderboard
       return data.filter(entry => {
-        // Include if no profile (shouldn't happen) or if they've opted in (or null default)
-        return !entry.profiles || entry.profiles.leaderboard_opt_in !== false;
-      });
+        // If profiles is null or has no leaderboard_opt_in property, default to including the entry
+        if (!entry.profiles || entry.profiles.leaderboard_opt_in === null) {
+          return true;
+        }
+        // Otherwise, only include if they've opted in
+        return entry.profiles.leaderboard_opt_in !== false;
+      }) as ScoreEntry[];
     },
     refetchOnWindowFocus: false,
   });
 
-  const getInitials = (name: string | null) => {
+  const getInitials = (name: string | null | undefined) => {
     if (!name) return "#";
     return name.charAt(0).toUpperCase();
   };
