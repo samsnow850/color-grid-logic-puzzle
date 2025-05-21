@@ -47,11 +47,11 @@ const Game = () => {
     ];
     
     if (difficulty === "medium") {
-      colorCount = 9; // Changed from 6 to 9
-      gridSizeValue = 9; // Changed from 6 to 9
+      colorCount = 7; // Changed to 7 for medium difficulty
+      gridSizeValue = 7; // Changed to 7 for medium difficulty
       previewColors = [
         "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
-        "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+        "bg-purple-400", "bg-pink-400", "bg-orange-400"
       ];
     } else if (difficulty === "hard") {
       colorCount = 9;
@@ -69,9 +69,21 @@ const Game = () => {
     for (let i = 0; i < gridSizeValue; i++) {
       for (let j = 0; j < gridSizeValue; j++) {
         // Calculate region boundaries for borders
-        const regionSize = Math.sqrt(gridSizeValue);
-        const isTopEdge = i % regionSize === 0;
-        const isLeftEdge = j % regionSize === 0;
+        let regionSize = Math.sqrt(gridSizeValue);
+        let isTopEdge = i % regionSize === 0;
+        let isLeftEdge = j % regionSize === 0;
+        
+        // Special case for 7x7 which doesn't have clean square regions
+        if (gridSizeValue === 7) {
+          // Define custom region boundaries for 7x7
+          const isInTopRegion = i < 3;
+          const isInMiddleRegion = i >= 3 && i < 5;
+          const isInLeftRegion = j < 3;
+          
+          isTopEdge = i === 0 || i === 3 || i === 5;
+          isLeftEdge = j === 0 || j === 3;
+        }
+        
         const isBottomEdge = i === gridSizeValue - 1;
         const isRightEdge = j === gridSizeValue - 1;
         
@@ -102,8 +114,8 @@ const Game = () => {
         style={{
           gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
-          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "180px" : "160px",
-          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "180px" : "160px",
+          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 7 ? "190px" : "160px",
+          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 7 ? "190px" : "160px",
         }}
       >
         {previewElements}
@@ -120,10 +132,9 @@ const Game = () => {
       setError(null);
       scrollToTop();
       
-      // For medium difficulty, use 9x9 instead of 6x6
       if (difficulty === "medium") {
-        newGridSize = 9;
-        colorCount = 9;
+        newGridSize = 7; // Changed to 7 for medium difficulty
+        colorCount = 7; // Use 7 colors for 7x7 grid
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
@@ -249,7 +260,7 @@ const Game = () => {
                   </div>
                   <div className="flex items-center space-x-2 mb-2">
                     <RadioGroupItem value="medium" id="medium" />
-                    <Label htmlFor="medium">Medium (9×9 with fewer colors)</Label>
+                    <Label htmlFor="medium">Medium (7×7)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="hard" id="hard" />

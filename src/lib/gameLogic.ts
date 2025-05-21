@@ -1,17 +1,26 @@
+
 export type DifficultyLevel = "easy" | "medium" | "hard";
 
 // Function to generate a new puzzle
 export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
   try {
     // Validate grid size
-    if (gridSize !== 4 && gridSize !== 9) {
+    if (gridSize !== 4 && gridSize !== 7 && gridSize !== 9) {
       throw new Error(`Invalid grid size: ${gridSize}`);
     }
 
-    // Ensure the grid size has a valid square root for region calculations
-    const regionSize = Math.sqrt(gridSize);
-    if (Math.floor(regionSize) !== regionSize) {
-      throw new Error(`Grid size must have an integer square root: ${gridSize}`);
+    // For 7x7, we need special handling for region size since sqrt(7) is not an integer
+    let regionSize: number;
+    if (gridSize === 7) {
+      // For 7x7 puzzles, we'll use irregular regions (not perfectly square)
+      // This is common in some Sudoku variants
+      regionSize = Math.ceil(Math.sqrt(gridSize));
+    } else {
+      // For 4x4 and 9x9, use regular square regions
+      regionSize = Math.sqrt(gridSize);
+      if (Math.floor(regionSize) !== regionSize) {
+        throw new Error(`Grid size must have an integer square root: ${gridSize}`);
+      }
     }
 
     // Create an empty grid
@@ -28,9 +37,9 @@ export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
     if (difficulty === "easy") {
       cellsToRemove = Math.floor(gridSize * gridSize * 0.4); // 40% cells removed
     } else if (difficulty === "medium") {
-      cellsToRemove = Math.floor(gridSize * gridSize * 0.55); // 55% cells removed for medium
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.5); // 50% cells removed for medium
     } else {
-      cellsToRemove = Math.floor(gridSize * gridSize * 0.7); // 70% cells removed
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.65); // 65% cells removed for hard
     }
     
     // Remove cells using a smarter algorithm that ensures puzzles remain solvable
@@ -241,15 +250,53 @@ export function isValidPlacement(
     }
   }
   
-  // Check region (like 2x2 for 4x4 grid, or 3x3 for 9x9 grid)
-  const regionSize = Math.sqrt(gridSize);
-  const regionStartRow = Math.floor(row / regionSize) * regionSize;
-  const regionStartCol = Math.floor(col / regionSize) * regionSize;
+  // Check region
+  // For 7x7 puzzles, we need special handling for regions
+  let regionSize: number;
+  let regionStartRow: number;
+  let regionStartCol: number;
   
-  for (let r = regionStartRow; r < regionStartRow + regionSize; r++) {
-    for (let c = regionStartCol; c < regionStartCol + regionSize; c++) {
-      if (grid[r][c] === color) {
-        return false;
+  if (gridSize === 7) {
+    // For 7x7, we'll define regions manually to handle the odd grid size
+    // We'll use 3x2 and 2x3 regions (not perfectly square)
+    const regions = [
+      // Define region boundaries [startRow, endRow, startCol, endCol]
+      [0, 2, 0, 3], // Region 0: top-left 3x3
+      [0, 2, 3, 7], // Region 1: top-right 3x4
+      [3, 4, 0, 3], // Region 2: middle-left 2x3
+      [3, 4, 3, 7], // Region 3: middle-right 2x4
+      [5, 7, 0, 3], // Region 4: bottom-left 2x3
+      [5, 7, 3, 7], // Region 5: bottom-right 2x4
+    ];
+    
+    // Find which region this cell belongs to
+    for (const [startRow, endRow, startCol, endCol] of regions) {
+      if (row >= startRow && row < endRow && col >= startCol && col < endCol) {
+        regionStartRow = startRow;
+        regionStartCol = startCol;
+        
+        // Check all cells in this region
+        for (let r = startRow; r < endRow; r++) {
+          for (let c = startCol; c < endCol; c++) {
+            if (grid[r][c] === color) {
+              return false;
+            }
+          }
+        }
+        break;
+      }
+    }
+  } else {
+    // For 4x4 and 9x9, use standard square regions
+    regionSize = Math.sqrt(gridSize);
+    regionStartRow = Math.floor(row / regionSize) * regionSize;
+    regionStartCol = Math.floor(col / regionSize) * regionSize;
+    
+    for (let r = regionStartRow; r < regionStartRow + regionSize; r++) {
+      for (let c = regionStartCol; c < regionStartCol + regionSize; c++) {
+        if (grid[r][c] === color) {
+          return false;
+        }
       }
     }
   }
