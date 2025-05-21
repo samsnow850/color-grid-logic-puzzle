@@ -35,7 +35,7 @@ const ColorGrid = ({
   return (
     <div 
       className={cn(
-        "grid gap-1 p-1 bg-gray-200 rounded-lg",
+        "grid gap-1 bg-neutral-100 dark:bg-gray-700 rounded-lg p-1.5 shadow-md",
         gridSize === 9 && "max-w-[500px]"
       )}
       style={{
@@ -55,10 +55,11 @@ const ColorGrid = ({
             <div
               key={`${rowIndex}-${colIndex}`}
               className={cn(
-                "aspect-square flex items-center justify-center rounded-sm cursor-pointer",
-                cell || "bg-white",
-                isSelected && "ring-2 ring-blue-500",
+                "aspect-square flex items-center justify-center rounded shadow-sm transition-all",
+                cell ? `${cell} shadow-inner` : "bg-white dark:bg-gray-800",
+                isSelected && "ring-2 ring-purple-400",
                 isPrefilled && "cursor-not-allowed",
+                !isPrefilled && "cursor-pointer hover:brightness-110",
                 isTopEdge && "border-t-2 border-gray-500",
                 isLeftEdge && "border-l-2 border-gray-500",
                 rowIndex === gridSize - 1 && "border-b-2 border-gray-500",
@@ -66,10 +67,14 @@ const ColorGrid = ({
               )}
               onClick={() => onCellClick(rowIndex, colIndex)}
               style={{
-                width: gridSize === 9 ? "40px" : gridSize === 6 ? "50px" : "60px",
-                height: gridSize === 9 ? "40px" : gridSize === 6 ? "50px" : "60px",
+                width: gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
+                height: gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
               }}
-            />
+            >
+              {isPrefilled && (
+                <span className="block w-2 h-2 bg-white dark:bg-gray-300 rounded-full opacity-70"></span>
+              )}
+            </div>
           );
         })
       ))}

@@ -14,6 +14,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ColorGrid from "@/components/game/ColorGrid";
 import ColorPalette from "@/components/game/ColorPalette";
+import GameTimer from "@/components/game/GameTimer";
+import PauseOverlay from "@/components/game/PauseOverlay";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -33,6 +35,8 @@ const Game = () => {
   ]);
   const [error, setError] = useState<string | null>(null);
   const [previewGrid, setPreviewGrid] = useState<JSX.Element | null>(null);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Initialize with preview colors based on difficulty
   useEffect(() => {
@@ -77,20 +81,24 @@ const Game = () => {
         previewElements.push(
           <div 
             key={`preview-${i}-${j}`}
-            className={`${previewColors[colorIndex]} rounded-sm
+            className={`${previewColors[colorIndex]} rounded-sm shadow-sm
               ${isTopEdge ? "border-t-2 border-gray-500" : ""}
               ${isLeftEdge ? "border-l-2 border-gray-500" : ""}
               ${isBottomEdge ? "border-b-2 border-gray-500" : ""}
               ${isRightEdge ? "border-r-2 border-gray-500" : ""}`
             }
-          />
+          >
+            {(i + j) % 3 === 0 && (
+              <div className="w-2 h-2 bg-white rounded-full mx-auto my-auto"></div>
+            )}
+          </div>
         );
       }
     }
     
     setPreviewGrid(
       <div 
-        className="grid gap-1 p-2 bg-gray-100 rounded-lg mx-auto"
+        className="grid gap-1 p-2 bg-neutral-100 dark:bg-gray-700 rounded-lg mx-auto"
         style={{
           gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
@@ -112,6 +120,7 @@ const Game = () => {
       setError(null);
       scrollToTop();
       
+      // For medium difficulty, we'll just make a bigger easy grid (4x4 -> 6x6)
       if (difficulty === "medium") {
         newGridSize = 6;
         colorCount = 6;
@@ -136,6 +145,8 @@ const Game = () => {
       
       setShowTitleScreen(false);
       setShowGameOverScreen(false);
+      setIsTimerRunning(true);
+      setIsPaused(false);
     } catch (err) {
       console.error("Error starting game:", err);
       setError("There was a problem starting the game. Please try a different difficulty level.");
@@ -145,6 +156,9 @@ const Game = () => {
   };
 
   const handleCellClick = (row: number, col: number) => {
+    // Don't allow clicking if paused
+    if (isPaused) return;
+    
     // Don't allow clicking on pre-filled cells
     if (originalGrid[row][col] !== "") {
       return;
@@ -153,7 +167,7 @@ const Game = () => {
   };
 
   const handleColorSelect = (color: string) => {
-    if (!selectedCell) return;
+    if (!selectedCell || isPaused) return;
     
     const [row, col] = selectedCell;
     const newGrid = [...grid];
@@ -164,21 +178,27 @@ const Game = () => {
     if (checkWinCondition(newGrid)) {
       setGameWon(true);
       setShowGameOverScreen(true);
+      setIsTimerRunning(false);
     }
   };
 
   const handleReset = () => {
+    if (isPaused) return;
+    
     setGrid(JSON.parse(JSON.stringify(originalGrid)));
     setSelectedCell(null);
   };
 
   const handleGiveUp = () => {
+    if (isPaused) return;
+    
     setGameWon(false);
     setShowGameOverScreen(true);
+    setIsTimerRunning(false);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (!selectedCell) return;
+    if (!selectedCell || isPaused) return;
     
     const keyNum = parseInt(e.key);
     if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= colors.length) {
@@ -191,7 +211,17 @@ const Game = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedCell, colors]);
+  }, [selectedCell, colors, isPaused]);
+
+  const handlePauseGame = () => {
+    setIsTimerRunning(false);
+    setIsPaused(true);
+  };
+  
+  const handleResumeGame = () => {
+    setIsTimerRunning(true);
+    setIsPaused(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -199,7 +229,7 @@ const Game = () => {
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-background to-purple-50">
         {showTitleScreen ? (
-          <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
             <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
             <p className="mb-6 text-center text-muted-foreground">
               Fill the grid with colors following Sudoku-style rules.
@@ -238,7 +268,7 @@ const Game = () => {
             )}
             
             <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700" 
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
               size="lg"
               onClick={startNewGame}
             >
@@ -249,44 +279,56 @@ const Game = () => {
           <div className="w-full max-w-4xl">
             <div className="mb-4 flex justify-between items-center">
               <h1 className="text-2xl font-bold">Color Grid Logic</h1>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleReset}
-                >
-                  Reset
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGiveUp}
-                >
-                  Give Up
-                </Button>
-              </div>
+              
+              {!showTitleScreen && !showGameOverScreen && (
+                <GameTimer 
+                  isRunning={isTimerRunning} 
+                  onPause={handlePauseGame} 
+                  onResume={handleResumeGame} 
+                />
+              )}
             </div>
             
-            <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg">
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-8 rounded-lg shadow-lg">
               <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                <ColorGrid 
-                  grid={grid}
-                  originalGrid={originalGrid}
-                  gridSize={gridSize}
-                  selectedCell={selectedCell}
-                  onCellClick={handleCellClick}
-                />
+                <div className="flex flex-col items-center gap-4">
+                  <ColorGrid 
+                    grid={grid}
+                    originalGrid={originalGrid}
+                    gridSize={gridSize}
+                    selectedCell={selectedCell}
+                    onCellClick={handleCellClick}
+                  />
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleReset}
+                      disabled={isPaused}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleGiveUp}
+                      disabled={isPaused}
+                    >
+                      Give Up
+                    </Button>
+                  </div>
+                </div>
 
                 <div className="w-full md:w-auto">
-                  <h2 className="text-lg font-medium mb-4">Color Palette</h2>
+                  <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
                   <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
                   
                   <div className="mt-8">
-                    <h2 className="text-lg font-medium mb-4">Instructions</h2>
+                    <h2 className="text-lg font-medium mb-4 text-center md:text-left">Instructions</h2>
                     <ul className="list-disc pl-5 text-sm text-muted-foreground">
                       <li>Click on an empty cell to select it</li>
                       <li>Click on a color or press 1-{colors.length} to place it</li>
                       <li>Each row, column, and region must contain each color exactly once</li>
+                      <li>Press pause to take a break and hide the puzzle</li>
                     </ul>
                   </div>
                 </div>
@@ -295,6 +337,9 @@ const Game = () => {
           </div>
         )}
       </main>
+      
+      {/* Pause Overlay */}
+      {isPaused && <PauseOverlay onResume={handleResumeGame} />}
       
       <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
         <DialogContent className="sm:max-w-md">
@@ -314,7 +359,7 @@ const Game = () => {
           
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button 
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={startNewGame}
             >
               {gameWon ? "Play Again" : "New Puzzle"}

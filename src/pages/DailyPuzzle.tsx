@@ -13,6 +13,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ColorGrid from "@/components/game/ColorGrid";
 import ColorPalette from "@/components/game/ColorPalette";
+import GameTimer from "@/components/game/GameTimer";
+import PauseOverlay from "@/components/game/PauseOverlay";
 import { checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Calendar, Clock } from "lucide-react";
@@ -41,6 +43,8 @@ const DailyPuzzle = () => {
   const [nextPuzzleTime, setNextPuzzleTime] = useState<Date | null>(null);
   const [timeUntilNextPuzzle, setTimeUntilNextPuzzle] = useState<string>("");
   const [puzzleDate, setPuzzleDate] = useState<string>("");
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
   
   // Check if user is logged in
   useEffect(() => {
@@ -66,6 +70,7 @@ const DailyPuzzle = () => {
       
       if (completedPuzzlesList.includes(currentDateString)) {
         setDailyCompleted(true);
+        setIsTimerRunning(false);
         
         // Calculate time until next puzzle
         const tomorrow = new Date(sfDate);
@@ -156,7 +161,7 @@ const DailyPuzzle = () => {
   
   const handleCellClick = (row: number, col: number) => {
     // Don't allow clicking if the daily puzzle is completed
-    if (dailyCompleted) return;
+    if (dailyCompleted || isPaused) return;
     
     // Don't allow clicking on pre-filled cells
     if (originalGrid[row][col] !== "") {
@@ -166,7 +171,7 @@ const DailyPuzzle = () => {
   };
 
   const handleColorSelect = (color: string) => {
-    if (dailyCompleted || !selectedCell) return;
+    if (dailyCompleted || !selectedCell || isPaused) return;
     
     const [row, col] = selectedCell;
     const newGrid = [...grid];
@@ -190,19 +195,20 @@ const DailyPuzzle = () => {
       
       setGameWon(true);
       setDailyCompleted(true);
+      setIsTimerRunning(false);
       setShowGameOverScreen(true);
     }
   };
 
   const handleReset = () => {
-    if (dailyCompleted) return;
+    if (dailyCompleted || isPaused) return;
     
     setGrid(JSON.parse(JSON.stringify(originalGrid)));
     setSelectedCell(null);
   };
 
   const handleGiveUp = () => {
-    if (dailyCompleted) return;
+    if (dailyCompleted || isPaused) return;
     
     // Mark as completed but not won
     const sfDate = getSanFranciscoDate();
@@ -219,11 +225,12 @@ const DailyPuzzle = () => {
     
     setGameWon(false);
     setDailyCompleted(true);
+    setIsTimerRunning(false);
     setShowGameOverScreen(true);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (dailyCompleted || !selectedCell) return;
+    if (dailyCompleted || !selectedCell || isPaused) return;
     
     const keyNum = parseInt(e.key);
     if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= colors.length) {
@@ -236,7 +243,17 @@ const DailyPuzzle = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedCell, colors, dailyCompleted]);
+  }, [selectedCell, colors, dailyCompleted, isPaused]);
+
+  const handlePauseGame = () => {
+    setIsTimerRunning(false);
+    setIsPaused(true);
+  };
+  
+  const handleResumeGame = () => {
+    setIsTimerRunning(true);
+    setIsPaused(false);
+  };
 
   if (!user) {
     return null; // Don't render anything while redirecting
@@ -248,11 +265,23 @@ const DailyPuzzle = () => {
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-background to-purple-50">
         <div className="w-full max-w-4xl">
-          <div className="mb-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-primary">Daily Challenge</h1>
+          <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <div>
+              <h1 className="text-2xl font-bold text-primary">Daily Challenge</h1>
+              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+                <Calendar className="text-primary" size={16} />
+                <span>{puzzleDate}</span>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-2">
-              <Calendar className="text-primary" size={20} />
-              <span className="font-medium">{puzzleDate}</span>
+              {!dailyCompleted && (
+                <GameTimer 
+                  isRunning={isTimerRunning} 
+                  onPause={handlePauseGame} 
+                  onResume={handleResumeGame} 
+                />
+              )}
             </div>
           </div>
           
@@ -284,20 +313,22 @@ const DailyPuzzle = () => {
           
           <div className="bg-white dark:bg-gray-800 p-4 md:p-8 rounded-lg shadow-lg">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-              <ColorGrid 
-                grid={grid}
-                originalGrid={originalGrid}
-                gridSize={9} // Daily is always a 9x9 hard puzzle
-                selectedCell={dailyCompleted ? null : selectedCell}
-                onCellClick={handleCellClick}
-              />
+              <div className="flex flex-col items-center gap-4">
+                <ColorGrid 
+                  grid={grid}
+                  originalGrid={originalGrid}
+                  gridSize={9} // Daily is always a 9x9 hard puzzle
+                  selectedCell={dailyCompleted ? null : selectedCell}
+                  onCellClick={handleCellClick}
+                />
+              </div>
 
               <div className="w-full md:w-auto">
-                <h2 className="text-lg font-medium mb-4">Color Palette</h2>
+                <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
                 <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
                 
                 <div className="mt-8 space-y-4">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 justify-center md:justify-start">
                     <Button
                       variant="outline"
                       onClick={handleReset}
@@ -314,7 +345,7 @@ const DailyPuzzle = () => {
                     </Button>
                   </div>
                   
-                  <div>
+                  <div className="text-center md:text-left">
                     <h2 className="text-lg font-medium mb-2">Daily Challenge</h2>
                     <p className="text-sm text-muted-foreground">
                       A new puzzle is available each day at midnight San Francisco time (PT).
@@ -327,6 +358,9 @@ const DailyPuzzle = () => {
           </div>
         </div>
       </main>
+      
+      {/* Pause Overlay */}
+      {isPaused && <PauseOverlay onResume={handleResumeGame} />}
       
       <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
         <DialogContent className="sm:max-w-md">
@@ -361,7 +395,7 @@ const DailyPuzzle = () => {
               Return Home
             </Button>
             <Button 
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
               onClick={() => {
                 setShowGameOverScreen(false);
                 navigate("/game");
