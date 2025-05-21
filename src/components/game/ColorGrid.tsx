@@ -32,6 +32,9 @@ const ColorGrid = ({
   const displayOriginal = originalGrid && originalGrid.length === gridSize ? 
     originalGrid : Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
   
+  // Count pre-filled cells for debugging
+  console.log("Pre-filled cell count:", displayOriginal.flat().filter(cell => cell !== "").length);
+  
   return (
     <div 
       className={cn(
