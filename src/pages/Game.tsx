@@ -172,9 +172,9 @@ const Game = () => {
       scrollToTop();
       
       if (difficulty === "medium") {
-        // Show medium difficulty warning
-        setShowMediumWarning(true);
-        return; // Don't actually start the game for medium difficulty
+        newGridSize = 7;
+        colorCount = 7;
+        hintCount = 4; // Medium difficulty gets 4 hints
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
@@ -459,14 +459,9 @@ const Game = () => {
                     <RadioGroupItem value="easy" id="easy" />
                     <Label htmlFor="easy" className="cursor-pointer w-full">Easy (4×4)</Label>
                   </div>
-                  <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 relative">
-                    <RadioGroupItem value="medium" id="medium" disabled />
-                    <Label htmlFor="medium" className="flex items-center cursor-pointer w-full">
-                      Medium (7×7) 
-                      <span className="ml-2 text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 px-2 py-0.5 rounded-md">
-                        OUT OF SERVICE
-                      </span>
-                    </Label>
+                  <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <RadioGroupItem value="medium" id="medium" />
+                    <Label htmlFor="medium" className="cursor-pointer w-full">Medium (7×7)</Label>
                   </div>
                   <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                     <RadioGroupItem value="hard" id="hard" />
