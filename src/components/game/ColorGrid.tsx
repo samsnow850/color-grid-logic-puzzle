@@ -35,13 +35,20 @@ const ColorGrid = ({
   // Count pre-filled cells for debugging
   console.log("Pre-filled cell count:", displayOriginal.flat().filter(cell => cell !== "").length);
   
+  // Calculate cell size based on grid size
+  const getCellSize = () => {
+    if (gridSize === 9) return "w-9 h-9 md:w-11 md:h-11";
+    if (gridSize === 7) return "w-10 h-10 md:w-12 md:h-12";
+    return "w-14 h-14 md:w-16 md:h-16"; // For 4x4
+  };
+  
   return (
     <div 
       className={cn(
-        "grid gap-1 bg-white border border-gray-200 rounded-lg p-1.5 shadow-md",
-        gridSize === 9 && "max-w-[500px]",
-        gridSize === 7 && "max-w-[420px]",
-        gridSize === 4 && "max-w-[280px]"
+        "grid gap-px bg-gray-800 border border-gray-800 rounded-lg p-1 shadow-lg mx-auto",
+        gridSize === 9 && "max-w-[360px] md:max-w-[420px]",
+        gridSize === 7 && "max-w-[300px] md:max-w-[360px]",
+        gridSize === 4 && "max-w-[240px] md:max-w-[280px]"
       )}
       style={{
         gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
@@ -51,17 +58,30 @@ const ColorGrid = ({
       {displayGrid.map((row, rowIndex) => (
         row.map((cell, colIndex) => {
           // Calculate borders based on grid size
-          let isTopEdge = false;
-          let isLeftEdge = false;
+          const isTopEdge = rowIndex % regionSize === 0;
+          const isLeftEdge = colIndex % regionSize === 0;
+          const isBottomEdge = rowIndex === gridSize - 1;
+          const isRightEdge = colIndex === gridSize - 1;
           
+          // Special case for 7x7 grid
+          let borderClasses = "";
           if (gridSize === 7) {
             // Define custom region boundaries for 7x7
-            isTopEdge = rowIndex === 0 || rowIndex === 3 || rowIndex === 5;
-            isLeftEdge = colIndex === 0 || colIndex === 3;
+            const isTopEdge = rowIndex === 0 || rowIndex === 3 || rowIndex === 5;
+            const isLeftEdge = colIndex === 0 || colIndex === 3;
+            borderClasses = cn(
+              isTopEdge && "border-t-2 border-gray-900",
+              isLeftEdge && "border-l-2 border-gray-900",
+              isBottomEdge && "border-b-2 border-gray-900",
+              isRightEdge && "border-r-2 border-gray-900"
+            );
           } else {
-            // For 4x4 and 9x9, use standard regions
-            isTopEdge = rowIndex % regionSize === 0;
-            isLeftEdge = colIndex % regionSize === 0;
+            borderClasses = cn(
+              isTopEdge && "border-t-2 border-gray-900",
+              isLeftEdge && "border-l-2 border-gray-900",
+              isBottomEdge && "border-b-2 border-gray-900",
+              isRightEdge && "border-r-2 border-gray-900"
+            );
           }
           
           const isSelected = selectedCell?.[0] === rowIndex && selectedCell?.[1] === colIndex;
@@ -71,21 +91,15 @@ const ColorGrid = ({
             <div
               key={`${rowIndex}-${colIndex}`}
               className={cn(
-                "aspect-square flex items-center justify-center rounded shadow-sm transition-all",
-                cell ? `${cell} shadow-inner` : "bg-white border border-gray-100",
-                isSelected && "ring-2 ring-purple-400",
+                "flex items-center justify-center transition-all",
+                getCellSize(),
+                cell ? cell : "bg-white",
+                isSelected && "ring-2 ring-purple-500 ring-offset-1",
                 isPrefilled && "cursor-not-allowed",
                 !isPrefilled && "cursor-pointer hover:brightness-110",
-                isTopEdge && "border-t-2 border-gray-500",
-                isLeftEdge && "border-l-2 border-gray-500",
-                rowIndex === gridSize - 1 && "border-b-2 border-gray-500",
-                colIndex === gridSize - 1 && "border-r-2 border-gray-500"
+                borderClasses
               )}
               onClick={() => onCellClick(rowIndex, colIndex)}
-              style={{
-                width: gridSize === 9 ? "42px" : gridSize === 7 ? "48px" : "62px",
-                height: gridSize === 9 ? "42px" : gridSize === 7 ? "48px" : "62px",
-              }}
             >
               {isPrefilled && (
                 <span className="block w-2 h-2 bg-white dark:bg-gray-300 rounded-full opacity-70"></span>

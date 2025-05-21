@@ -27,7 +27,9 @@ import {
   Book, 
   Undo, 
   Redo,
-  Trophy
+  Trophy,
+  RefreshCw,
+  SkipBack
 } from "lucide-react";
 import { scrollToTop } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,6 +60,7 @@ const Game = () => {
   const [originalGrid, setOriginalGrid] = useState<string[][]>([]);
   const [solution, setSolution] = useState<string[][]>([]);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [colors, setColors] = useState<string[]>([
     "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
   ]);
@@ -129,10 +132,10 @@ const Game = () => {
           <div 
             key={`preview-${i}-${j}`}
             className={`${previewColors[colorIndex]} rounded-sm shadow-sm
-              ${isTopEdge ? "border-t-2 border-gray-500" : ""}
-              ${isLeftEdge ? "border-l-2 border-gray-500" : ""}
-              ${isBottomEdge ? "border-b-2 border-gray-500" : ""}
-              ${isRightEdge ? "border-r-2 border-gray-500" : ""}`
+              ${isTopEdge ? "border-t-2 border-gray-800" : ""}
+              ${isLeftEdge ? "border-l-2 border-gray-800" : ""}
+              ${isBottomEdge ? "border-b-2 border-gray-800" : ""}
+              ${isRightEdge ? "border-r-2 border-gray-800" : ""}`
             }
           >
             {(i + j) % 3 === 0 && (
@@ -145,7 +148,7 @@ const Game = () => {
     
     setPreviewGrid(
       <div 
-        className="grid gap-1 p-2 bg-neutral-100 dark:bg-gray-700 rounded-lg mx-auto"
+        className="grid gap-px bg-gray-800 p-1 rounded-lg mx-auto"
         style={{
           gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
@@ -205,6 +208,8 @@ const Game = () => {
       setGameTime(0);
       setHintsRemaining(hintCount);
       setUsedHint(false);
+      setSelectedCell(null);
+      setSelectedColor(null);
       
       toast({
         title: `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} puzzle started!`,
@@ -226,11 +231,19 @@ const Game = () => {
     if (originalGrid[row][col] !== "") {
       return;
     }
+    
     setSelectedCell([row, col]);
+    
+    // If a color is already selected, apply it
+    if (selectedColor !== null) {
+      handleColorSelect(selectedColor);
+    }
   };
 
   const handleColorSelect = (color: string) => {
     if (!selectedCell || isPaused || !gridHistory) return;
+    
+    setSelectedColor(color);
     
     const [row, col] = selectedCell;
     const newGrid = JSON.parse(JSON.stringify(gridHistory.present));
@@ -299,6 +312,7 @@ const Game = () => {
     }
     
     setSelectedCell(null);
+    setSelectedColor(null);
     
     toast({
       title: "Puzzle reset",
@@ -415,36 +429,48 @@ const Game = () => {
       loadingDescription="Preparing your color puzzle"
       loadingColor="green"
     >
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
         <Navbar />
 
-        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 gap-6">
           {showTitleScreen ? (
-            <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md border border-gray-200">
-              <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
+            <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
+              <div className="flex justify-center mb-6">
+                <div className="w-24 h-24 relative">
+                  {/* Game Logo */}
+                  <svg viewBox="0 0 40 40" className="w-full h-full">
+                    <rect x="0" y="0" width="18" height="18" fill="#9b87f5" rx="3" />
+                    <rect x="20" y="0" width="18" height="18" fill="#F97316" rx="3" />
+                    <rect x="0" y="20" width="18" height="18" fill="#0EA5E9" rx="3" />
+                    <rect x="20" y="20" width="18" height="18" fill="#D946EF" rx="3" />
+                  </svg>
+                </div>
+              </div>
+              
+              <h1 className="text-3xl font-bold mb-4 text-center">Color Grid Logic</h1>
               <p className="mb-6 text-center text-muted-foreground">
                 Fill the grid with colors following Sudoku-style rules.
               </p>
               
               <div className="mb-6">
-                <h2 className="text-lg font-medium mb-2">Select Difficulty:</h2>
-                <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
-                  <div className="flex items-center space-x-2 mb-2">
+                <h2 className="text-lg font-medium mb-3">Select Difficulty:</h2>
+                <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)} className="space-y-3">
+                  <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                     <RadioGroupItem value="easy" id="easy" />
-                    <Label htmlFor="easy">Easy (4×4)</Label>
+                    <Label htmlFor="easy" className="cursor-pointer w-full">Easy (4×4)</Label>
                   </div>
-                  <div className="flex items-center space-x-2 mb-2 relative">
+                  <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 relative">
                     <RadioGroupItem value="medium" id="medium" disabled />
-                    <Label htmlFor="medium" className="flex items-center">
+                    <Label htmlFor="medium" className="flex items-center cursor-pointer w-full">
                       Medium (7×7) 
-                      <span className="ml-2 text-xs font-bold text-red-500 bg-red-100 px-2 py-0.5 rounded-md">
+                      <span className="ml-2 text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900 dark:text-red-300 px-2 py-0.5 rounded-md">
                         OUT OF SERVICE
                       </span>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                     <RadioGroupItem value="hard" id="hard" />
-                    <Label htmlFor="hard">Hard (9×9)</Label>
+                    <Label htmlFor="hard" className="cursor-pointer w-full">Hard (9×9)</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -472,33 +498,46 @@ const Game = () => {
                   Start Game
                 </Button>
                 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowTutorial(true)}
-                >
-                  <Book className="mr-2 h-4 w-4" />
-                  How to Play
-                </Button>
-                
-                {user && (
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="w-full"
-                    onClick={() => setShowAchievements(true)}
+                    className="flex-1"
+                    onClick={() => setShowTutorial(true)}
                   >
-                    <Award className="mr-2 h-4 w-4" />
-                    View Achievements
+                    <Book className="mr-2 h-4 w-4" />
+                    How to Play
                   </Button>
-                )}
+                  
+                  {user && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setShowAchievements(true)}
+                    >
+                      <Award className="mr-2 h-4 w-4" />
+                      Achievements
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
             <div className="w-full max-w-4xl">
               <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+                <div className="flex items-center gap-2">
+                  {/* Game Logo */}
+                  <div className="w-10 h-10 relative hidden sm:block">
+                    <svg viewBox="0 0 40 40" className="w-full h-full">
+                      <rect x="0" y="0" width="18" height="18" fill="#9b87f5" rx="3" />
+                      <rect x="20" y="0" width="18" height="18" fill="#F97316" rx="3" />
+                      <rect x="0" y="20" width="18" height="18" fill="#0EA5E9" rx="3" />
+                      <rect x="20" y="20" width="18" height="18" fill="#D946EF" rx="3" />
+                    </svg>
+                  </div>
+                  <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+                </div>
                 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2">
                   {!showTitleScreen && !showGameOverScreen && (
                     <GameTimer 
                       isRunning={isTimerRunning} 
@@ -513,6 +552,8 @@ const Game = () => {
                     size="sm"
                     onClick={() => setShowAchievements(true)}
                     disabled={isPaused}
+                    title="Achievements"
+                    className="rounded-full aspect-square p-2"
                   >
                     <Trophy className="h-4 w-4" />
                   </Button>
@@ -522,15 +563,17 @@ const Game = () => {
                     size="sm"
                     onClick={() => setShowTutorial(true)}
                     disabled={isPaused}
+                    title="How to Play"
+                    className="rounded-full aspect-square p-2"
                   >
                     <Book className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               
-              <div className="bg-white p-4 md:p-8 rounded-lg shadow-md border border-gray-200">
+              <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-col items-center gap-6">
                     <ColorGrid 
                       grid={grid}
                       originalGrid={originalGrid}
@@ -539,7 +582,7 @@ const Game = () => {
                       onCellClick={handleCellClick}
                     />
                     
-                    <div className="flex flex-wrap gap-2 justify-center">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
                       <Button
                         variant="outline"
                         onClick={handleUndo}
@@ -564,7 +607,9 @@ const Game = () => {
                         variant="outline"
                         onClick={handleReset}
                         disabled={isPaused}
+                        className="flex items-center gap-1"
                       >
+                        <RefreshCw className="h-4 w-4" />
                         Reset
                       </Button>
                       
@@ -572,7 +617,9 @@ const Game = () => {
                         variant="outline"
                         onClick={handleGiveUp}
                         disabled={isPaused}
+                        className="flex items-center gap-1"
                       >
+                        <SkipBack className="h-4 w-4" />
                         Give Up
                       </Button>
                     </div>
@@ -592,17 +639,36 @@ const Game = () => {
 
                   <div className="w-full md:w-auto">
                     <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
-                    <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
+                    <ColorPalette 
+                      colors={colors} 
+                      onColorSelect={handleColorSelect} 
+                      selectedColor={selectedColor}
+                    />
                     
                     <div className="mt-8">
-                      <h2 className="text-lg font-medium mb-4 text-center md:text-left">Instructions</h2>
-                      <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                      <h2 className="text-lg font-medium mb-3 text-center md:text-left flex items-center">
+                        <Info className="h-4 w-4 mr-2" />
+                        How to Play
+                      </h2>
+                      <ul className="list-disc pl-6 space-y-2 text-sm text-muted-foreground">
                         <li>Click on an empty cell to select it</li>
                         <li>Click on a color or press 1-{colors.length} to place it</li>
                         <li>Each row, column, and region must contain each color exactly once</li>
                         <li>Use the hint button if you're stuck (limited hints per game)</li>
                         <li>Use Undo/Redo to fix mistakes</li>
                       </ul>
+                    </div>
+                    
+                    <div className="mt-6 md:mt-8 text-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowTitleScreen(true);
+                          setIsPaused(false);
+                        }}
+                      >
+                        Back to Menu
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -618,15 +684,15 @@ const Game = () => {
         <Dialog open={showMediumWarning} onOpenChange={setShowMediumWarning}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-red-600">
+              <DialogTitle className="text-2xl font-bold text-red-600 dark:text-red-400">
                 Medium Difficulty Unavailable
               </DialogTitle>
             </DialogHeader>
             
             <div className="py-4">
-              <Alert className="bg-red-50 border border-red-200 mb-4">
-                <Info className="h-5 w-5 text-red-600" />
-                <AlertDescription className="text-red-600">
+              <Alert className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 mb-4">
+                <Info className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <AlertDescription className="text-red-600 dark:text-red-400">
                   We're experiencing technical difficulties with the 7×7 puzzle format.
                 </AlertDescription>
               </Alert>
