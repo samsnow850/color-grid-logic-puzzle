@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/useAuth";
 
-import Index from './pages/Index';
+import Preview from './pages/Preview'; // Using Preview as the home page
 import Game from './pages/Game';
 import About from './pages/About';
 import Auth from './pages/Auth';
@@ -23,7 +23,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import AboutDev from './pages/AboutDev';
-import Preview from './pages/Preview';
+import Index from './pages/Index';
 
 const queryClient = new QueryClient()
 
@@ -34,7 +34,8 @@ const App = () => {
         <AuthProvider>
           <Router>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Preview />} />
+              <Route path="/classic" element={<Index />} />
               <Route path="/game" element={<Game />} />
               <Route path="/about" element={<About />} />
               <Route path="/auth" element={<Auth />} />

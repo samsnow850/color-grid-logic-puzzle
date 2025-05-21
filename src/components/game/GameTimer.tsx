@@ -7,22 +7,28 @@ interface GameTimerProps {
   isRunning: boolean;
   onPause: () => void;
   onResume: () => void;
-  onTimeUpdate?: (seconds: number) => void; // Added a callback for time tracking
+  onTimeUpdate?: (seconds: number) => void;
+  time?: number;
+  setTime?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate }: GameTimerProps) => {
+const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate, time: externalTime, setTime: setExternalTime }: GameTimerProps) => {
   const [seconds, setSeconds] = useState(0);
+  
+  // Use external time state if provided, otherwise use internal state
+  const time = externalTime !== undefined ? externalTime : seconds;
+  const setTime = setExternalTime || setSeconds;
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     if (isRunning) {
       interval = setInterval(() => {
-        setSeconds((prevSeconds) => {
-          const newSeconds = prevSeconds + 1;
+        setTime((prevTime) => {
+          const newTime = prevTime + 1;
           // Call the optional callback with the updated time
-          if (onTimeUpdate) onTimeUpdate(newSeconds);
-          return newSeconds;
+          if (onTimeUpdate) onTimeUpdate(newTime);
+          return newTime;
         });
       }, 1000);
     }
@@ -30,7 +36,7 @@ const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate }: GameTimerProp
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, onTimeUpdate]);
+  }, [isRunning, onTimeUpdate, setTime]);
 
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -40,8 +46,8 @@ const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate }: GameTimerProp
 
   return (
     <div className="flex items-center gap-2">
-      <div className="px-3 py-1 bg-gray-100 rounded-md font-mono text-lg">
-        {formatTime(seconds)}
+      <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-md font-mono text-lg">
+        {formatTime(time)}
       </div>
       <Button
         size="icon"
