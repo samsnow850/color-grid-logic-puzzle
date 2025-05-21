@@ -12,7 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PageWrapper } from "@/components/PageWrapper";
+import PageWrapper from "@/components/PageWrapper";
 
 const Account = () => {
   const navigate = useNavigate();
