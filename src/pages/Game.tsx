@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,7 @@ const Game = () => {
   const [previewGrid, setPreviewGrid] = useState<JSX.Element | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showMediumWarning, setShowMediumWarning] = useState(false);
 
   // Initialize with preview colors based on difficulty
   useEffect(() => {
@@ -133,8 +135,9 @@ const Game = () => {
       scrollToTop();
       
       if (difficulty === "medium") {
-        newGridSize = 7; // Changed to 7 for medium difficulty
-        colorCount = 7; // Use 7 colors for 7x7 grid
+        // Show medium difficulty warning
+        setShowMediumWarning(true);
+        return; // Don't actually start the game for medium difficulty
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
@@ -234,6 +237,10 @@ const Game = () => {
     setIsPaused(false);
   };
 
+  const handleCloseMediumWarning = () => {
+    setShowMediumWarning(false);
+  };
+
   return (
     <PageWrapper 
       loadingTitle="Game Loading" 
@@ -258,9 +265,14 @@ const Game = () => {
                     <RadioGroupItem value="easy" id="easy" />
                     <Label htmlFor="easy">Easy (4×4)</Label>
                   </div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value="medium" id="medium" />
-                    <Label htmlFor="medium">Medium (7×7)</Label>
+                  <div className="flex items-center space-x-2 mb-2 relative">
+                    <RadioGroupItem value="medium" id="medium" disabled />
+                    <Label htmlFor="medium" className="flex items-center">
+                      Medium (7×7) 
+                      <span className="ml-2 text-xs font-bold text-red-500 bg-red-100 px-2 py-0.5 rounded-md">
+                        OUT OF SERVICE
+                      </span>
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="hard" id="hard" />
@@ -357,6 +369,39 @@ const Game = () => {
         {/* Pause Overlay */}
         {isPaused && <PauseOverlay onResume={handleResumeGame} />}
         
+        {/* Medium Difficulty Warning Dialog */}
+        <Dialog open={showMediumWarning} onOpenChange={setShowMediumWarning}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-red-600">
+                Medium Difficulty Unavailable
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <Alert className="bg-red-50 border border-red-200 mb-4">
+                <Info className="h-5 w-5 text-red-600" />
+                <AlertDescription className="text-red-600">
+                  We're experiencing technical difficulties with the 7×7 puzzle format.
+                </AlertDescription>
+              </Alert>
+              <p className="text-center text-muted-foreground">
+                We are working hard to fix this issue. In the meantime, please try our other difficulty levels.
+                We apologize for the inconvenience.
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={handleCloseMediumWarning}
+              >
+                Return to Selection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
         <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -401,3 +446,4 @@ const Game = () => {
 };
 
 export default Game;
+
