@@ -367,18 +367,3 @@ function shuffleArray<T>(array: T[]): T[] {
   }
   return array;
 }
-
-// Export functions to match the imports in Game.tsx
-export const generateGrid = (gridSize: number, difficulty: DifficultyLevel) => {
-  const { puzzle } = generatePuzzle(gridSize, difficulty);
-  return puzzle;
-};
-
-export const solvePuzzle = (grid: string[][]) => {
-  // Create a copy of the grid
-  const puzzleCopy = JSON.parse(JSON.stringify(grid));
-  return generateSolution(puzzleCopy, grid.length);
-};
-
-// Export the checkWinCondition function as checkWin
-export const checkWin = checkWinCondition;

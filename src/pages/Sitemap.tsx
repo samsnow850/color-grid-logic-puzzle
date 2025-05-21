@@ -63,24 +63,6 @@ const Sitemap = () => {
                 >
                   <Link to="/about">About</Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="justify-start" 
-                  onClick={() => scrollToTop()}
-                  asChild
-                >
-                  <Link to="/about-dev">About Developer</Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="justify-start" 
-                  onClick={() => scrollToTop()}
-                  asChild
-                >
-                  <Link to="/preview">Preview</Link>
-                </Button>
               </div>
             </section>
             
@@ -113,24 +95,6 @@ const Sitemap = () => {
                   asChild
                 >
                   <Link to="/settings">Settings</Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="justify-start" 
-                  onClick={() => scrollToTop()}
-                  asChild
-                >
-                  <Link to="/forgot-password">Forgot Password</Link>
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="justify-start" 
-                  onClick={() => scrollToTop()}
-                  asChild
-                >
-                  <Link to="/reset-password">Reset Password</Link>
                 </Button>
               </div>
             </section>
@@ -165,29 +129,6 @@ const Sitemap = () => {
                 >
                   <Link to="/terms-of-use">Terms of Use</Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  className="justify-start" 
-                  onClick={() => scrollToTop()}
-                  asChild
-                >
-                  <Link to="/sitemap">Sitemap</Link>
-                </Button>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Recent Updates</h2>
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <ul className="list-disc pl-6 space-y-3">
-                  <li>Enhanced preview page with advanced animations and interactive elements</li>
-                  <li>Added custom loading screens with progress indicators for all pages</li>
-                  <li>Improved navigation with scroll-responsive animated navbar</li>
-                  <li>Added achievements system with multiple unlockable rewards</li>
-                  <li>Implemented tutorial mode for new players</li>
-                  <li>Added undo/redo functionality for gameplay moves</li>
-                </ul>
               </div>
             </section>
           </div>

@@ -25,8 +25,8 @@ import { Achievement, getUserAchievements, achievementsList } from "@/lib/achiev
 import { useAuth } from "@/hooks/useAuth";
 
 interface AchievementsDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 const AchievementsDialog = ({ open, onOpenChange }: AchievementsDialogProps) => {
@@ -70,88 +70,90 @@ const AchievementsDialog = ({ open, onOpenChange }: AchievementsDialogProps) => 
   };
 
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle className="text-2xl font-bold">
-          Achievements
-        </DialogTitle>
-        <DialogDescription>
-          You've unlocked {unlockedCount} out of {achievements.length} achievements
-        </DialogDescription>
-      </DialogHeader>
-      
-      <ScrollArea className="h-[400px] pr-4">
-        <div className="space-y-4">
-          {achievements.map((achievement) => (
-            <div 
-              key={achievement.id} 
-              className={`p-4 rounded-lg border ${
-                achievement.unlocked 
-                  ? "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-900/30" 
-                  : "border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700"
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-full ${
-                  achievement.unlocked ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-gray-100 dark:bg-gray-800"
-                }`}>
-                  {getAchievementIcon(achievement.icon, achievement.unlocked)}
-                </div>
-                
-                <div className="flex-1">
-                  <h3 className={`font-medium ${
-                    achievement.unlocked ? "text-yellow-900 dark:text-yellow-300" : "text-gray-500 dark:text-gray-400"
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold">
+            Achievements
+          </DialogTitle>
+          <DialogDescription>
+            You've unlocked {unlockedCount} out of {achievements.length} achievements
+          </DialogDescription>
+        </DialogHeader>
+        
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-4">
+            {achievements.map((achievement) => (
+              <div 
+                key={achievement.id} 
+                className={`p-4 rounded-lg border ${
+                  achievement.unlocked 
+                    ? "border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-900/30" 
+                    : "border-gray-200 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700"
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-full ${
+                    achievement.unlocked ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-gray-100 dark:bg-gray-800"
                   }`}>
-                    {achievement.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{achievement.description}</p>
+                    {getAchievementIcon(achievement.icon, achievement.unlocked)}
+                  </div>
                   
-                  {/* Progress bar for achievements with progress */}
-                  {achievement.progress && (
-                    <div className="mt-2">
-                      <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-yellow-500 rounded-full transition-all duration-300 ease-in-out"
-                          style={{ 
-                            width: `${(achievement.progress.current / achievement.progress.target) * 100}%` 
-                          }}
-                        ></div>
+                  <div className="flex-1">
+                    <h3 className={`font-medium ${
+                      achievement.unlocked ? "text-yellow-900 dark:text-yellow-300" : "text-gray-500 dark:text-gray-400"
+                    }`}>
+                      {achievement.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{achievement.description}</p>
+                    
+                    {/* Progress bar for achievements with progress */}
+                    {achievement.progress && (
+                      <div className="mt-2">
+                        <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-yellow-500 rounded-full transition-all duration-300 ease-in-out"
+                            style={{ 
+                              width: `${(achievement.progress.current / achievement.progress.target) * 100}%` 
+                            }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {achievement.progress.current}/{achievement.progress.target}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {achievement.progress.current}/{achievement.progress.target}
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    {achievement.unlocked ? (
+                      <CheckCircle className="text-green-500" size={20} />
+                    ) : (
+                      <LockIcon className="text-gray-300 dark:text-gray-600" size={20} />
+                    )}
+                  </div>
                 </div>
                 
-                <div className="flex-shrink-0">
-                  {achievement.unlocked ? (
-                    <CheckCircle className="text-green-500" size={20} />
-                  ) : (
-                    <LockIcon className="text-gray-300 dark:text-gray-600" size={20} />
-                  )}
-                </div>
+                {achievement.date && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Unlocked: {new Date(achievement.date).toLocaleDateString()}
+                  </p>
+                )}
               </div>
-              
-              {achievement.date && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Unlocked: {new Date(achievement.date).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
-      
-      <DialogFooter>
-        <Button
-          onClick={() => onOpenChange && onOpenChange(false)}
-          className="w-full"
-        >
-          Close
-        </Button>
-      </DialogFooter>
-    </>
+            ))}
+          </div>
+        </ScrollArea>
+        
+        <DialogFooter>
+          <Button
+            onClick={() => onOpenChange(false)}
+            className="w-full"
+          >
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

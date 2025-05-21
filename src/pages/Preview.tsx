@@ -100,7 +100,7 @@ const TestimonialCard = ({ quote, name, title, delay = 0 }) => {
       <div className="flex flex-col h-full">
         <div className="mb-4 flex">
           {[1, 2, 3, 4, 5].map((_, index) => (
-            <Star key={index} className="text-yellow-400 h-5 w-5 flex-shrink-0" />
+            <Star key={index} className="text-yellow-400 h-5 w-5" />
           ))}
         </div>
         <p className="text-gray-700 italic mb-4 flex-1">"{quote}"</p>
@@ -283,7 +283,6 @@ const Preview = () => {
       loadingTitle="Welcome to the Future"
       loadingDescription="Preparing an enhanced Color Grid Logic experience"
       loadingColor="purple"
-      animationSrc="/animations/game-loading.lottie"
     >
       <div className="min-h-screen font-poppins">
         {/* Navbar - updated with scroll behavior */}

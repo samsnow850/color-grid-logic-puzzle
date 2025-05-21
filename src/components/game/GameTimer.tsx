@@ -8,24 +8,17 @@ interface GameTimerProps {
   onPause: () => void;
   onResume: () => void;
   onTimeUpdate?: (seconds: number) => void; // Added a callback for time tracking
-  // Add time and setTime props
-  time?: number;
-  setTime?: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate, time, setTime }: GameTimerProps) => {
-  const [internalSeconds, setInternalSeconds] = useState(0);
-  
-  // Use either external time state or internal state
-  const seconds = time !== undefined ? time : internalSeconds;
-  const updateSeconds = setTime || setInternalSeconds;
+const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate }: GameTimerProps) => {
+  const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
     if (isRunning) {
       interval = setInterval(() => {
-        updateSeconds((prevSeconds) => {
+        setSeconds((prevSeconds) => {
           const newSeconds = prevSeconds + 1;
           // Call the optional callback with the updated time
           if (onTimeUpdate) onTimeUpdate(newSeconds);
@@ -37,7 +30,7 @@ const GameTimer = ({ isRunning, onPause, onResume, onTimeUpdate, time, setTime }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, onTimeUpdate, updateSeconds]);
+  }, [isRunning, onTimeUpdate]);
 
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
