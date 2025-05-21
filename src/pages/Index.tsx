@@ -135,10 +135,6 @@ const Index = () => {
               <Link to="/game">Play Game</Link>
             </Button>
             
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white" asChild>
-              <Link to="/daily-puzzle">Daily Challenge</Link>
-            </Button>
-            
             <Button 
               variant="outline" 
               size="lg" 
@@ -194,9 +190,9 @@ const Index = () => {
               <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mb-4">
                 <Award className="text-blue-600" />
               </div>
-              <h3 className="text-xl font-bold mb-2">Daily Challenges</h3>
+              <h3 className="text-xl font-bold mb-2">Achievements</h3>
               <p className="text-gray-600">
-                Complete a new puzzle every day to track your progress and challenge yourself.
+                Earn achievements as you complete puzzles and improve your skills over time.
               </p>
             </motion.div>
             
@@ -386,7 +382,7 @@ const Index = () => {
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>
-                  <span>Daily challenges to look forward to</span>
+                  <span>Achievement tracking to boost motivation</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-pink-500"></span>
@@ -517,9 +513,6 @@ const Index = () => {
             <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-8" asChild>
               <Link to="/game">Play Now</Link>
             </Button>
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8" asChild>
-              <Link to="/daily-puzzle">Try Daily Challenge</Link>
-            </Button>
           </div>
         </div>
       </section>
@@ -560,7 +553,6 @@ const AboutModal = ({ open, onOpenChange }: ModalProps) => (
           <li><strong>Easy:</strong> 4×4 grid with more pre-filled cells</li>
           <li><strong>Medium:</strong> 6×6 grid with a moderate number of pre-filled cells</li>
           <li><strong>Hard:</strong> 9×9 grid with fewer pre-filled cells</li>
-          <li><strong>Daily Challenge:</strong> 10×10 grid for an extra challenge</li>
         </ul>
       </div>
     </DialogContent>
@@ -575,17 +567,25 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
       </DialogHeader>
       <div className="space-y-6">
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date())} - Beta 2.8</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date())} - Beta 2.9</h3>
+          <ul className="list-disc pl-6 text-muted-foreground mt-2">
+            <li>Temporarily removed daily challenge feature (will return in a future update)</li>
+            <li>Updated homepage layout and content</li>
+            <li>Simplified game features presentation</li>
+            <li>Improved mobile responsiveness across all sections</li>
+          </ul>
+        </div>
+        <div>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 86400000))} - Beta 2.8</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Enhanced homepage with new sections showcasing game benefits and features</li>
             <li>Added keyboard number shortcuts to color palette for faster gameplay</li>
-            <li>Upgraded daily challenge to 10×10 grid size for more challenge</li>
             <li>Improved light mode UI across all game components</li>
             <li>Optimized game grid to better fit mobile screens</li>
           </ul>
         </div>
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 86400000))} - Beta 2.7</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 172800000))} - Beta 2.7</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Combined Settings and Account pages into a single page</li>
             <li>Added improved theme selector with button choices</li>
@@ -595,7 +595,7 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
           </ul>
         </div>
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 172800000))} - Beta 2.6</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 259200000))} - Beta 2.6</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Added daily puzzle challenge feature</li>
             <li>Fixed Medium (6×6) grid color display issues</li>
@@ -605,37 +605,12 @@ const ChangelogModal = ({ open, onOpenChange }: ModalProps) => (
           </ul>
         </div>
         <div>
-          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 259200000))} - Beta 2.5</h3>
+          <h3 className="font-bold text-lg">{formatDate(new Date(Date.now() - 345600000))} - Beta 2.5</h3>
           <ul className="list-disc pl-6 text-muted-foreground mt-2">
             <li>Added animated hero section to homepage</li>
             <li>Implemented loading screens for all pages</li>
             <li>Enhanced scroll-to-top functionality for better navigation</li>
             <li>Improved sitemap with clickable navigation buttons</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 21, 2025 - Beta 2.4</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Improved sitemap with clickable navigation buttons</li>
-            <li>Fixed Medium (6×6) grid color display issues</li>
-            <li>Added scroll-to-top functionality for better navigation</li>
-            <li>Enhanced mobile experience with hamburger menu</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 20, 2025 - Security Update</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Fixed security issue with OTP expiry time in authentication</li>
-            <li>Enhanced user account security measures</li>
-            <li>Improved authentication flow experience</li>
-          </ul>
-        </div>
-        <div>
-          <h3 className="font-bold text-lg">May 18, 2025 - Beta 2.3</h3>
-          <ul className="list-disc pl-6 text-muted-foreground mt-2">
-            <li>Added high contrast mode for improved accessibility</li>
-            <li>Optimized game load times across all devices</li>
-            <li>Fixed several UI glitches on mobile devices</li>
           </ul>
         </div>
       </div>
