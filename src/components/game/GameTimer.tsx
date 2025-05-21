@@ -33,7 +33,7 @@ const GameTimer = ({ isRunning, onPause, onResume }: GameTimerProps) => {
   };
   
   return (
-    <div className="flex items-center gap-2 bg-neutral-100 px-4 py-2 rounded-full border border-gray-200">
+    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
       <Timer size={18} className="text-purple-600" />
       <span className="font-mono text-lg">{formatTime(seconds)}</span>
       

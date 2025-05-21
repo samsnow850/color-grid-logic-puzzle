@@ -35,7 +35,7 @@ const ColorGrid = ({
   return (
     <div 
       className={cn(
-        "grid gap-1 bg-neutral-100 dark:bg-gray-700 rounded-lg p-1.5 shadow-md",
+        "grid gap-1 bg-white border border-gray-200 rounded-lg p-1.5 shadow-md",
         gridSize === 9 && "max-w-[500px]"
       )}
       style={{
@@ -56,7 +56,7 @@ const ColorGrid = ({
               key={`${rowIndex}-${colIndex}`}
               className={cn(
                 "aspect-square flex items-center justify-center rounded shadow-sm transition-all",
-                cell ? `${cell} shadow-inner` : "bg-white dark:bg-gray-800",
+                cell ? `${cell} shadow-inner` : "bg-white border border-gray-100",
                 isSelected && "ring-2 ring-purple-400",
                 isPrefilled && "cursor-not-allowed",
                 !isPrefilled && "cursor-pointer hover:brightness-110",
