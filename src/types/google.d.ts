@@ -14,6 +14,9 @@ interface Window {
             size?: string;
             text?: string;
             width?: number;
+            type?: string;
+            shape?: string;
+            logo_alignment?: string;
           }
         ) => void;
       };
