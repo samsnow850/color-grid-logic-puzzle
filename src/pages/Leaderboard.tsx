@@ -1,410 +1,390 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAuth } from "@/hooks/useAuth";
-import { motion } from "framer-motion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, Award, RefreshCw } from "lucide-react";
-import { Link } from "react-router-dom";
+import { User, UserCircle2, Crown, Award, Clock, Medal, XCircle, Filter } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
+// Define the Profile type
 interface Profile {
   display_name: string | null;
   avatar_url: string | null;
-  leaderboard_opt_in: boolean | null;
+  leaderboard_opt_in: boolean;
 }
 
+// Define the ScoreEntry type
 interface ScoreEntry {
   id: string;
   user_id: string;
   score: number;
-  created_at: string;
   difficulty: string;
   time_taken: number;
-  profiles?: Profile | null;
+  created_at: string;
+  profiles: Profile;
 }
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const formatTime = (seconds: number) => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
 
 const Leaderboard = () => {
   const { user } = useAuth();
-  const [difficulty, setDifficulty] = useState<string>("all");
-  const [timeRange, setTimeRange] = useState<"all" | "month" | "week">("all");
-
-  const { data: scores, isLoading, error, refetch } = useQuery({
-    queryKey: ["leaderboard", difficulty, timeRange],
-    queryFn: async () => {
-      // Build query for game scores
+  const [activeTab, setActiveTab] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all-time");
+  const [loading, setLoading] = useState(true);
+  const [scores, setScores] = useState<ScoreEntry[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  
+  useEffect(() => {
+    fetchScores();
+  }, [activeTab, difficultyFilter, timeFilter, user]);
+  
+  const fetchScores = async () => {
+    setLoading(true);
+    
+    try {
+      // Determine date range for filtering
+      let dateConstraint = '';
+      const now = new Date();
+      
+      if (timeFilter === 'today') {
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        dateConstraint = `created_at >= '${today}'`;
+      } else if (timeFilter === 'this-week') {
+        const oneWeekAgo = new Date(now);
+        oneWeekAgo.setDate(now.getDate() - 7);
+        dateConstraint = `created_at >= '${oneWeekAgo.toISOString()}'`;
+      } else if (timeFilter === 'this-month') {
+        const oneMonthAgo = new Date(now);
+        oneMonthAgo.setMonth(now.getMonth() - 1);
+        dateConstraint = `created_at >= '${oneMonthAgo.toISOString()}'`;
+      }
+      
+      // Build difficulty filter
+      const difficultyConstraint = difficultyFilter !== 'all' ? `difficulty = '${difficultyFilter}'` : '';
+      
+      // Combine constraints
+      let constraints = [];
+      if (dateConstraint) constraints.push(dateConstraint);
+      if (difficultyConstraint) constraints.push(difficultyConstraint);
+      
+      // Filter by user if on 'me' tab
+      if (activeTab === 'me' && user) {
+        constraints.push(`user_id = '${user.id}'`);
+      }
+      
+      // Build final query
       let query = supabase
-        .from("game_scores")
+        .from('game_scores')
         .select(`
-          id,
-          user_id,
-          score,
-          difficulty,
-          time_taken,
-          created_at,
-          profiles:user_id(
-            display_name,
-            avatar_url,
-            leaderboard_opt_in
-          )
+          *,
+          profiles:user_id(display_name, avatar_url, leaderboard_opt_in)
         `)
-        .eq("completed", true)
-        .order("score", { ascending: false })
-        .limit(50);
+        .eq('completed', true)
+        .order('score', { ascending: false });
       
-      // Apply difficulty filter if needed
-      if (difficulty !== "all") {
-        query = query.eq("difficulty", difficulty);
+      // Add constraints if any
+      if (constraints.length > 0) {
+        query = query.or(constraints.join(','));
       }
       
-      // Apply time range filter if needed
-      if (timeRange !== "all") {
-        const now = new Date();
-        let filterDate = new Date();
-        
-        if (timeRange === "week") {
-          filterDate.setDate(now.getDate() - 7);
-        } else if (timeRange === "month") {
-          filterDate.setDate(now.getDate() - 30);
-        }
-        
-        query = query.gte("created_at", filterDate.toISOString());
+      // Execute query
+      const { data: scoreData, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching leaderboard:', error);
+        setScores([]);
+        setUserRank(null);
+        setLoading(false);
+        return;
       }
       
-      const { data, error } = await query;
+      // Type assertion and filtering for leaderboard opt-in
+      const typedScores = scoreData as unknown as Array<{
+        id: string;
+        user_id: string;
+        score: number;
+        difficulty: string;
+        time_taken: number;
+        created_at: string;
+        profiles: Profile;
+      }>;
       
-      if (error) throw error;
-      
-      if (!data) return [];
-      
-      // Filter out entries where user has opted out of leaderboard
-      return data.filter(entry => {
-        // If profiles is null or has no leaderboard_opt_in property, default to including the entry
-        if (!entry.profiles || entry.profiles.leaderboard_opt_in === null) {
+      // Filter out users who opted out of leaderboard
+      const filteredScores = typedScores.filter(score => {
+        // For the 'me' tab, show the user's scores regardless of opt-in status
+        if (activeTab === 'me' && user && score.user_id === user.id) {
           return true;
         }
-        // Otherwise, only include if they've opted in
-        return entry.profiles.leaderboard_opt_in !== false;
-      }) as ScoreEntry[];
-    },
-    refetchOnWindowFocus: false,
-  });
-
-  const getInitials = (name: string | null | undefined) => {
-    if (!name) return "#";
-    return name.charAt(0).toUpperCase();
-  };
-
-  const getDisplayName = (score: ScoreEntry) => {
-    if (score.profiles?.display_name) {
-      return score.profiles.display_name;
+        // For other tabs, respect the opt-in flag
+        return score.profiles && score.profiles.leaderboard_opt_in !== false;
+      });
+      
+      setScores(filteredScores);
+      
+      // Calculate user's rank if they are logged in
+      if (user) {
+        const userRankIndex = filteredScores.findIndex(score => score.user_id === user.id);
+        setUserRank(userRankIndex >= 0 ? userRankIndex + 1 : null);
+      } else {
+        setUserRank(null);
+      }
+      
+    } catch (error) {
+      console.error("Error fetching leaderboard data:", error);
+      setScores([]);
+      setUserRank(null);
+    } finally {
+      setLoading(false);
     }
-    return `Player ${score.user_id.substring(0, 6)}`;
   };
-
-  // Highlight current user's scores
-  const isCurrentUser = (userId: string) => {
-    return user?.id === userId;
+  
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
-  useEffect(() => {
-    // Handle scroll to top when page loads
-    window.scrollTo(0, 0);
-    
-    // Refresh leaderboard data on mount
-    refetch();
-  }, [refetch]);
-
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-1 p-6 md:p-12 bg-gradient-to-b from-background to-purple-50">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="flex flex-col md:flex-row gap-2 md:items-center mb-6">
+      <main className="flex-1 container max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-primary">Leaderboard</h1>
+              <p className="text-muted-foreground">Compare your puzzle-solving skills with players worldwide</p>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2 rounded-lg"
+              onClick={() => setFilterOpen(!filterOpen)}
+            >
+              <Filter size={16} />
+              Filters
+            </Button>
+          </div>
+          
+          {filterOpen && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <h1 className="text-3xl font-bold">Leaderboard</h1>
-                <p className="text-muted-foreground">See how players rank in Color Grid Logic</p>
+                <label className="text-sm font-medium mb-1 block">Difficulty</label>
+                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <SelectTrigger className="w-full rounded-lg">
+                    <SelectValue placeholder="All Difficulties" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Difficulties</SelectItem>
+                    <SelectItem value="easy">Easy</SelectItem>
+                    <SelectItem value="hard">Hard</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="ml-auto"
-                onClick={() => refetch()}
-                title="Refresh leaderboard"
-              >
-                <RefreshCw className="h-5 w-5" />
-              </Button>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Time Period</label>
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger className="w-full rounded-lg">
+                    <SelectValue placeholder="All Time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-time">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="this-week">This Week</SelectItem>
+                    <SelectItem value="this-month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </motion.div>
+          )}
           
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-6"
-          >
-            <Tabs defaultValue="filters" className="space-y-6">
-              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Time Range</h3>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm"
-                        variant={timeRange === "all" ? "default" : "outline"} 
-                        onClick={() => setTimeRange("all")}
-                        className="rounded-lg"
-                      >
-                        All Time
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant={timeRange === "month" ? "default" : "outline"} 
-                        onClick={() => setTimeRange("month")}
-                        className="rounded-lg"
-                      >
-                        This Month
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant={timeRange === "week" ? "default" : "outline"} 
-                        onClick={() => setTimeRange("week")}
-                        className="rounded-lg"
-                      >
-                        This Week
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 mb-6 rounded-lg">
+              <TabsTrigger value="all">Global Rankings</TabsTrigger>
+              <TabsTrigger value="me" disabled={!user}>Your Rankings</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              {loading ? (
+                <div className="py-20 text-center text-muted-foreground">
+                  Loading leaderboard...
+                </div>
+              ) : scores.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto">
+                    <thead>
+                      <tr className="bg-gray-50 text-left">
+                        <th className="px-4 py-3 rounded-tl-lg">Rank</th>
+                        <th className="px-4 py-3">Player</th>
+                        <th className="px-4 py-3">Score</th>
+                        <th className="px-4 py-3">Difficulty</th>
+                        <th className="px-4 py-3">Time</th>
+                        <th className="px-4 py-3 rounded-tr-lg">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scores.map((score, index) => {
+                        const isCurrentUser = user && score.user_id === user.id;
+                        const displayName = score.profiles?.display_name || 'Anonymous';
+                        
+                        return (
+                          <tr 
+                            key={score.id} 
+                            className={`border-t border-gray-100 ${isCurrentUser ? 'bg-purple-50' : ''} ${index % 2 === 1 ? 'bg-gray-50' : ''}`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center">
+                                {index < 3 ? (
+                                  <div className={`
+                                    w-8 h-8 rounded-full flex items-center justify-center text-white font-bold
+                                    ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-700'}
+                                  `}>
+                                    {index === 0 && <Crown size={16} />}
+                                    {index === 1 && <Award size={16} />}
+                                    {index === 2 && <Medal size={16} />}
+                                  </div>
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-medium text-gray-700">
+                                    {index + 1}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                {score.profiles?.avatar_url ? (
+                                  <img 
+                                    src={score.profiles.avatar_url} 
+                                    alt={score.profiles.display_name || 'Player'} 
+                                    className="w-8 h-8 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <UserCircle2 className="w-8 h-8 text-gray-400" />
+                                )}
+                                <span className={isCurrentUser ? 'font-bold' : ''}>{displayName}</span>
+                                {isCurrentUser && <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded">You</span>}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 font-bold">{score.score}</td>
+                            <td className="px-4 py-3 capitalize">{score.difficulty}</td>
+                            <td className="px-4 py-3">{formatTime(score.time_taken)}</td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {formatDistanceToNow(new Date(score.created_at), { addSuffix: true })}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-20 text-center">
+                  <XCircle className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <h3 className="text-lg font-medium mb-1">No scores found</h3>
+                  <p className="text-muted-foreground">
+                    {difficultyFilter !== 'all' || timeFilter !== 'all-time' 
+                      ? 'Try changing your filters to see more results' 
+                      : 'Be the first to set a high score!'}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="me">
+              {!user ? (
+                <div className="py-20 text-center">
+                  <User className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <h3 className="text-lg font-medium mb-1">Sign in to view your rankings</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Create an account to track your progress and see where you rank
+                  </p>
+                  <Button asChild>
+                    <a href="/auth">Sign In</a>
+                  </Button>
+                </div>
+              ) : loading ? (
+                <div className="py-20 text-center text-muted-foreground">
+                  Loading your scores...
+                </div>
+              ) : scores.length > 0 ? (
+                <div>
+                  {userRank !== null && (
+                    <div className="mb-6 p-4 bg-purple-50 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-100 p-2 rounded-full">
+                          <Trophy className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Your Global Rank</p>
+                          <p className="font-bold text-lg">{userRank}</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" asChild className="rounded-lg">
+                        <a href="#all" onClick={() => setActiveTab('all')}>View Global Ranking</a>
                       </Button>
                     </div>
-                  </div>
+                  )}
                   
-                  <Separator className="md:hidden" />
-                  <Separator orientation="vertical" className="hidden md:block h-auto" />
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Difficulty</h3>
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        size="sm"
-                        variant={difficulty === "all" ? "default" : "outline"} 
-                        onClick={() => setDifficulty("all")}
-                        className="rounded-lg"
-                      >
-                        All
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant={difficulty === "easy" ? "default" : "outline"} 
-                        onClick={() => setDifficulty("easy")}
-                        className="rounded-lg"
-                      >
-                        Easy
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant={difficulty === "hard" ? "default" : "outline"} 
-                        onClick={() => setDifficulty("hard")}
-                        className="rounded-lg"
-                      >
-                        Hard
-                      </Button>
-                      <Button 
-                        size="sm"
-                        variant={difficulty === "daily" ? "default" : "outline"} 
-                        onClick={() => setDifficulty("daily")}
-                        className="rounded-lg"
-                      >
-                        Daily
-                      </Button>
-                    </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full table-auto">
+                      <thead>
+                        <tr className="bg-gray-50 text-left">
+                          <th className="px-4 py-3 rounded-tl-lg">Score</th>
+                          <th className="px-4 py-3">Difficulty</th>
+                          <th className="px-4 py-3">Time</th>
+                          <th className="px-4 py-3 rounded-tr-lg">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scores.map((score, index) => (
+                          <tr 
+                            key={score.id} 
+                            className={index % 2 === 1 ? 'bg-gray-50' : ''}
+                          >
+                            <td className="px-4 py-3 font-bold">{score.score}</td>
+                            <td className="px-4 py-3 capitalize">{score.difficulty}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <Clock size={14} className="text-gray-400" />
+                                {formatTime(score.time_taken)}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {formatDistanceToNow(new Date(score.created_at), { addSuffix: true })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              </div>
-              
-              <div className="bg-white rounded-xl shadow overflow-hidden border border-gray-100">
-                {isLoading ? (
-                  <div className="p-6">
-                    <div className="space-y-4">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="flex items-center gap-4">
-                          <Skeleton className="h-6 w-6 rounded-full" />
-                          <Skeleton className="h-6 w-12" />
-                          <Skeleton className="h-6 w-48" />
-                          <Skeleton className="h-6 w-24 ml-auto" />
-                          <Skeleton className="h-6 w-24" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : error ? (
-                  <div className="p-6 text-center">
-                    <p className="text-red-500">Error loading leaderboard data. Please try again later.</p>
-                    <Button onClick={() => refetch()} className="mt-4 rounded-lg">Retry</Button>
-                  </div>
-                ) : scores && scores.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-16">Rank</TableHead>
-                          <TableHead>Player</TableHead>
-                          <TableHead className="text-right">Score</TableHead>
-                          <TableHead className="text-right">Time</TableHead>
-                          <TableHead className="text-right hidden md:table-cell">Difficulty</TableHead>
-                          <TableHead className="text-right hidden md:table-cell">Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {scores.map((score, index) => (
-                          <TableRow 
-                            key={score.id}
-                            className={isCurrentUser(score.user_id) ? "bg-primary/5" : undefined}
-                          >
-                            <TableCell className="font-medium">
-                              {index === 0 && (
-                                <div className="flex items-center">
-                                  <Award className="h-4 w-4 text-yellow-500 mr-1" />
-                                  {index + 1}
-                                </div>
-                              )}
-                              {index === 1 && (
-                                <div className="flex items-center">
-                                  <Award className="h-4 w-4 text-gray-400 mr-1" />
-                                  {index + 1}
-                                </div>
-                              )}
-                              {index === 2 && (
-                                <div className="flex items-center">
-                                  <Award className="h-4 w-4 text-amber-600 mr-1" />
-                                  {index + 1}
-                                </div>
-                              )}
-                              {index > 2 && index + 1}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  {score.profiles?.avatar_url ? (
-                                    <AvatarImage src={score.profiles.avatar_url} />
-                                  ) : (
-                                    <AvatarFallback>{getInitials(score.profiles?.display_name)}</AvatarFallback>
-                                  )}
-                                </Avatar>
-                                <div>
-                                  <span className={isCurrentUser(score.user_id) ? "font-medium" : ""}>
-                                    {getDisplayName(score)}
-                                  </span>
-                                  {isCurrentUser(score.user_id) && (
-                                    <span className="text-xs text-primary ml-2">(You)</span>
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right font-bold">{score.score.toLocaleString()}</TableCell>
-                            <TableCell className="text-right">
-                              <span className="flex items-center justify-end">
-                                <Clock className="h-3 w-3 mr-1 opacity-70" />
-                                {formatTime(score.time_taken)}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right hidden md:table-cell">
-                              <span className={`px-2 py-1 rounded-full text-xs 
-                                ${score.difficulty === "easy" ? "bg-green-100 text-green-800" : ""}
-                                ${score.difficulty === "hard" ? "bg-red-100 text-red-800" : ""}
-                                ${score.difficulty === "daily" ? "bg-blue-100 text-blue-800" : ""}
-                              `}>
-                                {score.difficulty.charAt(0).toUpperCase() + score.difficulty.slice(1)}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right hidden md:table-cell">{formatDate(score.created_at)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">No scores found for the selected filters.</p>
-                    <Button variant="outline" onClick={() => {
-                      setDifficulty("all");
-                      setTimeRange("all");
-                    }} className="mt-4 rounded-lg">
-                      Reset Filters
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Tabs>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-8"
-          >
-            <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-              <h2 className="text-xl font-semibold mb-4">About Scoring</h2>
-              <p className="mb-4">
-                Scores in Color Grid Logic are calculated based on several factors:
-              </p>
-              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li>
-                  <strong>Base Score:</strong> Easy (100 points), Medium (200 points), Hard (300 points), Daily (250 points)
-                </li>
-                <li>
-                  <strong>Time Bonus:</strong> Faster completion times earn higher scores
-                </li>
-                <li>
-                  <strong>Error Penalty:</strong> Fewer incorrect attempts result in higher scores
-                </li>
-              </ul>
-              <Separator className="my-4" />
-              <p className="flex items-center">
-                {!user ? (
-                  <>
-                    To appear on the leaderboard, you need to be signed in when completing puzzles.
-                    <Button variant="link" className="ml-1 p-0" asChild>
-                      <Link to="/auth">Sign in now</Link>
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    You can opt out of appearing on the leaderboard in your 
-                    <Button variant="link" className="mx-1 p-0" asChild>
-                      <Link to="/account">account settings</Link>
-                    </Button>
-                  </>
-                )}
-              </p>
-            </div>
-          </motion.div>
+              ) : (
+                <div className="py-20 text-center">
+                  <XCircle className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <h3 className="text-lg font-medium mb-1">No scores yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Play some games to see your scores and rankings here
+                  </p>
+                  <Button asChild>
+                    <a href="/game">Play a Game</a>
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       

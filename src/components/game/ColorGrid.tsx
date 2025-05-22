@@ -32,12 +32,20 @@ const ColorGrid = ({
   const displayOriginal = originalGrid && originalGrid.length === gridSize ? 
     originalGrid : Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
   
+  // Calculate cell size based on grid size
+  const getCellSize = () => {
+    if (gridSize <= 4) return "62px";
+    if (gridSize <= 6) return "52px";
+    if (gridSize <= 9) return "40px";
+    return "36px";
+  };
+  
   return (
     <div 
       className={cn(
         "grid gap-1 bg-white border border-gray-200 rounded-lg p-1.5 shadow-md",
         gridSize === 10 && "max-w-[540px]",
-        gridSize === 9 && "max-w-[500px]",
+        gridSize === 9 && "max-w-[420px]",  // Reduced from 500px
         gridSize === 6 && "max-w-[350px]",
         gridSize === 4 && "max-w-[280px]"
       )}
@@ -70,8 +78,8 @@ const ColorGrid = ({
               )}
               onClick={() => onCellClick(rowIndex, colIndex)}
               style={{
-                width: gridSize === 10 ? "40px" : gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
-                height: gridSize === 10 ? "40px" : gridSize === 9 ? "42px" : gridSize === 6 ? "52px" : "62px",
+                width: getCellSize(),
+                height: getCellSize(),
               }}
             >
               {isPrefilled && (

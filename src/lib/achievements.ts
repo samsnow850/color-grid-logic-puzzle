@@ -1,16 +1,15 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface Achievement {
-  id?: string;
+  id: string;
   type: string;
   name: string;
   description: string;
   achieved: boolean;
-  achieved_at?: string | null;
   progress?: number;
-  goal?: number;
+  progressTarget?: number;
+  achievedAt?: string;
 }
 
 export const ACHIEVEMENT_TYPES = {
@@ -36,7 +35,7 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
       description: "Complete 5 Easy puzzles",
       achieved: false,
       progress: 0,
-      goal: 5,
+      progressTarget: 5,
     },
     {
       type: ACHIEVEMENT_TYPES.hard_master,
@@ -44,7 +43,7 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
       description: "Complete 3 Hard puzzles",
       achieved: false,
       progress: 0,
-      goal: 3,
+      progressTarget: 3,
     },
     {
       type: ACHIEVEMENT_TYPES.speed_demon,
@@ -64,7 +63,7 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
       description: "Complete 3 daily puzzles",
       achieved: false,
       progress: 0,
-      goal: 3,
+      progressTarget: 3,
     },
   ];
   
@@ -88,7 +87,7 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
         const index = achievements.findIndex((a) => a.type === achievement.achievement_type);
         if (index >= 0) {
           achievements[index].achieved = true;
-          achievements[index].achieved_at = achievement.achieved_at;
+          achievements[index].achievedAt = achievement.achieved_at;
           achievements[index].id = achievement.id;
         }
       });
@@ -106,21 +105,21 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
       const easyGames = gameScores.filter((score) => score.difficulty === "easy").length;
       const easyMasterAchievement = achievements.find((a) => a.type === ACHIEVEMENT_TYPES.easy_master);
       if (easyMasterAchievement) {
-        easyMasterAchievement.progress = Math.min(easyGames, easyMasterAchievement.goal || 5);
+        easyMasterAchievement.progress = Math.min(easyGames, easyMasterAchievement.progressTarget || 5);
       }
       
       // Hard Master progress
       const hardGames = gameScores.filter((score) => score.difficulty === "hard").length;
       const hardMasterAchievement = achievements.find((a) => a.type === ACHIEVEMENT_TYPES.hard_master);
       if (hardMasterAchievement) {
-        hardMasterAchievement.progress = Math.min(hardGames, hardMasterAchievement.goal || 3);
+        hardMasterAchievement.progress = Math.min(hardGames, hardMasterAchievement.progressTarget || 3);
       }
       
       // Daily Challenger progress
       const dailyGames = gameScores.filter((score) => score.difficulty === "daily").length;
       const dailyChallengerAchievement = achievements.find((a) => a.type === ACHIEVEMENT_TYPES.daily_challenger);
       if (dailyChallengerAchievement) {
-        dailyChallengerAchievement.progress = Math.min(dailyGames, dailyChallengerAchievement.goal || 3);
+        dailyChallengerAchievement.progress = Math.min(dailyGames, dailyChallengerAchievement.progressTarget || 3);
       }
     }
     

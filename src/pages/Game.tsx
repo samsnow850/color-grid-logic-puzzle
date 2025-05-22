@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +17,9 @@ import GameTimer from "@/components/game/GameTimer";
 import PauseOverlay from "@/components/game/PauseOverlay";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, Trophy, ChevronRight, HelpCircle, Party } from "lucide-react";
+import { 
+  Info, Trophy, ChevronRight, HelpCircle, Sparkles 
+} from "lucide-react";
 import { scrollToTop } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -27,6 +28,66 @@ import { saveGameResult } from "@/lib/gameUtils";
 import { Link } from "react-router-dom";
 import { useAchievements } from "@/hooks/useAchievements";
 import { Achievement } from "@/lib/achievements";
+
+const AchievementDialog = ({ 
+  open, 
+  onOpenChange, 
+  achievement 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  achievement: Achievement | null 
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-center">Achievement Unlocked!</DialogTitle>
+        </DialogHeader>
+        
+        {achievement && (
+          <div className="py-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+                <Sparkles className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold">{achievement.name}</h3>
+              <p className="text-muted-foreground">
+                {achievement.description}
+              </p>
+              
+              <div className="pt-4">
+                <Button
+                  className="rounded-lg"
+                  onClick={() => {
+                    onOpenChange(false);
+                    setShowGameOverScreen(true);
+                  }}
+                >
+                  Continue
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="pt-2">
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => {
+                    onOpenChange(false);
+                    window.location.href = '/achievements';
+                  }}
+                >
+                  View all achievements
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Game = () => {
   const { user } = useAuth();
@@ -627,53 +688,11 @@ const Game = () => {
       </Dialog>
       
       {/* Achievement Dialog */}
-      <Dialog open={showAchievementDialog} onOpenChange={setShowAchievementDialog}>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center">Achievement Unlocked!</DialogTitle>
-          </DialogHeader>
-          
-          {latestAchievement && (
-            <div className="py-6">
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Party className="h-10 w-10 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold">{latestAchievement.name}</h3>
-                <p className="text-muted-foreground">
-                  {latestAchievement.description}
-                </p>
-                
-                <div className="pt-4">
-                  <Button
-                    className="rounded-lg"
-                    onClick={() => {
-                      setShowAchievementDialog(false);
-                      setShowGameOverScreen(true);
-                    }}
-                  >
-                    Continue
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="pt-2">
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => {
-                      setShowAchievementDialog(false);
-                      window.location.href = '/achievements';
-                    }}
-                  >
-                    View all achievements
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AchievementDialog 
+        open={showAchievementDialog} 
+        onOpenChange={setShowAchievementDialog} 
+        achievement={latestAchievement} 
+      />
       
       <Footer />
     </div>
