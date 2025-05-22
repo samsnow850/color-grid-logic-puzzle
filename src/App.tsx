@@ -16,7 +16,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import Contact from "./pages/Contact";
-import Leaderboard from "./pages/Leaderboard";
+import { default as Leaderboard } from "./pages/Leaderboard";
 import Account from "./pages/Account";
 import Settings from "./pages/Settings";
 import About from "./pages/About";

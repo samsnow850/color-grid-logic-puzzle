@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -209,6 +209,31 @@ const sendScore = async (score: number, difficulty: string) => {
   }
 };
 
+// Helper function to count occurrences of a value in the grid
+const countValueInGrid = (grid: Grid, value: number): number => {
+  let count = 0;
+  const size = grid.length;
+  
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      if (grid[i][j] === value) {
+        count++;
+      }
+    }
+  }
+  
+  return count;
+};
+
+// Helper function to check if a value has reached its maximum allowed count
+const isValueMaxed = (grid: Grid, value: number): boolean => {
+  const size = grid.length;
+  const maxAllowed = size; // In Sudoku, each value can appear exactly size times
+  const currentCount = countValueInGrid(grid, value);
+  
+  return currentCount >= maxAllowed;
+};
+
 // Main Game component
 const Game = () => {
   const { user } = useAuth();
@@ -406,7 +431,7 @@ const Game = () => {
     toast({
       title: "Congratulations!",
       description: "You've completed the puzzle!",
-      variant: "success",
+      variant: "default",
     });
   };
   
@@ -621,15 +646,18 @@ const Game = () => {
       )}>
         {Array.from({ length: size }).map((_, i) => {
           const value = i + 1;
+          const isMaxed = isValueMaxed(grid, value);
+          
           return (
             <Button
               key={value}
               variant="outline"
               className={cn(
                 "h-10 md:h-12 text-lg font-medium",
-                noteMode && "bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20"
+                noteMode && "bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20",
+                isMaxed && !noteMode && "opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700"
               )}
-              onClick={() => handleNumberInput(value)}
+              onClick={() => !isMaxed || noteMode ? handleNumberInput(value) : null}
             >
               {value}
             </Button>
@@ -645,7 +673,7 @@ const Game = () => {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Puzzle Game</h1>
-            <p className="text-muted-foreground">Fill the grid with colors following Sudoku-style rules.</p>
+            <p className="text-muted-foreground">Fill the grid with numbers following Sudoku-style rules.</p>
           </div>
           
           <div className="flex items-center gap-2">

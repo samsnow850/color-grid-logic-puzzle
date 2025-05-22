@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,7 @@ import { Menu, User, Trophy, Settings, LogOut, Home, Info, FileText, HelpCircle 
 import { ThemeToggle } from './ThemeToggle';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 const Navbar = () => {
   const location = useLocation();
@@ -77,13 +79,15 @@ const Navbar = () => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 w-full transition-all duration-200 ${scrolled ? 'bg-background/80 backdrop-blur-md border-b shadow-sm' : 'bg-transparent'}`}>
+    <header className={cn(
+      "sticky top-0 z-50 w-full transition-all duration-200",
+      scrolled ? 'bg-background/80 backdrop-blur-md border-b shadow-sm' : 'bg-transparent'
+    )}>
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
               <Logo className="h-8 w-auto text-primary" />
-              {/* Removed "Color Grid Logic" text */}
             </Link>
             
             {/* Desktop Navigation */}
@@ -92,7 +96,7 @@ const Navbar = () => {
                 <Button 
                   variant={isActive('/') ? "default" : "ghost"} 
                   size="sm" 
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1.5"
                 >
                   <Home className="w-4 h-4" />
                   <span>Home</span>
@@ -102,7 +106,7 @@ const Navbar = () => {
                 <Button 
                   variant={isActive('/game') ? "default" : "ghost"} 
                   size="sm" 
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1.5"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-grid-3x3"><rect width="18" height="18" x="3" y="3" rx="2" /></svg>
                   <span>Play</span>
@@ -112,7 +116,7 @@ const Navbar = () => {
                 <Button 
                   variant={isActive('/leaderboard') ? "default" : "ghost"} 
                   size="sm" 
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1.5"
                 >
                   <Trophy className="w-4 h-4" />
                   <span>Leaderboard</span>
@@ -122,7 +126,7 @@ const Navbar = () => {
                 <Button 
                   variant={isActive('/about') ? "default" : "ghost"} 
                   size="sm" 
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1.5"
                 >
                   <Info className="w-4 h-4" />
                   <span>About</span>
@@ -163,7 +167,7 @@ const Navbar = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/account" className="flex items-center cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
-                      <span>Account & Settings</span>
+                      <span>Account Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -187,7 +191,7 @@ const Navbar = () => {
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle navigation menu</span>
                 </Button>
               </SheetTrigger>
@@ -220,7 +224,7 @@ const Navbar = () => {
                     <>
                       <Link to="/account" className="flex items-center py-2 px-3 rounded-md hover:bg-accent">
                         <User className="mr-2 h-5 w-5" />
-                        <span>Account & Settings</span>
+                        <span>Account Settings</span>
                       </Link>
                       <button 
                         className="flex items-center py-2 px-3 rounded-md hover:bg-accent text-left w-full" 

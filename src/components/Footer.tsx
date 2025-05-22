@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
@@ -15,7 +16,6 @@ const Footer = () => {
           <div className="flex flex-col mb-8 md:mb-0 md:max-w-xs">
             <div className="flex items-center gap-2 mb-4">
               <Logo className="h-8 w-auto text-primary" />
-              {/* Removed "Color Grid Logic" text */}
             </div>
             <p className="text-muted-foreground text-sm mb-4">
               A colorful puzzle challenge where logic meets creativity. Fill the grid with colors following Sudoku-style rules.
