@@ -32,16 +32,11 @@ const ColorGrid = ({
   const displayOriginal = originalGrid && originalGrid.length === gridSize ? 
     originalGrid : Array(gridSize).fill("").map(() => Array(gridSize).fill(""));
   
-  // Count pre-filled cells for debugging
-  console.log("Pre-filled cell count:", displayOriginal.flat().filter(cell => cell !== "").length);
-  
   return (
     <div 
       className={cn(
-        "grid gap-1 bg-white border border-gray-200 rounded-lg p-1.5 shadow-md",
-        gridSize === 9 && "max-w-[500px]",
-        gridSize === 7 && "max-w-[420px]",
-        gridSize === 4 && "max-w-[280px]"
+        "grid gap-1 p-1 bg-gray-200 rounded-lg",
+        gridSize === 9 && "max-w-[500px]"
       )}
       style={{
         gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
@@ -50,20 +45,9 @@ const ColorGrid = ({
     >
       {displayGrid.map((row, rowIndex) => (
         row.map((cell, colIndex) => {
-          // Calculate borders based on grid size
-          let isTopEdge = false;
-          let isLeftEdge = false;
-          
-          if (gridSize === 7) {
-            // Define custom region boundaries for 7x7
-            isTopEdge = rowIndex === 0 || rowIndex === 3 || rowIndex === 5;
-            isLeftEdge = colIndex === 0 || colIndex === 3;
-          } else {
-            // For 4x4 and 9x9, use standard regions
-            isTopEdge = rowIndex % regionSize === 0;
-            isLeftEdge = colIndex % regionSize === 0;
-          }
-          
+          // Calculate region boundaries for borders
+          const isTopEdge = rowIndex % regionSize === 0;
+          const isLeftEdge = colIndex % regionSize === 0;
           const isSelected = selectedCell?.[0] === rowIndex && selectedCell?.[1] === colIndex;
           const isPrefilled = displayOriginal[rowIndex]?.[colIndex] !== "";
           
@@ -71,11 +55,10 @@ const ColorGrid = ({
             <div
               key={`${rowIndex}-${colIndex}`}
               className={cn(
-                "aspect-square flex items-center justify-center rounded shadow-sm transition-all",
-                cell ? `${cell} shadow-inner` : "bg-white border border-gray-100",
-                isSelected && "ring-2 ring-purple-400",
+                "aspect-square flex items-center justify-center rounded-sm cursor-pointer",
+                cell || "bg-white",
+                isSelected && "ring-2 ring-blue-500",
                 isPrefilled && "cursor-not-allowed",
-                !isPrefilled && "cursor-pointer hover:brightness-110",
                 isTopEdge && "border-t-2 border-gray-500",
                 isLeftEdge && "border-l-2 border-gray-500",
                 rowIndex === gridSize - 1 && "border-b-2 border-gray-500",
@@ -83,14 +66,10 @@ const ColorGrid = ({
               )}
               onClick={() => onCellClick(rowIndex, colIndex)}
               style={{
-                width: gridSize === 9 ? "42px" : gridSize === 7 ? "48px" : "62px",
-                height: gridSize === 9 ? "42px" : gridSize === 7 ? "48px" : "62px",
+                width: gridSize === 9 ? "40px" : gridSize === 6 ? "50px" : "60px",
+                height: gridSize === 9 ? "40px" : gridSize === 6 ? "50px" : "60px",
               }}
-            >
-              {isPrefilled && (
-                <span className="block w-2 h-2 bg-white dark:bg-gray-300 rounded-full opacity-70"></span>
-              )}
-            </div>
+            />
           );
         })
       ))}

@@ -20,7 +20,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { HelpCircle, Mail, Lock, User, Shield, Paintbrush, Bell, Moon, Sun, Monitor } from "lucide-react";
+import { HelpCircle, Mail, Lock, User, Shield, Paintbrush, Bell, Laptop, Moon, Sun, Monitor } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -69,7 +69,6 @@ const Settings = () => {
   const [showBugReport, setShowBugReport] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile");
 
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
     resolver: zodResolver(profileFormSchema),
@@ -339,10 +338,10 @@ const Settings = () => {
       
       <main className="flex-1 p-6 md:p-12 bg-gradient-to-b from-background to-purple-50 dark:from-background dark:to-background">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Settings & Account</h1>
-          <p className="text-muted-foreground mb-8">Manage your profile, account settings and preferences</p>
+          <h1 className="text-3xl font-bold mb-2">Settings</h1>
+          <p className="text-muted-foreground mb-8">Manage your account and preferences</p>
           
-          <Tabs defaultValue="profile" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+          <Tabs defaultValue="profile" className="w-full">
             <TabsList className="grid grid-cols-4 mb-8">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="account">Account</TabsTrigger>
@@ -570,7 +569,7 @@ const Settings = () => {
             {/* Appearance Tab */}
             <TabsContent value="appearance">
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>Theme Settings</CardTitle>
@@ -579,49 +578,95 @@ const Settings = () => {
                     <Paintbrush className="h-5 w-5 text-primary" />
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
                     <h3 className="text-lg font-medium">Color Theme</h3>
                     <p className="text-sm text-muted-foreground">
                       Select the theme appearance for the application.
                     </p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                      {/* Light Theme Option */}
-                      <button
-                        onClick={() => setTheme("light")}
-                        className={`flex flex-col items-center justify-between rounded-md border-2 ${
-                          theme === "light" ? "border-primary" : "border-muted"
-                        } p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer`}
-                      >
-                        <Sun className="mb-3 h-6 w-6" />
-                        <div className="font-medium">Light</div>
-                      </button>
-                      
-                      {/* Dark Theme Option */}
-                      <button
-                        onClick={() => setTheme("dark")}
-                        className={`flex flex-col items-center justify-between rounded-md border-2 ${
-                          theme === "dark" ? "border-primary" : "border-muted"
-                        } p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer`}
-                      >
-                        <Moon className="mb-3 h-6 w-6" />
-                        <div className="font-medium">Dark</div>
-                      </button>
-                      
-                      {/* System Theme Option */}
-                      <button
-                        onClick={() => setTheme("system")}
-                        className={`flex flex-col items-center justify-between rounded-md border-2 ${
-                          theme === "system" ? "border-primary" : "border-muted"
-                        } p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer`}
-                      >
-                        <Monitor className="mb-3 h-6 w-6" />
-                        <div className="font-medium">System</div>
-                      </button>
-                    </div>
+                    <RadioGroup 
+                      defaultValue={theme}
+                      onValueChange={(value) => setTheme(value as "light" | "dark" | "system")}
+                      className="mt-3"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Light Theme Option */}
+                        <div>
+                          <RadioGroupItem value="light" id="light" className="sr-only" />
+                          <label
+                            htmlFor="light"
+                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                          >
+                            <Sun className="mb-3 h-6 w-6" />
+                            <div className="font-medium">Light</div>
+                          </label>
+                        </div>
+                        
+                        {/* Dark Theme Option */}
+                        <div>
+                          <RadioGroupItem value="dark" id="dark" className="sr-only" />
+                          <label
+                            htmlFor="dark"
+                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                          >
+                            <Moon className="mb-3 h-6 w-6" />
+                            <div className="font-medium">Dark</div>
+                          </label>
+                        </div>
+                        
+                        {/* System Theme Option */}
+                        <div>
+                          <RadioGroupItem value="system" id="system" className="sr-only" />
+                          <label
+                            htmlFor="system"
+                            className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                          >
+                            <Monitor className="mb-3 h-6 w-6" />
+                            <div className="font-medium">System</div>
+                          </label>
+                        </div>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">UI Density</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Choose how compact you want the interface to appear.
+                    </p>
+                    
+                    <RadioGroup defaultValue="comfortable" className="mt-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="compact" id="compact" />
+                          <label htmlFor="compact" className="text-sm font-medium cursor-pointer">
+                            Compact
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="comfortable" id="comfortable" />
+                          <label htmlFor="comfortable" className="text-sm font-medium cursor-pointer">
+                            Comfortable
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="spacious" id="spacious" />
+                          <label htmlFor="spacious" className="text-sm font-medium cursor-pointer">
+                            Spacious
+                          </label>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Button className="w-full" onClick={() => toast.success("Appearance settings saved")}>
+                    Save Appearance Settings
+                  </Button>
+                </CardFooter>
               </Card>
             </TabsContent>
             

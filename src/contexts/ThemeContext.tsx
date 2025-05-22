@@ -23,7 +23,7 @@ export function ThemeProvider({
   children,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>("system");
+  const [theme, setTheme] = useState<Theme>("light");
   
   // Initialize theme from localStorage if available
   useEffect(() => {
@@ -36,34 +36,6 @@ export function ThemeProvider({
   // Update localStorage and apply theme when it changes
   useEffect(() => {
     localStorage.setItem("theme", theme);
-    
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
-  }, [theme]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    
-    const handleChange = () => {
-      if (theme === "system") {
-        const root = window.document.documentElement;
-        root.classList.remove("light", "dark");
-        root.classList.add(mediaQuery.matches ? "dark" : "light");
-      }
-    };
-    
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
   const value = {

@@ -1,586 +1,330 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useAuth } from "@/hooks/useAuth";
-import { useGameTimer } from '@/hooks/useGameTimer';
-import { 
-  getGameById, 
-  solveGrid, 
-  generateGrid, 
-  checkSolution, 
-  Difficulty, 
-  Cell, 
-  Hint 
-} from '@/lib/grid';
-import { 
-  GridHistory, 
-  createHistory, 
-  saveHistory, 
-  undo, 
-  redo 
-} from '@/lib/historySystem';
-import { 
-  defaultAchievements,
-  unlockAchievement,
-  updateAchievementProgress,
-} from '@/lib/achievements';
-import { 
-  AlertDialog, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from "@/components/ui/alert-dialog";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogFooter
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { 
-  Slider 
-} from "@/components/ui/slider"
-import { 
-  Button 
-} from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
-} from "@/components/ui/tooltip"
-import { 
-  Separator 
-} from "@/components/ui/separator";
-import { 
-  Shuffle, 
-  Undo, 
-  Redo, 
-  Lightbulb, 
-  CheckCircle2, 
-  RotateCcw, 
-  RotateCw, 
-  MoreVertical,
-  Trophy,
-  Sparkles,
-  Pause,
-  Play,
-  ChevronsLeft,
-  ChevronsRight,
-  Flag,
-  Settings,
-  Share2
-} from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PageWrapper from "@/components/PageWrapper";
-import GridComponent from "@/components/game/GridComponent";
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { ShareDialog } from '@/components/game/ShareDialog';
-import AchievementDialog from '@/components/game/AchievementDialog';
+import ColorGrid from "@/components/game/ColorGrid";
+import ColorPalette from "@/components/game/ColorPalette";
+import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
+import { scrollToTop } from "@/lib/utils";
 
 const Game = () => {
-  const { id } = useParams<{ id?: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>("easy");
+  const [showTitleScreen, setShowTitleScreen] = useState(true);
+  const [showGameOverScreen, setShowGameOverScreen] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+  const [gridSize, setGridSize] = useState(4);
+  const [grid, setGrid] = useState<string[][]>([]);
+  const [originalGrid, setOriginalGrid] = useState<string[][]>([]);
+  const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
+  const [colors, setColors] = useState<string[]>([
+    "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
+  ]);
+  const [error, setError] = useState<string | null>(null);
+  const [previewGrid, setPreviewGrid] = useState<JSX.Element | null>(null);
 
-  // Game state
-  const [grid, setGrid] = useState<Cell[][]>([]);
-  const [solution, setSolution] = useState<number[][]>([]);
-  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
-  const [showSolution, setShowSolution] = useState(false);
-  const [isSolved, setIsSolved] = useState(false);
-  const [hints, setHints] = useState<Hint[]>([]);
-  const [isPaused, setIsPaused] = useState(false);
-  const [showCongratulations, setShowCongratulations] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showShareDialog, setShowShareDialog] = useState(false);
-  const [showAchievementsDialog, setShowAchievementsDialog] = useState(false);
-  const [gridSize, setGridSize] = useState<number>(9);
-
-  // History state
-  const [gridHistory, setGridHistory] = useState<GridHistory<string>>(createHistory<string>([[]]));
-
-  // Timer
-  const timer = useGameTimer(false);
-  const { isRunning, seconds, minutes, hours, formatted, start, pause, reset } = timer;
-
-  // Local storage for settings
-  const [animationSpeed, setAnimationSpeed] = useLocalStorage<number>('animationSpeed', 50);
-  const [darkMode, setDarkMode] = useLocalStorage<boolean>('darkMode', false);
-
-  // Achievements state
-  const [achievements, setAchievements] = useState(defaultAchievements);
-
-  // Fetch game data
-  const { isLoading, error } = useQuery({
-    queryKey: ['game', id],
-    queryFn: async () => {
-      if (id === 'daily') {
-        // Daily puzzle logic here
-        const today = new Date();
-        const seed = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
-        const newGrid = generateGrid(difficulty, gridSize, seed);
-        return {
-          grid: newGrid.grid,
-          solution: newGrid.solution,
-          difficulty: difficulty,
-        };
-      } else if (id) {
-        const game = await getGameById(id);
-        if (!game) {
-          throw new Error('Game not found');
-        }
-        return game;
-      } else {
-        const newGrid = generateGrid(difficulty, gridSize);
-        return {
-          grid: newGrid.grid,
-          solution: newGrid.solution,
-          difficulty: difficulty,
-        };
-      }
-    },
-    meta: {
-      onSuccess: (data: any) => {
-        setGrid(data.grid);
-        setSolution(data.solution);
-        setGridHistory(createHistory<string>(data.grid.map((row: Cell[]) => row.map(cell => cell.value))));
-      },
-      onError: () => {
-        toast.error('Failed to load game. Redirecting to home.');
-        setTimeout(() => navigate('/'), 2000);
-      },
-    },
-    enabled: true,
-    retry: false,
-  });
-
-  // Function to start a new game
-  const startNewGame = useCallback((newDifficulty: Difficulty = difficulty, newGridSize: number = gridSize) => {
-    reset();
-    pause();
-    setIsSolved(false);
-    setShowSolution(false);
-    setDifficulty(newDifficulty);
-    setGridSize(newGridSize);
-
-    const newGridData = generateGrid(newDifficulty, newGridSize);
-    setGrid(newGridData.grid);
-    setSolution(newGridData.solution);
-    setGridHistory(createHistory<string>(newGridData.grid.map(row => row.map(cell => cell.value))));
-  }, [difficulty, gridSize, reset, pause]);
-
-  // Check if the game is solved
+  // Initialize with preview colors based on difficulty
   useEffect(() => {
-    if (grid.length > 0) {
-      const solved = checkSolution(grid, solution);
-      setIsSolved(solved);
-
-      if (solved) {
-        pause();
-        setShowCongratulations(true);
-
-        // Unlock "First Victory" achievement
-        if (user) {
-          setAchievements(prevAchievements => {
-            const updatedAchievements = unlockAchievement(prevAchievements, "first_victory");
-            return updatedAchievements;
-          });
-        }
-      }
-    }
-  }, [grid, solution, pause, user]);
-
-  // Handle cell value change
-  const handleCellValueChange = (rowIndex: number, colIndex: number, newValue: string) => {
-    if (isPaused) return;
-
-    const newGrid = grid.map((row, rIndex) =>
-      row.map((cell, cIndex) =>
-        rIndex === rowIndex && cIndex === colIndex ? { ...cell, value: newValue } : cell
-      )
-    );
-
-    setGrid(newGrid);
-    setGridHistory(saveHistory<string>(gridHistory, newGrid.map(row => row.map(cell => cell.value))));
-  };
-
-  // Undo move
-  const handleUndoMove = () => {
-    if (isPaused) return;
+    let colorCount = 4;
+    let gridSizeValue = 4;
+    let previewColors: string[] = [];
     
-    const newHistory = undo<string>(gridHistory);
-    setGridHistory(newHistory);
-    setGrid(newHistory.present.map((row, i) => 
-      row.map((value, j) => ({
-        ...grid[i][j],
-        value
-      }))
-    ));
-  };
-
-  // Redo move
-  const handleRedoMove = () => {
-    if (isPaused) return;
-
-    const newHistory = redo<string>(gridHistory);
-    setGridHistory(newHistory);
-    setGrid(newHistory.present.map((row, i) => 
-      row.map((value, j) => ({
-        ...grid[i][j],
-        value
-      }))
-    ));
-  };
-
-  // Solve the grid
-  const handleSolveGrid = async () => {
-    if (isPaused) return;
-
-    const solvedGrid = await solveGrid(grid, solution);
-    if (solvedGrid) {
-      setGrid(solvedGrid);
-      setGridHistory(saveHistory<string>(gridHistory, solvedGrid.map(row => row.map(cell => cell.value))));
-      setIsSolved(true);
-      pause();
-      setShowSolution(true);
+    if (difficulty === "medium") {
+      colorCount = 6;
+      gridSizeValue = 6;
+      previewColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400"
+      ];
+    } else if (difficulty === "hard") {
+      colorCount = 9;
+      gridSizeValue = 9;
+      previewColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+      ];
     } else {
-      toast.error('Could not solve the grid.');
+      gridSizeValue = 4;
+      previewColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
+      ];
     }
-  };
-
-  // Get a hint
-  const handleGetHint = () => {
-    if (isPaused) return;
-
-    // Find an empty cell
-    const emptyCells = grid.flatMap((row, rowIndex) =>
-      row.map((cell, colIndex) =>
-        cell.value === '' ? { rowIndex, colIndex } : null
-      ).filter(Boolean)
-    );
-
-    if (emptyCells.length > 0) {
-      // Select a random empty cell
-      const randomIndex = Math.floor(Math.random() * emptyCells.length);
-      const { rowIndex, colIndex } = emptyCells[randomIndex] as { rowIndex: number, colIndex: number };
-
-      // Get the correct value from the solution
-      const correctValue = String(solution[rowIndex][colIndex]);
-
-      // Update the grid with the hint
-      const newGrid = grid.map((row, rIndex) =>
-        row.map((cell, cIndex) =>
-          rIndex === rowIndex && cIndex === colIndex ? { ...cell, value: correctValue, isHint: true } : cell
-        )
+    
+    setColors(previewColors);
+    
+    // Create preview grid
+    const previewElements = [];
+    for (let i = 0; i < gridSizeValue * gridSizeValue; i++) {
+      const colorIndex = i % colorCount;
+      previewElements.push(
+        <div 
+          key={`preview-${i}`} 
+          className={`rounded-md ${previewColors[colorIndex]}`}
+          style={{
+            width: gridSizeValue === 9 ? "20px" : gridSizeValue === 6 ? "30px" : "40px",
+            height: gridSizeValue === 9 ? "20px" : gridSizeValue === 6 ? "30px" : "40px",
+          }}
+        />
       );
+    }
+    
+    setPreviewGrid(
+      <div 
+        className="grid gap-1 p-2 bg-gray-100 rounded-lg mx-auto"
+        style={{
+          gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
+          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "210px" : "180px",
+          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 6 ? "210px" : "180px",
+        }}
+      >
+        {previewElements}
+      </div>
+    );
+    
+  }, [difficulty]);
 
-      setGrid(newGrid);
-      setGridHistory(saveHistory<string>(gridHistory, newGrid.map(row => row.map(cell => cell.value))));
-
-      // Add the hint to the hints array
-      setHints([...hints, { rowIndex, colIndex, value: correctValue }]);
-    } else {
-      toast('No hints available. The grid is full!');
+  const startNewGame = () => {
+    let newGridSize = 4;
+    let colorCount = 4;
+    
+    try {
+      setError(null);
+      scrollToTop();
+      
+      if (difficulty === "medium") {
+        newGridSize = 6;
+        colorCount = 6;
+      } else if (difficulty === "hard") {
+        newGridSize = 9;
+        colorCount = 9;
+      }
+      
+      setGridSize(newGridSize);
+      
+      // Generate colors
+      const generatedColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+      ].slice(0, colorCount);
+      
+      setColors(generatedColors);
+      
+      const { puzzle, solution } = generatePuzzle(newGridSize, difficulty);
+      setGrid(puzzle);
+      setOriginalGrid(JSON.parse(JSON.stringify(puzzle)));
+      
+      setShowTitleScreen(false);
+      setShowGameOverScreen(false);
+    } catch (err) {
+      console.error("Error starting game:", err);
+      setError("There was a problem starting the game. Please try a different difficulty level.");
+      // Default to easy mode if an error occurs
+      setDifficulty("easy");
     }
   };
 
-  // Reset hints
-  const handleResetHints = () => {
-    const newGrid = grid.map((row) =>
-      row.map((cell) => ({ ...cell, isHint: false }))
-    );
+  const handleCellClick = (row: number, col: number) => {
+    // Don't allow clicking on pre-filled cells
+    if (originalGrid[row][col] !== "") {
+      return;
+    }
+    setSelectedCell([row, col]);
+  };
+
+  const handleColorSelect = (color: string) => {
+    if (!selectedCell) return;
+    
+    const [row, col] = selectedCell;
+    const newGrid = [...grid];
+    newGrid[row][col] = color;
     setGrid(newGrid);
-    setHints([]);
-  };
-
-  // Toggle pause
-  const togglePause = () => {
-    if (isRunning) {
-      pause();
-      setIsPaused(true);
-    } else {
-      start();
-      setIsPaused(false);
+    
+    // Check if the puzzle is solved
+    if (checkWinCondition(newGrid)) {
+      setGameWon(true);
+      setShowGameOverScreen(true);
     }
   };
 
-  // Format time
-  const formatTime = () => {
-    const hrs = String(hours).padStart(2, '0');
-    const mins = String(minutes).padStart(2, '0');
-    const secs = String(seconds).padStart(2, '0');
-    return `${hrs}:${mins}:${secs}`;
+  const handleReset = () => {
+    setGrid(JSON.parse(JSON.stringify(originalGrid)));
+    setSelectedCell(null);
   };
 
-  if (isLoading) {
-    return (
-      <PageWrapper
-        loadingTitle="Loading Game"
-        loadingDescription="Generating your puzzle"
-        loadingColor="blue"
-        animationSrc="/animations/loading.lottie"
-      >
-        <div>Loading...</div>
-      </PageWrapper>
-    );
-  }
+  const handleGiveUp = () => {
+    setGameWon(false);
+    setShowGameOverScreen(true);
+  };
 
-  if (error) {
-    return (
-      <PageWrapper
-        loadingTitle="Failed to Load Game"
-        loadingDescription="There was an error loading the game. Please try again."
-        loadingColor="red"
-        animationSrc="/animations/error.lottie"
-        errorTitle="Failed to Load Game"
-        errorDescription="There was an error loading the game. Please try again."
-        errorColor="red"
-      >
-        <div>Error loading game</div>
-      </PageWrapper>
-    );
-  }
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!selectedCell) return;
+    
+    const keyNum = parseInt(e.key);
+    if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= colors.length) {
+      handleColorSelect(colors[keyNum - 1]);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedCell, colors]);
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-1 p-4 md:p-8 bg-gradient-to-b from-background to-blue-50 dark:to-blue-950/20">
-        <div className="container mx-auto max-w-4xl">
-          <Card className="mb-6 overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-2xl font-bold">
-                {id === 'daily' ? 'Daily Puzzle' : 'Color Grid Logic'}
-              </CardTitle>
-              <div className="flex items-center space-x-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={togglePause}
-                        disabled={isSolved}
-                      >
-                        {isRunning ? (
-                          <Pause className="h-4 w-4" />
-                        ) : (
-                          <Play className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{isRunning ? 'Pause' : 'Play'}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleGetHint}
-                        disabled={isSolved}
-                      >
-                        <Lightbulb className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Get Hint</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleUndoMove}
-                        disabled={isSolved || gridHistory.past.length === 0}
-                      >
-                        <Undo className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Undo</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleRedoMove}
-                        disabled={isSolved || gridHistory.future.length === 0}
-                      >
-                        <Redo className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Redo</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0 rounded-full">
-                      <MoreVertical className="h-4 w-4" />
-                      <span className="sr-only">Open menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setShowAchievementsDialog(true)}>
-                      <Trophy className="h-4 w-4 mr-2" />
-                      Achievements
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSolveGrid} disabled={isSolved}>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Solve
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem>
-                          <Shuffle className="h-4 w-4 mr-2" />
-                          New Game
-                        </DropdownMenuItem>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will start a new game and you will lose your current progress.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <Button variant="destructive" onClick={() => startNewGame()}>
-                            New Game
-                          </Button>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-b from-background to-purple-50">
+        {showTitleScreen ? (
+          <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-lg">
+            <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
+            <p className="mb-6 text-center text-muted-foreground">
+              Fill the grid with colors following Sudoku-style rules.
+            </p>
+            
+            <div className="mb-6">
+              <h2 className="text-lg font-medium mb-2">Select Difficulty:</h2>
+              <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="easy" id="easy" />
+                  <Label htmlFor="easy">Easy (4×4)</Label>
+                </div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="medium" id="medium" />
+                  <Label htmlFor="medium">Medium (6×6)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="hard" id="hard" />
+                  <Label htmlFor="hard">Hard (9×9)</Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            {/* Preview of the selected grid */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Preview:</h3>
+              <div className="flex justify-center">
+                {previewGrid}
               </div>
-            </CardHeader>
-            <CardDescription>
-              Time: {formatTime()}
-            </CardDescription>
-            <CardContent className="p-0">
-              <GridComponent
-                grid={grid}
-                solution={solution}
-                showSolution={showSolution}
-                hints={hints}
-                animationSpeed={animationSpeed}
-                onCellValueChange={handleCellValueChange}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-
-      <Footer />
-
-      {/* Congratulations Dialog */}
-      <Dialog open={showCongratulations} onOpenChange={setShowCongratulations}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Congratulations!</DialogTitle>
-            <DialogDescription>
-              You solved the puzzle in {formatTime()}!
-              <div className="flex justify-center mt-4">
-                <Sparkles className="h-10 w-10 text-yellow-400" />
+            </div>
+            
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Button 
+              className="w-full bg-purple-600 hover:bg-purple-700" 
+              size="lg"
+              onClick={startNewGame}
+            >
+              Start Game
+            </Button>
+          </div>
+        ) : (
+          <div className="w-full max-w-4xl">
+            <div className="mb-4 flex justify-between items-center">
+              <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReset}
+                >
+                  Reset
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGiveUp}
+                >
+                  Give Up
+                </Button>
               </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setShowCongratulations(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </div>
+            
+            <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg">
+              <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                <ColorGrid 
+                  grid={grid}
+                  originalGrid={originalGrid}
+                  gridSize={gridSize}
+                  selectedCell={selectedCell}
+                  onCellClick={handleCellClick}
+                />
 
-      {/* Settings Dialog */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>
-              Customize your gaming experience.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Animation Speed</h3>
-              <p className="text-sm text-muted-foreground">
-                Control the speed of the cell reveal animations.
-              </p>
-              <Slider
-                defaultValue={[animationSpeed]}
-                max={100}
-                step={1}
-                onValueChange={(value) => setAnimationSpeed(value[0])}
-              />
-              <p className="text-sm text-muted-foreground">
-                Current speed: {animationSpeed}ms
-              </p>
+                <div className="w-full md:w-auto">
+                  <h2 className="text-lg font-medium mb-4">Color Palette</h2>
+                  <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
+                  
+                  <div className="mt-8">
+                    <h2 className="text-lg font-medium mb-4">Instructions</h2>
+                    <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                      <li>Click on an empty cell to select it</li>
+                      <li>Click on a color or press 1-{colors.length} to place it</li>
+                      <li>Each row, column, and region must contain each color exactly once</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={() => setShowSettings(false)}>Close</Button>
+        )}
+      </main>
+      
+      <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              {gameWon ? "Puzzle Solved!" : "Puzzle Unfinished"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-center text-muted-foreground">
+              {gameWon 
+                ? "Congratulations! You've successfully solved the puzzle." 
+                : "Try a new puzzle?"}
+            </p>
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={startNewGame}
+            >
+              {gameWon ? "Play Again" : "New Puzzle"}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setShowGameOverScreen(false);
+                setShowTitleScreen(true);
+                scrollToTop();
+              }}
+            >
+              Main Menu
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Share Dialog */}
-      <ShareDialog open={showShareDialog} onOpenChange={setShowShareDialog} />
-
-      {/* Achievements Dialog */}
-      <AchievementDialog open={showAchievementsDialog} onOpenChange={setShowAchievementsDialog} achievements={achievements} />
+      
+      <Footer />
     </div>
   );
 };
