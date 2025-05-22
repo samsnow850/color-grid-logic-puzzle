@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,14 +7,29 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import GoogleAuthButton from "./GoogleAuthButton";
+import HCaptcha from "./HCaptcha";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+  
+  const handleCaptchaExpire = () => {
+    setCaptchaToken("");
+    toast.warning("Captcha expired. Please verify again.");
+  };
+
+  const handleCaptchaError = () => {
+    toast.error("Captcha error. Please try again.");
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +42,7 @@ const SignUpForm = () => {
           first_name: firstName,
           last_name: lastName,
         },
+        captchaToken,
         redirectTo: window.location.origin + '/account'
       } as any; // Type assertion to bypass TypeScript checking
 
@@ -102,7 +119,17 @@ const SignUpForm = () => {
         <p className="text-xs text-gray-500 mt-1">Password must be at least 6 characters</p>
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
+      <HCaptcha 
+        onVerify={handleCaptchaVerify}
+        onExpire={handleCaptchaExpire}
+        onError={handleCaptchaError}
+      />
+      
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading || !captchaToken}
+      >
         {loading ? "Creating account..." : "Create Account"}
       </Button>
       

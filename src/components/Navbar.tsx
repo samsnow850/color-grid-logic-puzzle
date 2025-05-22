@@ -81,7 +81,7 @@ const Navbar = () => {
             >
               <Link to={item.path}>
                 {item.icon}
-                {item.name}
+                <span className="text-foreground">{item.name}</span>
               </Link>
             </Button>
           ))}
@@ -95,7 +95,7 @@ const Navbar = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  Account
+                  <span className="text-foreground">Account</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -110,7 +110,7 @@ const Navbar = () => {
           ) : (
             <Button size="sm" asChild>
               <Link to="/auth">
-                <LogIn className="mr-2 h-4 w-4" /> Sign In
+                <LogIn className="mr-2 h-4 w-4" /> <span className="text-foreground">Sign In</span>
               </Link>
             </Button>
           )}
@@ -135,7 +135,7 @@ const Navbar = () => {
                   >
                     <Link to={item.path}>
                       {item.icon}
-                      {item.name}
+                      <span className="text-foreground">{item.name}</span>
                     </Link>
                   </Button>
                 ))}
@@ -149,7 +149,7 @@ const Navbar = () => {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <Link to="/account">
-                          <User className="h-4 w-4" /> Profile
+                          <User className="h-4 w-4" /> <span className="text-foreground">Profile</span>
                         </Link>
                       </Button>
                       <Button
@@ -159,7 +159,7 @@ const Navbar = () => {
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <Link to="/settings">
-                          <Settings className="h-4 w-4" /> Settings
+                          <Settings className="h-4 w-4" /> <span className="text-foreground">Settings</span>
                         </Link>
                       </Button>
                     </>
@@ -170,7 +170,7 @@ const Navbar = () => {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <Link to="/auth">
-                        <LogIn className="h-4 w-4" /> Sign In
+                        <LogIn className="h-4 w-4" /> <span className="text-foreground">Sign In</span>
                       </Link>
                     </Button>
                   )}

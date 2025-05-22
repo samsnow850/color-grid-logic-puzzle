@@ -9,11 +9,26 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
+import HCaptcha from "@/components/auth/HCaptcha";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+  
+  const handleCaptchaExpire = () => {
+    setCaptchaToken("");
+    toast.warning("Captcha expired. Please verify again.");
+  };
+
+  const handleCaptchaError = () => {
+    toast.error("Captcha error. Please try again.");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +36,7 @@ const ForgotPassword = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        captchaToken,
         redirectTo: `https://game.samuelesnow.co/reset-password`,
       });
 
@@ -83,7 +99,17 @@ const ForgotPassword = () => {
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <HCaptcha 
+                  onVerify={handleCaptchaVerify}
+                  onExpire={handleCaptchaExpire}
+                  onError={handleCaptchaError}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={loading || !captchaToken}
+                >
                   {loading ? "Sending..." : "Send Reset Link"}
                 </Button>
                 

@@ -8,12 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import GoogleAuthButton from "./GoogleAuthButton";
 import Logo from "@/components/Logo";
+import HCaptcha from "./HCaptcha";
 
 const SignInForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+  
+  const handleCaptchaExpire = () => {
+    setCaptchaToken("");
+    toast.warning("Captcha expired. Please verify again.");
+  };
+
+  const handleCaptchaError = () => {
+    toast.error("Captcha error. Please try again.");
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +39,7 @@ const SignInForm = () => {
         email,
         password,
         options: {
+          captchaToken,
           redirectTo: window.location.origin + '/account'
         } as any // Type assertion to bypass TypeScript checking
       });
@@ -82,7 +98,17 @@ const SignInForm = () => {
           />
         </div>
         
-        <Button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700" disabled={loading}>
+        <HCaptcha 
+          onVerify={handleCaptchaVerify}
+          onExpire={handleCaptchaExpire}
+          onError={handleCaptchaError}
+        />
+        
+        <Button 
+          type="submit" 
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700" 
+          disabled={loading || !captchaToken}
+        >
           {loading ? "Signing in..." : "LOGIN"}
         </Button>
         

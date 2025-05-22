@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +22,7 @@ import { UserCircle2, Mail, Lock, UserX2, Bell, Gamepad2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageWrapper from "@/components/PageWrapper";
+import DeleteAccountDialog from "@/components/account/DeleteAccountDialog";
 
 const profileFormSchema = z.object({
   display_name: z.string().min(2, "Name must be at least 2 characters").max(30, "Name cannot exceed 30 characters"),
@@ -730,29 +730,13 @@ const Account = () => {
           </div>
         </main>
         
-        {/* Delete Account Confirmation */}
-        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-destructive">Delete Account</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete your account? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p>All your data will be permanently removed, including:</p>
-              <ul className="list-disc pl-6 text-sm text-muted-foreground space-y-2">
-                <li>Your profile information</li>
-                <li>Your game progress and scores</li>
-                <li>Your saved preferences</li>
-              </ul>
-            </div>
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={deleteAccount}>Delete Account</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Delete Account Confirmation Dialog */}
+        <DeleteAccountDialog 
+          open={showDeleteConfirm} 
+          onOpenChange={setShowDeleteConfirm}
+          userId={user?.id || ''}
+          onSignOut={signOut}
+        />
         
         <Footer />
       </div>

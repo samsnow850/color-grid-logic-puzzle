@@ -12,6 +12,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import HCaptcha from "@/components/auth/HCaptcha";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -26,6 +27,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
   const navigate = useNavigate();
   const [session, setSession] = useState<any>(null);
 
@@ -36,6 +38,19 @@ const ResetPassword = () => {
       confirmPassword: "",
     },
   });
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+  };
+  
+  const handleCaptchaExpire = () => {
+    setCaptchaToken("");
+    toast.warning("Captcha expired. Please verify again.");
+  };
+
+  const handleCaptchaError = () => {
+    toast.error("Captcha error. Please try again.");
+  };
 
   useEffect(() => {
     // Check if user is authenticated via the recovery flow
@@ -57,11 +72,17 @@ const ResetPassword = () => {
       toast.error("Authentication required to reset password.");
       return;
     }
+    
+    if (!captchaToken) {
+      toast.error("Please complete the captcha verification.");
+      return;
+    }
 
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({
-        password: values.password
+        password: values.password,
+        data: { captchaToken }
       });
       
       if (error) {
@@ -151,10 +172,16 @@ const ResetPassword = () => {
                     )}
                   />
                   
+                  <HCaptcha 
+                    onVerify={handleCaptchaVerify}
+                    onExpire={handleCaptchaExpire}
+                    onError={handleCaptchaError}
+                  />
+                  
                   <Button 
                     type="submit" 
                     className="w-full"
-                    disabled={loading}
+                    disabled={loading || !captchaToken}
                   >
                     {loading ? "Updating..." : "Reset Password"}
                   </Button>
