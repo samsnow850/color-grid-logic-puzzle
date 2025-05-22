@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -241,7 +240,7 @@ const Game = () => {
     }
   };
   
-  const handleGameWon = () => {
+  const handleGameWin = () => {
     setGameWon(true);
     setShowGameOverScreen(true);
     setIsTimerRunning(false);
@@ -279,7 +278,12 @@ const Game = () => {
     setAchievements(updatedAchievements);
     saveAchievements(updatedAchievements);
     
-    toast.success("Congratulations! Puzzle solved!");
+    // Only show achievements dialog for logged in users
+    if (user && !showAchievementsDialog) {
+      setTimeout(() => {
+        setShowAchievementsDialog(true);
+      }, 1500);
+    }
   };
 
   const handleReset = () => {
