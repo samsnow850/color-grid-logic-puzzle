@@ -4,18 +4,8 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, Award, Clock, Shield, Calendar, Trophy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-
-// Define Achievement interface here since we're importing it
-interface Achievement {
-  id: string;
-  type: string;
-  name: string;
-  description: string;
-  achieved: boolean;
-  progress?: number;
-  progressTarget?: number;
-  date?: string;
-}
+import { Achievement } from "@/lib/achievements";
+import { AchievementDialogProps } from "./AchievementDialogProps";
 
 const getAchievementIcon = (type: string) => {
   switch (type) {

@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useStopwatch } from 'react-timer-hook';
 import { toast } from 'sonner';
 import { useAuth } from "@/hooks/useAuth";
+import { useGameTimer } from '@/hooks/useGameTimer';
 import { 
   getGameById, 
   solveGrid, 
@@ -84,7 +85,7 @@ import {
   RotateCw, 
   MoreVertical,
   Trophy,
-  Confetti,
+  Sparkles,
   Pause,
   Play,
   ChevronsLeft,
@@ -99,7 +100,7 @@ import PageWrapper from "@/components/PageWrapper";
 import GridComponent from "@/components/game/GridComponent";
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { ShareDialog } from '@/components/game/ShareDialog';
-import AchievementsDialog from '@/components/game/AchievementsDialog';
+import AchievementDialog from '@/components/game/AchievementDialog';
 
 const Game = () => {
   const { id } = useParams<{ id?: string }>();
@@ -124,7 +125,8 @@ const Game = () => {
   const [gridHistory, setGridHistory] = useState<GridHistory<string>>(createHistory<string>([[]]));
 
   // Timer
-  const { seconds, minutes, hours, isRunning, start, pause, reset } = useStopwatch({ autoStart: false });
+  const timer = useGameTimer(false);
+  const { isRunning, seconds, minutes, hours, formatted, start, pause, reset } = timer;
 
   // Local storage for settings
   const [animationSpeed, setAnimationSpeed] = useLocalStorage<number>('animationSpeed', 50);
@@ -162,14 +164,16 @@ const Game = () => {
         };
       }
     },
-    onSuccess: (data) => {
-      setGrid(data.grid);
-      setSolution(data.solution);
-      setGridHistory(createHistory<string>(data.grid.map(row => row.map(cell => cell.value))));
-    },
-    onError: () => {
-      toast.error('Failed to load game. Redirecting to home.');
-      setTimeout(() => navigate('/'), 2000);
+    meta: {
+      onSuccess: (data: any) => {
+        setGrid(data.grid);
+        setSolution(data.solution);
+        setGridHistory(createHistory<string>(data.grid.map((row: Cell[]) => row.map(cell => cell.value))));
+      },
+      onError: () => {
+        toast.error('Failed to load game. Redirecting to home.');
+        setTimeout(() => navigate('/'), 2000);
+      },
     },
     enabled: true,
     retry: false,
@@ -188,7 +192,7 @@ const Game = () => {
     setGrid(newGridData.grid);
     setSolution(newGridData.solution);
     setGridHistory(createHistory<string>(newGridData.grid.map(row => row.map(cell => cell.value))));
-  }, [difficulty, gridSize, navigate, reset, pause]);
+  }, [difficulty, gridSize, reset, pause]);
 
   // Check if the game is solved
   useEffect(() => {
@@ -230,8 +234,13 @@ const Game = () => {
     if (isPaused) return;
     
     const newHistory = undo<string>(gridHistory);
-    setGridHistory(newHistory as GridHistory<string>);
-    setGrid(newHistory.present);
+    setGridHistory(newHistory);
+    setGrid(newHistory.present.map((row, i) => 
+      row.map((value, j) => ({
+        ...grid[i][j],
+        value
+      }))
+    ));
   };
 
   // Redo move
@@ -239,8 +248,13 @@ const Game = () => {
     if (isPaused) return;
 
     const newHistory = redo<string>(gridHistory);
-    setGridHistory(newHistory as GridHistory<string>);
-    setGrid(newHistory.present);
+    setGridHistory(newHistory);
+    setGrid(newHistory.present.map((row, i) => 
+      row.map((value, j) => ({
+        ...grid[i][j],
+        value
+      }))
+    ));
   };
 
   // Solve the grid
@@ -273,7 +287,7 @@ const Game = () => {
     if (emptyCells.length > 0) {
       // Select a random empty cell
       const randomIndex = Math.floor(Math.random() * emptyCells.length);
-      const { rowIndex, colIndex } = emptyCells[randomIndex];
+      const { rowIndex, colIndex } = emptyCells[randomIndex] as { rowIndex: number, colIndex: number };
 
       // Get the correct value from the solution
       const correctValue = String(solution[rowIndex][colIndex]);
@@ -291,7 +305,7 @@ const Game = () => {
       // Add the hint to the hints array
       setHints([...hints, { rowIndex, colIndex, value: correctValue }]);
     } else {
-      toast.message('No hints available. The grid is full!');
+      toast('No hints available. The grid is full!');
     }
   };
 
@@ -331,6 +345,7 @@ const Game = () => {
         loadingColor="blue"
         animationSrc="/animations/loading.lottie"
       >
+        <div>Loading...</div>
       </PageWrapper>
     );
   }
@@ -338,11 +353,15 @@ const Game = () => {
   if (error) {
     return (
       <PageWrapper
+        loadingTitle="Failed to Load Game"
+        loadingDescription="There was an error loading the game. Please try again."
+        loadingColor="red"
+        animationSrc="/animations/error.lottie"
         errorTitle="Failed to Load Game"
         errorDescription="There was an error loading the game. Please try again."
         errorColor="red"
-        animationSrc="/animations/error.lottie"
       >
+        <div>Error loading game</div>
       </PageWrapper>
     );
   }
@@ -514,7 +533,9 @@ const Game = () => {
             <DialogTitle>Congratulations!</DialogTitle>
             <DialogDescription>
               You solved the puzzle in {formatTime()}!
-              <Confetti width={250} height={250} recycle={false} />
+              <div className="flex justify-center mt-4">
+                <Sparkles className="h-10 w-10 text-yellow-400" />
+              </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -559,7 +580,7 @@ const Game = () => {
       <ShareDialog open={showShareDialog} onOpenChange={setShowShareDialog} />
 
       {/* Achievements Dialog */}
-      <AchievementsDialog open={showAchievementsDialog} onOpenChange={setShowAchievementsDialog} />
+      <AchievementDialog open={showAchievementsDialog} onOpenChange={setShowAchievementsDialog} achievements={achievements} />
     </div>
   );
 };

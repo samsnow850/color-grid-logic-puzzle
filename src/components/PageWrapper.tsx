@@ -5,11 +5,14 @@ import { LoadingScreen } from "@/components/ui/loading-screen";
 import { scrollToTop } from "@/lib/utils";
 
 interface PageWrapperProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   loadingTitle?: string;
   loadingDescription?: string;
   loadingColor?: string;
   animationSrc?: string;
+  errorTitle?: string;
+  errorDescription?: string;
+  errorColor?: string;
 }
 
 const PageWrapper = ({ 
@@ -17,7 +20,10 @@ const PageWrapper = ({
   loadingTitle = "Loading...", 
   loadingDescription = "Preparing your content", 
   loadingColor = "purple",
-  animationSrc
+  animationSrc,
+  errorTitle,
+  errorDescription,
+  errorColor
 }: PageWrapperProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
@@ -41,9 +47,9 @@ const PageWrapper = ({
     <>
       <LoadingScreen 
         isLoading={isLoading} 
-        title={loadingTitle} 
-        description={loadingDescription}
-        color={loadingColor}
+        title={errorTitle || loadingTitle}
+        description={errorDescription || loadingDescription}
+        color={errorColor || loadingColor}
         animationSrc={animationSrc}
       />
       <div className={isLoading ? "invisible" : "visible"}>
