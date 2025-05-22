@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -84,7 +83,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
               <Logo className="h-8 w-auto text-primary" />
-              <span className="font-bold text-lg hidden sm:inline-block">Color Grid Logic</span>
+              {/* Removed "Color Grid Logic" text */}
             </Link>
             
             {/* Desktop Navigation */}
