@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import {
   QueryClient,
   QueryClientProvider,
@@ -8,6 +7,8 @@ import {
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/useAuth";
+import { Routes, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 
 import Index from './pages/Index';
 import Game from './pages/Game';
@@ -23,15 +24,21 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import AboutDev from './pages/AboutDev';
+import DailyPuzzle from './pages/DailyPuzzle';
 
 const queryClient = new QueryClient()
 
 const App = () => {
+  // Set document title
+  React.useEffect(() => {
+    document.title = "Color Grid Logic";
+  }, []);
+
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Router>
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/game" element={<Game />} />
@@ -46,10 +53,11 @@ const App = () => {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/about-dev" element={<AboutDev />} />
+              <Route path="/daily-puzzle" element={<DailyPuzzle />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster position="top-center" expand={true} richColors />
-          </Router>
+          </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
