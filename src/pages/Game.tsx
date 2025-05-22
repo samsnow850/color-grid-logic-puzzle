@@ -236,7 +236,7 @@ const Game = () => {
     
     // Check if the puzzle is solved
     if (checkWinCondition(newGrid)) {
-      handleGameWon();
+      handleGameWin();
     }
   };
   
@@ -362,7 +362,7 @@ const Game = () => {
     
     // Check if the puzzle is solved
     if (checkWinCondition(newGrid)) {
-      handleGameWon();
+      handleGameWin();
     }
   };
   

@@ -52,7 +52,7 @@ const Leaderboard = () => {
       try {
         // Get the scores
         let query = supabase
-          .from("scores")
+          .from("game_scores")
           .select(`
             id,
             user_id,
@@ -89,9 +89,9 @@ const Leaderboard = () => {
         if (scoresError) throw scoresError;
         
         // Filter out users who have opted out of leaderboard
-        const filteredScores: ScoreEntry[] = scoresData.filter((score) => {
+        const filteredScores = scoresData ? scoresData.filter((score) => {
           return !score.profiles || score.profiles.leaderboard_opt_in !== false;
-        });
+        }) : [];
         
         // Find the current user's position, if logged in
         if (user) {
@@ -101,7 +101,7 @@ const Leaderboard = () => {
           setUserRank(null);
         }
         
-        return filteredScores;
+        return filteredScores as ScoreEntry[];
       } catch (err) {
         console.error("Error fetching leaderboard data:", err);
         throw err;

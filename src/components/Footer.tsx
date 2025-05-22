@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
-import { GitHub, Mail, Twitter } from 'lucide-react';
+import { Github, Mail, Twitter } from 'lucide-react';
 import { Button } from './ui/button';
 
 const Footer = () => {
@@ -24,7 +24,7 @@ const Footer = () => {
             <div className="flex space-x-2">
               <Button variant="ghost" size="icon" className="rounded-full" asChild>
                 <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-                  <GitHub className="h-5 w-5" />
+                  <Github className="h-5 w-5" />
                 </a>
               </Button>
               <Button variant="ghost" size="icon" className="rounded-full" asChild>
