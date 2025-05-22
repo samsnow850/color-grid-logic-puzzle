@@ -247,7 +247,7 @@ const Game = () => {
     setIsTimerRunning(false);
     
     // Update achievements
-    const updatedAchievements = [...achievements];
+    let updatedAchievements = [...achievements];
     
     // First victory achievement
     if (!achievements.find(a => a.id === "first_victory")?.unlocked) {

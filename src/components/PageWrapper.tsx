@@ -46,7 +46,7 @@ const PageWrapper = ({
   return (
     <>
       <LoadingScreen 
-        isLoading={isLoading} 
+        isLoading={isLoading}
         title={loadingTitle}
         description={loadingDescription}
         color={loadingColor}
