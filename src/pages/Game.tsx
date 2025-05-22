@@ -15,6 +15,7 @@ import ColorGrid from "@/components/game/ColorGrid";
 import ColorPalette from "@/components/game/ColorPalette";
 import GameTimer from "@/components/game/GameTimer";
 import PauseOverlay from "@/components/game/PauseOverlay";
+import AchievementDialog from "@/components/game/AchievementDialog";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -32,11 +33,13 @@ import { Achievement } from "@/lib/achievements";
 const AchievementDialog = ({ 
   open, 
   onOpenChange, 
-  achievement 
+  achievement, 
+  onContinue 
 }: { 
   open: boolean; 
   onOpenChange: (open: boolean) => void; 
-  achievement: Achievement | null 
+  achievement: Achievement | null; 
+  onContinue: () => void 
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,7 +64,7 @@ const AchievementDialog = ({
                   className="rounded-lg"
                   onClick={() => {
                     onOpenChange(false);
-                    setShowGameOverScreen(true);
+                    onContinue();
                   }}
                 >
                   Continue
@@ -387,6 +390,11 @@ const Game = () => {
     setTimeTaken(seconds);
   };
 
+  // Handle showing game over screen from achievement dialog
+  const handleAchievementContinue = () => {
+    setShowGameOverScreen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-purple-50">
       <Navbar />
@@ -691,7 +699,8 @@ const Game = () => {
       <AchievementDialog 
         open={showAchievementDialog} 
         onOpenChange={setShowAchievementDialog} 
-        achievement={latestAchievement} 
+        achievement={latestAchievement}
+        onContinue={handleAchievementContinue} 
       />
       
       <Footer />

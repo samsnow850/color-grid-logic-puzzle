@@ -24,12 +24,14 @@ export const ACHIEVEMENT_TYPES = {
 export const getUserAchievements = async (userId: string): Promise<Achievement[]> => {
   const achievements: Achievement[] = [
     {
+      id: ACHIEVEMENT_TYPES.first_victory,
       type: ACHIEVEMENT_TYPES.first_victory,
       name: "First Victory",
       description: "Complete your first puzzle",
       achieved: false,
     },
     {
+      id: ACHIEVEMENT_TYPES.easy_master,
       type: ACHIEVEMENT_TYPES.easy_master,
       name: "Easy Master",
       description: "Complete 5 Easy puzzles",
@@ -38,6 +40,7 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
       progressTarget: 5,
     },
     {
+      id: ACHIEVEMENT_TYPES.hard_master,
       type: ACHIEVEMENT_TYPES.hard_master,
       name: "Hard Master",
       description: "Complete 3 Hard puzzles",
@@ -46,18 +49,21 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
       progressTarget: 3,
     },
     {
+      id: ACHIEVEMENT_TYPES.speed_demon,
       type: ACHIEVEMENT_TYPES.speed_demon,
       name: "Speed Demon",
       description: "Complete a puzzle in under 2 minutes",
       achieved: false,
     },
     {
+      id: ACHIEVEMENT_TYPES.no_help,
       type: ACHIEVEMENT_TYPES.no_help,
       name: "No Help Needed",
       description: "Complete a puzzle without using hints",
       achieved: false,
     },
     {
+      id: ACHIEVEMENT_TYPES.daily_challenger,
       type: ACHIEVEMENT_TYPES.daily_challenger,
       name: "Daily Challenger",
       description: "Complete 3 daily puzzles",

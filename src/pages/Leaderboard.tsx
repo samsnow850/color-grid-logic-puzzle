@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { User, UserCircle2, Crown, Award, Clock, Medal, XCircle, Filter } from "lucide-react";
+import { User, UserCircle2, Crown, Award, Clock, Medal, XCircle, Filter, Trophy } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 // Define the Profile type

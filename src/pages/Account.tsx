@@ -16,7 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Achievement } from "@/lib/achievements";
 import { useAchievements } from "@/hooks/useAchievements";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
 
@@ -72,7 +71,7 @@ const Account = () => {
         display_name: displayName,
         avatar_url: avatarUrl,
         leaderboard_opt_in: leaderboardOptIn,
-        updated_at: new Date(),
+        updated_at: new Date().toISOString(), // Convert Date to string
       };
 
       const { error } = await supabase.from("profiles").upsert(updates);
@@ -255,7 +254,7 @@ const Account = () => {
   );
 };
 
-interface Achievement {
+interface AchievementType {
   id: string;
   type: string;
   name: string;
@@ -266,7 +265,7 @@ interface Achievement {
   achievedAt?: string;
 }
 
-const AchievementProgress = ({ achievement }: { achievement: Achievement }) => {
+const AchievementProgress = ({ achievement }: { achievement: AchievementType }) => {
   // Handle both types of achievements: those with progress and those without
   const hasProgress = typeof achievement.progress !== 'undefined' && 
                      typeof achievement.progressTarget !== 'undefined';
