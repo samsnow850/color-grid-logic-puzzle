@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { GitHub, Linkedin, Globe, Mail } from "lucide-react";
+import { Github, Linkedin, Globe, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const AboutDev = () => {
