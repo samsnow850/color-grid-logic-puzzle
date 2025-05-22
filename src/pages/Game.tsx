@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -19,18 +20,39 @@ import confetti from 'canvas-confetti';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import ColorGrid from '@/components/game/ColorGrid';
+import ColorPalette from '@/components/game/ColorPalette';
 
 // Define the types for our game
-type CellValue = number | null;
-type Grid = CellValue[][];
 type Difficulty = 'easy' | 'hard';
 type Notes = Record<string, number[]>;
 
+const COLORS = {
+  easy: [
+    'bg-red-500',
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-yellow-500'
+  ],
+  hard: [
+    'bg-red-500',
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-orange-500',
+    'bg-teal-500',
+    'bg-indigo-500'
+  ]
+};
+
 // Helper function to generate a random grid
-const generateRandomGrid = (difficulty: Difficulty): { grid: Grid, solution: Grid } => {
+const generateRandomGrid = (difficulty: Difficulty): { grid: string[][], solution: string[][] } => {
   const size = difficulty === 'easy' ? 4 : 9;
-  const emptyGrid: Grid = Array(size).fill(null).map(() => Array(size).fill(null));
-  const solutionGrid: Grid = Array(size).fill(null).map(() => Array(size).fill(null));
+  const colors = COLORS[difficulty];
+  const emptyGrid: string[][] = Array(size).fill("").map(() => Array(size).fill(""));
+  const solutionGrid: string[][] = Array(size).fill("").map(() => Array(size).fill(""));
   
   // For this demo, we'll just create a simple grid
   // In a real app, you'd use a proper Sudoku generator algorithm
@@ -38,7 +60,8 @@ const generateRandomGrid = (difficulty: Difficulty): { grid: Grid, solution: Gri
   // Fill the solution grid
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
-      solutionGrid[i][j] = ((i * Math.floor(Math.sqrt(size)) + Math.floor(i / Math.sqrt(size)) + j) % size) + 1;
+      const colorIndex = ((i * Math.floor(Math.sqrt(size)) + Math.floor(i / Math.sqrt(size)) + j) % size);
+      solutionGrid[i][j] = colors[colorIndex];
     }
   }
   
@@ -51,7 +74,7 @@ const generateRandomGrid = (difficulty: Difficulty): { grid: Grid, solution: Gri
       // Remove some values based on difficulty
       const removalProbability = difficulty === 'easy' ? 0.5 : 0.7;
       if (Math.random() < removalProbability) {
-        emptyGrid[i][j] = null;
+        emptyGrid[i][j] = "";
       }
     }
   }
@@ -59,73 +82,8 @@ const generateRandomGrid = (difficulty: Difficulty): { grid: Grid, solution: Gri
   return { grid: emptyGrid, solution: solutionGrid };
 };
 
-// Helper function to check if the grid is valid
-const isValidGrid = (grid: Grid): boolean => {
-  const size = grid.length;
-  
-  // Check if all cells are filled
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      if (grid[i][j] === null) {
-        return false;
-      }
-    }
-  }
-  
-  // Check rows
-  for (let i = 0; i < size; i++) {
-    const row = new Set<number>();
-    for (let j = 0; j < size; j++) {
-      const value = grid[i][j];
-      if (value !== null) {
-        if (row.has(value)) {
-          return false;
-        }
-        row.add(value);
-      }
-    }
-  }
-  
-  // Check columns
-  for (let j = 0; j < size; j++) {
-    const col = new Set<number>();
-    for (let i = 0; i < size; i++) {
-      const value = grid[i][j];
-      if (value !== null) {
-        if (col.has(value)) {
-          return false;
-        }
-        col.add(value);
-      }
-    }
-  }
-  
-  // Check regions (boxes)
-  const regionSize = Math.sqrt(size);
-  for (let boxRow = 0; boxRow < regionSize; boxRow++) {
-    for (let boxCol = 0; boxCol < regionSize; boxCol++) {
-      const box = new Set<number>();
-      for (let i = 0; i < regionSize; i++) {
-        for (let j = 0; j < regionSize; j++) {
-          const row = boxRow * regionSize + i;
-          const col = boxCol * regionSize + j;
-          const value = grid[row][col];
-          if (value !== null) {
-            if (box.has(value)) {
-              return false;
-            }
-            box.add(value);
-          }
-        }
-      }
-    }
-  }
-  
-  return true;
-};
-
 // Helper function to check if the grid is complete and correct
-const isGridComplete = (grid: Grid, solution: Grid): boolean => {
+const isGridComplete = (grid: string[][], solution: string[][]): boolean => {
   const size = grid.length;
   
   // Check if all cells are filled correctly
@@ -141,7 +99,7 @@ const isGridComplete = (grid: Grid, solution: Grid): boolean => {
 };
 
 // Helper function to check if a specific value is valid at a position
-const isValidMove = (grid: Grid, row: number, col: number, value: number): boolean => {
+const isValidMove = (grid: string[][], row: number, col: number, value: string): boolean => {
   const size = grid.length;
   
   // Check row
@@ -177,7 +135,7 @@ const isValidMove = (grid: Grid, row: number, col: number, value: number): boole
 };
 
 // Helper function to deep clone a grid
-const cloneGrid = (grid: Grid): Grid => {
+const cloneGrid = (grid: string[][]): string[][] => {
   return grid.map(row => [...row]);
 };
 
@@ -209,14 +167,14 @@ const sendScore = async (score: number, difficulty: string) => {
   }
 };
 
-// Helper function to count occurrences of a value in the grid
-const countValueInGrid = (grid, value) => {
+// Helper function to count occurrences of a color in the grid
+const countColorInGrid = (grid: string[][], color: string): number => {
   let count = 0;
   const size = grid.length;
   
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
-      if (grid[i][j] === value) {
+      if (grid[i][j] === color) {
         count++;
       }
     }
@@ -225,11 +183,11 @@ const countValueInGrid = (grid, value) => {
   return count;
 };
 
-// Helper function to check if a value has reached its maximum allowed count
-const isValueMaxed = (grid, value) => {
+// Helper function to check if a color has reached its maximum allowed count
+const isColorMaxed = (grid: string[][], color: string): boolean => {
   const size = grid.length;
-  const maxAllowed = size; // In Sudoku, each value can appear exactly size times
-  const currentCount = countValueInGrid(grid, value);
+  const maxAllowed = size; // In Sudoku, each color can appear exactly size times
+  const currentCount = countColorInGrid(grid, color);
   
   return currentCount >= maxAllowed;
 };
@@ -242,9 +200,9 @@ const Game = () => {
   
   // Game state
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
-  const [grid, setGrid] = useState<Grid>([]);
-  const [initialGrid, setInitialGrid] = useState<Grid>([]);
-  const [solution, setSolution] = useState<Grid>([]);
+  const [grid, setGrid] = useState<string[][]>([]);
+  const [initialGrid, setInitialGrid] = useState<string[][]>([]);
+  const [solution, setSolution] = useState<string[][]>([]);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
@@ -253,19 +211,14 @@ const Game = () => {
   const [showHelp, setShowHelp] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showConfirmNew, setShowConfirmNew] = useState(false);
-  const [noteMode, setNoteMode] = useState(false);
-  const [notes, setNotes] = useState<Notes>({});
-  const [errors, setErrors] = useState<Set<string>>(new Set());
-  const [showErrors, setShowErrors] = useState(true);
-  const [highlightSameValues, setHighlightSameValues] = useState(true);
   const [timer, setTimer] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
+  const [hintsRemaining, setHintsRemaining] = useState(3);
   
   // Refs
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
   
   // Initialize the game
   useEffect(() => {
@@ -300,22 +253,20 @@ const Game = () => {
     setIsGameOver(false);
     setIsGameStarted(true);
     setShowSolution(false);
-    setNotes({});
-    setErrors(new Set());
     setTimer(0);
     setIsTimerRunning(true);
     setShowCongrats(false);
     setTotalScore(0);
+    setHintsRemaining(3);
   };
   
   // Reset the current game
   const resetGame = () => {
     setGrid(cloneGrid(initialGrid));
     setSelectedCell(null);
-    setNotes({});
-    setErrors(new Set());
     setShowConfirmReset(false);
     setIsTimerRunning(true);
+    setHintsRemaining(3);
   };
   
   // Handle cell click
@@ -323,83 +274,74 @@ const Game = () => {
     if (isGameOver || showSolution) return;
     
     // If the cell is part of the initial grid, don't allow selection
-    if (initialGrid[row][col] !== null) return;
+    if (initialGrid[row][col] !== "") return;
     
     setSelectedCell([row, col]);
   };
   
-  // Handle number input
-  const handleNumberInput = (value: number) => {
+  // Handle color selection
+  const handleColorSelect = (color: string) => {
     if (!selectedCell || isGameOver || showSolution) return;
     
     const [row, col] = selectedCell;
     
     // If the cell is part of the initial grid, don't allow changes
-    if (initialGrid[row][col] !== null) return;
+    if (initialGrid[row][col] !== "") return;
     
     const newGrid = cloneGrid(grid);
     
-    if (noteMode) {
-      // Handle note mode
-      const cellKey = `${row}-${col}`;
-      const currentNotes = notes[cellKey] || [];
-      
-      // Toggle the note
-      const newNotes = { ...notes };
-      if (currentNotes.includes(value)) {
-        newNotes[cellKey] = currentNotes.filter(n => n !== value);
-      } else {
-        newNotes[cellKey] = [...currentNotes, value].sort((a, b) => a - b);
-      }
-      
-      setNotes(newNotes);
+    // If the same color is clicked again, remove it
+    if (newGrid[row][col] === color) {
+      newGrid[row][col] = "";
     } else {
-      // Regular mode - place a number
-      // If the same number is clicked again, remove it
-      if (newGrid[row][col] === value) {
-        newGrid[row][col] = null;
-      } else {
-        newGrid[row][col] = value;
-        
-        // Check if the move is valid
-        if (!isValidMove(newGrid, row, col, value)) {
-          const errorKey = `${row}-${col}`;
-          const newErrors = new Set(errors);
-          newErrors.add(errorKey);
-          setErrors(newErrors);
-          
-          // Show error toast if enabled
-          if (showErrors) {
-            sonnerToast.error('Invalid move', {
-              description: 'This number already exists in the same row, column, or region.',
-              duration: 2000,
-            });
-          }
-        } else {
-          // Remove from errors if it was there
-          const errorKey = `${row}-${col}`;
-          if (errors.has(errorKey)) {
-            const newErrors = new Set(errors);
-            newErrors.delete(errorKey);
-            setErrors(newErrors);
-          }
-        }
-        
-        // Clear notes for this cell
-        const cellKey = `${row}-${col}`;
-        if (notes[cellKey]) {
-          const newNotes = { ...notes };
-          delete newNotes[cellKey];
-          setNotes(newNotes);
-        }
-      }
+      newGrid[row][col] = color;
       
-      setGrid(newGrid);
-      
-      // Check if the game is complete
-      if (isGridComplete(newGrid, solution)) {
-        handleGameComplete();
+      // Check if the move is valid
+      if (!isValidMove(newGrid, row, col, color)) {
+        sonnerToast.error('Invalid move', {
+          description: 'This color already exists in the same row, column, or region.',
+          duration: 2000,
+        });
       }
+    }
+    
+    setGrid(newGrid);
+    
+    // Check if the game is complete
+    if (isGridComplete(newGrid, solution)) {
+      handleGameComplete();
+    }
+  };
+  
+  // Handle hint request
+  const handleHintRequest = () => {
+    if (hintsRemaining <= 0 || !selectedCell) return;
+    
+    const [row, col] = selectedCell;
+    
+    // If the cell already has the correct color or is part of initial grid, don't provide hint
+    if (grid[row][col] === solution[row][col] || initialGrid[row][col] !== "") {
+      sonnerToast.warning('Try another cell', {
+        description: 'This cell already has the correct color or is part of the initial puzzle.',
+        duration: 2000,
+      });
+      return;
+    }
+    
+    // Apply the hint
+    const newGrid = cloneGrid(grid);
+    newGrid[row][col] = solution[row][col];
+    setGrid(newGrid);
+    setHintsRemaining(prev => prev - 1);
+    
+    sonnerToast.success('Hint used', {
+      description: `You have ${hintsRemaining - 1} hints remaining.`,
+      duration: 2000,
+    });
+    
+    // Check if the game is complete after hint
+    if (isGridComplete(newGrid, solution)) {
+      handleGameComplete();
     }
   };
   
@@ -412,7 +354,8 @@ const Game = () => {
     // Calculate score based on difficulty and time
     const baseScore = difficulty === 'easy' ? 1000 : 2500;
     const timeBonus = Math.max(0, difficulty === 'easy' ? 500 - timer : 1000 - timer);
-    const finalScore = baseScore + timeBonus;
+    const hintsBonus = hintsRemaining * 100;
+    const finalScore = baseScore + timeBonus + hintsBonus;
     setTotalScore(finalScore);
     
     // Trigger confetti
@@ -431,7 +374,6 @@ const Game = () => {
     toast({
       title: "Congratulations!",
       description: "You've completed the puzzle!",
-      variant: "default",
     });
   };
   
@@ -444,65 +386,10 @@ const Game = () => {
     return `${hours > 0 ? `${hours}:` : ''}${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   
-  // Get cell background color
-  const getCellBackgroundColor = (row: number, col: number) => {
-    const size = grid.length;
-    const regionSize = Math.sqrt(size);
-    const isEvenRegion = (Math.floor(row / regionSize) + Math.floor(col / regionSize)) % 2 === 0;
-    
-    if (selectedCell && row === selectedCell[0] && col === selectedCell[1]) {
-      return 'bg-primary/20';
-    }
-    
-    if (selectedCell && highlightSameValues && grid[row][col] !== null && grid[selectedCell[0]][selectedCell[1]] === grid[row][col]) {
-      return 'bg-primary/10';
-    }
-    
-    // Highlight the selected cell's row, column, and region
-    if (selectedCell) {
-      const [selRow, selCol] = selectedCell;
-      const selRegionRow = Math.floor(selRow / regionSize);
-      const selRegionCol = Math.floor(selCol / regionSize);
-      
-      if (row === selRow || col === selCol || 
-          (Math.floor(row / regionSize) === selRegionRow && Math.floor(col / regionSize) === selRegionCol)) {
-        return 'bg-muted/50';
-      }
-    }
-    
-    return isEvenRegion ? 'bg-background' : 'bg-muted/30';
-  };
-  
-  // Get cell text color
-  const getCellTextColor = (row: number, col: number) => {
-    if (initialGrid[row][col] !== null) {
-      return 'text-foreground font-bold';
-    }
-    
-    if (errors.has(`${row}-${col}`)) {
-      return 'text-destructive';
-    }
-    
-    return 'text-primary';
-  };
-  
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isGameStarted || isGameOver || showSolution) return;
-      
-      if (e.key === 'n') {
-        setNoteMode(prev => !prev);
-        return;
-      }
-      
-      // Number keys
-      const size = grid.length;
-      const num = parseInt(e.key);
-      if (!isNaN(num) && num >= 1 && num <= size) {
-        handleNumberInput(num);
-        return;
-      }
       
       // Arrow keys for navigation
       if (!selectedCell) return;
@@ -510,6 +397,7 @@ const Game = () => {
       const [row, col] = selectedCell;
       let newRow = row;
       let newCol = col;
+      const size = grid.length;
       
       switch (e.key) {
         case 'ArrowUp':
@@ -526,18 +414,10 @@ const Game = () => {
           break;
         case 'Delete':
         case 'Backspace':
-          if (initialGrid[row][col] === null) {
+          if (initialGrid[row][col] === "") {
             const newGrid = cloneGrid(grid);
-            newGrid[row][col] = null;
+            newGrid[row][col] = "";
             setGrid(newGrid);
-            
-            // Remove from errors if it was there
-            const errorKey = `${row}-${col}`;
-            if (errors.has(errorKey)) {
-              const newErrors = new Set(errors);
-              newErrors.delete(errorKey);
-              setErrors(newErrors);
-            }
           }
           break;
         default:
@@ -552,128 +432,15 @@ const Game = () => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedCell, grid, initialGrid, isGameStarted, isGameOver, showSolution, errors]);
-  
-  // Render the game board
-  const renderGrid = () => {
-    if (!grid.length) return null;
-    
-    const size = grid.length;
-    const regionSize = Math.sqrt(size);
-    
-    return (
-      <div 
-        ref={gridRef}
-        className={cn(
-          "grid gap-0.5 md:gap-1 border-2 border-primary/50 rounded-lg overflow-hidden",
-          size === 4 ? "grid-cols-4" : "grid-cols-9"
-        )}
-        style={{ 
-          gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,
-          aspectRatio: '1/1',
-          maxWidth: size === 4 ? '400px' : '600px',
-          margin: '0 auto'
-        }}
-      >
-        {grid.map((row, rowIndex) => (
-          row.map((cell, colIndex) => {
-            const isInitial = initialGrid[rowIndex][colIndex] !== null;
-            const isSelected = selectedCell && rowIndex === selectedCell[0] && colIndex === selectedCell[1];
-            const hasError = errors.has(`${rowIndex}-${colIndex}`);
-            const cellKey = `${rowIndex}-${colIndex}`;
-            const cellNotes = notes[cellKey] || [];
-            
-            return (
-              <div
-                key={`${rowIndex}-${colIndex}`}
-                className={cn(
-                  "relative flex items-center justify-center cursor-pointer transition-all",
-                  getCellBackgroundColor(rowIndex, colIndex),
-                  isInitial ? "cursor-not-allowed" : "hover:bg-primary/10",
-                  isSelected && "ring-2 ring-primary",
-                  hasError && showErrors && "ring-2 ring-destructive",
-                  // Add borders to separate regions
-                  (colIndex + 1) % regionSize === 0 && colIndex < size - 1 && "border-r-2 border-r-primary/50",
-                  (rowIndex + 1) % regionSize === 0 && rowIndex < size - 1 && "border-b-2 border-b-primary/50"
-                )}
-                onClick={() => handleCellClick(rowIndex, colIndex)}
-              >
-                {cell !== null ? (
-                  <span 
-                    className={cn(
-                      "text-lg md:text-2xl font-medium",
-                      getCellTextColor(rowIndex, colIndex)
-                    )}
-                  >
-                    {showSolution ? solution[rowIndex][colIndex] : cell}
-                  </span>
-                ) : showSolution ? (
-                  <span className="text-lg md:text-2xl font-medium text-primary/70">
-                    {solution[rowIndex][colIndex]}
-                  </span>
-                ) : cellNotes.length > 0 ? (
-                  <div className={`grid grid-cols-${Math.ceil(Math.sqrt(size))} gap-0.5 p-0.5 w-full h-full`}>
-                    {Array.from({ length: size }).map((_, i) => {
-                      const noteValue = i + 1;
-                      return (
-                        <div key={i} className="flex items-center justify-center">
-                          {cellNotes.includes(noteValue) && (
-                            <span className="text-[8px] md:text-xs text-muted-foreground">
-                              {noteValue}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })
-        ))}
-      </div>
-    );
-  };
-  
-  // Render the number pad with grayed out numbers that have reached max
-  const renderNumberPad = () => {
-    const size = grid.length;
-    
-    return (
-      <div className={cn(
-        "grid gap-2 mt-4",
-        size === 4 ? "grid-cols-4" : "grid-cols-5 md:grid-cols-9"
-      )}>
-        {Array.from({ length: size }).map((_, i) => {
-          const value = i + 1;
-          const isMaxed = isValueMaxed(grid, value);
-          
-          return (
-            <Button
-              key={value}
-              variant="outline"
-              className={cn(
-                "h-10 md:h-12 text-lg font-medium",
-                noteMode && "bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20",
-                isMaxed && !noteMode && "opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700"
-              )}
-              onClick={() => !isMaxed || noteMode ? handleNumberInput(value) : null}
-            >
-              {value}
-            </Button>
-          );
-        })}
-      </div>
-    );
-  };
+  }, [selectedCell, grid, initialGrid, isGameStarted, isGameOver, showSolution]);
   
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Puzzle Game</h1>
-            <p className="text-muted-foreground">Fill the grid with numbers following Sudoku-style rules.</p>
+            <h1 className="text-3xl font-bold mb-2">Color Sudoku</h1>
+            <p className="text-muted-foreground">Fill the grid with colors following Sudoku-style rules.</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -701,24 +468,6 @@ const Game = () => {
               </div>
               
               <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setNoteMode(!noteMode)}
-                        className={noteMode ? "bg-yellow-500/10 border-yellow-500 text-yellow-500" : ""}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Toggle Note Mode {noteMode ? '(On)' : '(Off)'}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -772,12 +521,25 @@ const Game = () => {
               </div>
             </div>
             
-            <div className="mb-6">
-              {renderGrid()}
+            <div className="mb-6 flex justify-center">
+              {grid.length > 0 && (
+                <ColorGrid 
+                  grid={grid}
+                  originalGrid={initialGrid}
+                  gridSize={grid.length}
+                  selectedCell={selectedCell}
+                  onCellClick={handleCellClick}
+                />
+              )}
             </div>
             
-            <div>
-              {renderNumberPad()}
+            <div className="flex justify-center">
+              <ColorPalette
+                colors={COLORS[difficulty]}
+                onColorSelect={handleColorSelect}
+                hintsRemaining={hintsRemaining}
+                onHintRequest={handleHintRequest}
+              />
             </div>
             
             <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
@@ -842,32 +604,9 @@ const Game = () => {
             <DialogTitle>Game Settings</DialogTitle>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="show-errors">Show Errors</Label>
-                <p className="text-sm text-muted-foreground">
-                  Highlight cells with invalid values
-                </p>
-              </div>
-              <Switch
-                id="show-errors"
-                checked={showErrors}
-                onCheckedChange={setShowErrors}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="highlight-same">Highlight Same Values</Label>
-                <p className="text-sm text-muted-foreground">
-                  Highlight cells with the same value as the selected cell
-                </p>
-              </div>
-              <Switch
-                id="highlight-same"
-                checked={highlightSameValues}
-                onCheckedChange={setHighlightSameValues}
-              />
+            <div className="text-center">
+              <p className="text-muted-foreground mb-2">Adjust game settings to your preference</p>
+              <Button onClick={() => setShowSettings(false)}>Close</Button>
             </div>
           </div>
         </DialogContent>
@@ -881,18 +620,16 @@ const Game = () => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p>
-              Fill the grid so that every row, column, and region contains each number exactly once.
+              Fill the grid so that every row, column, and region contains each color exactly once.
             </p>
             
             <div className="space-y-2">
               <h4 className="font-medium">Controls:</h4>
               <ul className="list-disc pl-5 space-y-1">
                 <li>Click on a cell to select it</li>
-                <li>Click on a number in the number pad to place it</li>
-                <li>Toggle note mode to add small notes to cells</li>
+                <li>Click on a color in the palette to place it</li>
+                <li>Use the hint button when you're stuck</li>
                 <li>Use arrow keys to navigate the grid</li>
-                <li>Use number keys (1-9) to input numbers</li>
-                <li>Press 'N' to toggle note mode</li>
                 <li>Press Delete or Backspace to clear a cell</li>
               </ul>
             </div>
@@ -900,8 +637,8 @@ const Game = () => {
             <div className="space-y-2">
               <h4 className="font-medium">Difficulty Levels:</h4>
               <ul className="list-disc pl-5 space-y-1">
-                <li><strong>Easy:</strong> 4×4 grid with more pre-filled cells</li>
-                <li><strong>Hard:</strong> 9×9 grid with fewer pre-filled cells</li>
+                <li><strong>Easy:</strong> 4×4 grid with four colors</li>
+                <li><strong>Hard:</strong> 9×9 grid with nine colors</li>
               </ul>
             </div>
           </div>
@@ -990,6 +727,10 @@ const Game = () => {
                 <Badge variant={difficulty === 'easy' ? 'secondary' : 'destructive'}>
                   {difficulty === 'easy' ? 'Easy' : 'Hard'}
                 </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>Hints Used:</span>
+                <span className="font-medium">{3 - hintsRemaining} of 3</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>Score:</span>

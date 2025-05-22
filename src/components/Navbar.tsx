@@ -14,12 +14,11 @@ import {
 import {
   Home,
   Trophy,
-  GamepadIcon,
+  Palette,
   Settings,
   LogIn,
   User,
   Menu,
-  X,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -50,7 +49,7 @@ const Navbar = () => {
     {
       name: "Play",
       path: "/game",
-      icon: <GamepadIcon className="h-4 w-4" />,
+      icon: <Palette className="h-4 w-4" />,
     },
     {
       name: "Leaderboard",
