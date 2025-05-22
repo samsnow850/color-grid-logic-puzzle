@@ -210,7 +210,7 @@ const sendScore = async (score: number, difficulty: string) => {
 };
 
 // Helper function to count occurrences of a value in the grid
-const countValueInGrid = (grid: Grid, value: number): number => {
+const countValueInGrid = (grid, value) => {
   let count = 0;
   const size = grid.length;
   
@@ -226,7 +226,7 @@ const countValueInGrid = (grid: Grid, value: number): number => {
 };
 
 // Helper function to check if a value has reached its maximum allowed count
-const isValueMaxed = (grid: Grid, value: number): boolean => {
+const isValueMaxed = (grid, value) => {
   const size = grid.length;
   const maxAllowed = size; // In Sudoku, each value can appear exactly size times
   const currentCount = countValueInGrid(grid, value);
@@ -635,7 +635,7 @@ const Game = () => {
     );
   };
   
-  // Render the number pad
+  // Render the number pad with grayed out numbers that have reached max
   const renderNumberPad = () => {
     const size = grid.length;
     
