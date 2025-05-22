@@ -1,62 +1,59 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./hooks/useAuth";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import PageWrapper from "./components/PageWrapper";
-import Index from "./pages/Index";
-import Game from "./pages/Game";
-import DailyPuzzle from "./pages/DailyPuzzle";
-import Auth from "./pages/Auth";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import NotFound from "./pages/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfUse from "./pages/TermsOfUse";
-import Contact from "./pages/Contact";
-import Leaderboard from "./pages/Leaderboard";
-import Account from "./pages/Account";
-import About from "./pages/About";
-import Sitemap from "./pages/Sitemap";
-import Developer from "./pages/Developer";
-import Achievements from "./pages/Achievements";
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/hooks/useAuth";
 
-const queryClient = new QueryClient();
+import Index from './pages/Index';
+import Game from './pages/Game';
+import About from './pages/About';
+import Auth from './pages/Auth';
+import Account from './pages/Account';
+import Leaderboard from './pages/Leaderboard';
+import Sitemap from './pages/Sitemap';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
+import AboutDev from './pages/AboutDev';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const queryClient = new QueryClient()
+
+const App = () => {
+  return (
     <ThemeProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
-            <Route path="/game" element={<PageWrapper><Game /></PageWrapper>} />
-            <Route path="/daily-puzzle" element={<PageWrapper><DailyPuzzle /></PageWrapper>} />
-            <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
-            <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
-            <Route path="/reset-password" element={<PageWrapper><ResetPassword /></PageWrapper>} />
-            <Route path="/privacy-policy" element={<PageWrapper><PrivacyPolicy /></PageWrapper>} />
-            <Route path="/terms-of-use" element={<PageWrapper><TermsOfUse /></PageWrapper>} />
-            <Route path="/contact" element={<PageWrapper><Contact /></PageWrapper>} />
-            <Route path="/leaderboard" element={<PageWrapper><Leaderboard /></PageWrapper>} />
-            <Route path="/account" element={<PageWrapper><Account /></PageWrapper>} />
-            <Route path="/about" element={<PageWrapper><About /></PageWrapper>} />
-            <Route path="/sitemap" element={<PageWrapper><Sitemap /></PageWrapper>} />
-            <Route path="/developer" element={<PageWrapper><Developer /></PageWrapper>} />
-            <Route path="/achievements" element={<PageWrapper><Achievements /></PageWrapper>} />
-            <Route path="/settings" element={<PageWrapper><Account /></PageWrapper>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
-          </Routes>
-        </TooltipProvider>
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/game" element={<Game />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/sitemap" element={<Sitemap />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-use" element={<TermsOfUse />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/about-dev" element={<AboutDev />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster position="top-center" expand={true} richColors />
+          </Router>
+        </AuthProvider>
+      </QueryClientProvider>
     </ThemeProvider>
-  </QueryClientProvider>
-);
+  );
+};
 
 export default App;

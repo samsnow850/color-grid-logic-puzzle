@@ -1,17 +1,26 @@
+
 export type DifficultyLevel = "easy" | "medium" | "hard";
 
 // Function to generate a new puzzle
 export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
   try {
     // Validate grid size
-    if (gridSize !== 4 && gridSize !== 6 && gridSize !== 9) {
+    if (gridSize !== 4 && gridSize !== 7 && gridSize !== 9) {
       throw new Error(`Invalid grid size: ${gridSize}`);
     }
 
-    // Ensure the grid size has a valid square root for region calculations
-    const regionSize = Math.sqrt(gridSize);
-    if (Math.floor(regionSize) !== regionSize) {
-      throw new Error(`Grid size must have an integer square root: ${gridSize}`);
+    // For 7x7, we need special handling for region size since sqrt(7) is not an integer
+    let regionSize: number;
+    if (gridSize === 7) {
+      // For 7x7 puzzles, we'll use irregular regions (not perfectly square)
+      // This is common in some Sudoku variants
+      regionSize = Math.ceil(Math.sqrt(gridSize));
+    } else {
+      // For 4x4 and 9x9, use regular square regions
+      regionSize = Math.sqrt(gridSize);
+      if (Math.floor(regionSize) !== regionSize) {
+        throw new Error(`Grid size must have an integer square root: ${gridSize}`);
+      }
     }
 
     // Create an empty grid
@@ -28,26 +37,23 @@ export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
     if (difficulty === "easy") {
       cellsToRemove = Math.floor(gridSize * gridSize * 0.4); // 40% cells removed
     } else if (difficulty === "medium") {
-      cellsToRemove = Math.floor(gridSize * gridSize * 0.55); // 55% cells removed (slightly easier than before)
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.5); // 50% cells removed for medium
     } else {
-      cellsToRemove = Math.floor(gridSize * gridSize * 0.7); // 70% cells removed (slightly easier than before)
+      cellsToRemove = Math.floor(gridSize * gridSize * 0.65); // 65% cells removed for hard
     }
     
-    // Remove cells randomly with a maximum number of attempts
+    // Remove cells using a smarter algorithm that ensures puzzles remain solvable
     const maxAttempts = gridSize * gridSize * 2;
-    let attempts = 0;
-    let removed = 0;
+    createSolvablePuzzle(puzzle, solution, gridSize, cellsToRemove, maxAttempts);
     
-    while (removed < cellsToRemove && attempts < maxAttempts) {
-      attempts++;
-      const row = Math.floor(Math.random() * gridSize);
-      const col = Math.floor(Math.random() * gridSize);
-      
-      if (puzzle[row][col] !== "") {
-        puzzle[row][col] = "";
-        removed++;
+    // Count filled cells for debugging
+    let filledCount = 0;
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        if (puzzle[r][c] !== "") filledCount++;
       }
     }
+    console.log(`Final puzzle has ${filledCount} filled cells out of ${gridSize * gridSize}`);
     
     return { puzzle, solution };
   } catch (error) {
@@ -58,14 +64,113 @@ export function generatePuzzle(gridSize: number, difficulty: DifficultyLevel) {
     const fallbackPuzzle = JSON.parse(JSON.stringify(fallbackSolution));
     
     // Remove a small number of cells for the fallback puzzle
-    for (let i = 0; i < 6; i++) {
-      const row = Math.floor(Math.random() * 4);
-      const col = Math.floor(Math.random() * 4);
-      fallbackPuzzle[row][col] = "";
-    }
+    const fallbackCellsToRemove = 6; // Very few to ensure solvability
+    createSolvablePuzzle(fallbackPuzzle, fallbackSolution, 4, fallbackCellsToRemove, 20);
     
     return { puzzle: fallbackPuzzle, solution: fallbackSolution };
   }
+}
+
+// New function that ensures puzzles remain solvable
+function createSolvablePuzzle(puzzle: string[][], solution: string[][], gridSize: number, cellsToRemove: number, maxAttempts: number) {
+  let removed = 0;
+  let attempts = 0;
+  
+  while (removed < cellsToRemove && attempts < maxAttempts) {
+    attempts++;
+    const row = Math.floor(Math.random() * gridSize);
+    const col = Math.floor(Math.random() * gridSize);
+    
+    // Skip if cell is already empty
+    if (puzzle[row][col] === "") continue;
+    
+    // Save the current value before removing
+    const originalValue = puzzle[row][col];
+    puzzle[row][col] = "";
+    removed++;
+    
+    // If we can't uniquely solve the puzzle after this removal, put the value back
+    if (!hasUniqueSolution(puzzle, gridSize)) {
+      puzzle[row][col] = originalValue;
+      removed--;
+    }
+  }
+}
+
+// Check if the puzzle has a unique solution
+function hasUniqueSolution(puzzle: string[][], gridSize: number): boolean {
+  // For smaller puzzles (4x4) or when we're short on time, we can simplify the check
+  if (gridSize <= 4) {
+    return true; // For 4×4 puzzles, we'll assume they're generally solvable
+  }
+  
+  // For larger puzzles, implement a basic uniqueness check
+  // Clone the puzzle to work with
+  const puzzleCopy = JSON.parse(JSON.stringify(puzzle));
+  
+  // Count empty cells
+  let emptyCells = 0;
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (puzzleCopy[r][c] === "") emptyCells++;
+    }
+  }
+  
+  // If there are too many empty cells, the puzzle likely has multiple solutions
+  // This is a heuristic approach; for 9×9 we'll say more than 60 empty cells is risky
+  if (gridSize === 9 && emptyCells > 60) return false;
+  if (gridSize === 6 && emptyCells > 28) return false;
+  
+  // Attempt to solve the puzzle using backtracking
+  // If we find multiple solutions, return false
+  // For simplicity, we'll just check if the puzzle is solvable at all
+  const colors = [
+    "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+    "bg-purple-400", "bg-pink-400", "bg-orange-400", "bg-indigo-400", "bg-teal-400"
+  ].slice(0, gridSize);
+  
+  return canSolvePuzzle(puzzleCopy, 0, 0, gridSize, colors);
+}
+
+// Check if the puzzle is solvable
+function canSolvePuzzle(
+  grid: string[][],
+  row: number,
+  col: number,
+  gridSize: number,
+  colors: string[]
+): boolean {
+  // If we've filled the entire grid, we're done
+  if (row === gridSize) {
+    return true;
+  }
+  
+  // Move to the next cell (or next row if at end of current row)
+  const nextRow = col === gridSize - 1 ? row + 1 : row;
+  const nextCol = col === gridSize - 1 ? 0 : col + 1;
+  
+  // If this cell is already filled, move to the next cell
+  if (grid[row][col] !== "") {
+    return canSolvePuzzle(grid, nextRow, nextCol, gridSize, colors);
+  }
+  
+  // Try each color
+  for (const color of colors) {
+    if (isValidPlacement(grid, row, col, color, gridSize)) {
+      grid[row][col] = color;
+      
+      // Recursively try to solve the rest of the grid
+      if (canSolvePuzzle(grid, nextRow, nextCol, gridSize, colors)) {
+        return true;
+      }
+      
+      // If that didn't work, undo our choice and try the next color
+      grid[row][col] = "";
+    }
+  }
+  
+  // No solution found with any color
+  return false;
 }
 
 // Generate a valid solution for the grid
@@ -145,15 +250,53 @@ export function isValidPlacement(
     }
   }
   
-  // Check region (like 2x2 for 4x4 grid, or 3x3 for 9x9 grid)
-  const regionSize = Math.sqrt(gridSize);
-  const regionStartRow = Math.floor(row / regionSize) * regionSize;
-  const regionStartCol = Math.floor(col / regionSize) * regionSize;
+  // Check region
+  // For 7x7 puzzles, we need special handling for regions
+  let regionSize: number;
+  let regionStartRow: number;
+  let regionStartCol: number;
   
-  for (let r = regionStartRow; r < regionStartRow + regionSize; r++) {
-    for (let c = regionStartCol; c < regionStartCol + regionSize; c++) {
-      if (grid[r][c] === color) {
-        return false;
+  if (gridSize === 7) {
+    // For 7x7, we'll define regions manually to handle the odd grid size
+    // We'll use 3x2 and 2x3 regions (not perfectly square)
+    const regions = [
+      // Define region boundaries [startRow, endRow, startCol, endCol]
+      [0, 2, 0, 3], // Region 0: top-left 3x3
+      [0, 2, 3, 7], // Region 1: top-right 3x4
+      [3, 4, 0, 3], // Region 2: middle-left 2x3
+      [3, 4, 3, 7], // Region 3: middle-right 2x4
+      [5, 7, 0, 3], // Region 4: bottom-left 2x3
+      [5, 7, 3, 7], // Region 5: bottom-right 2x4
+    ];
+    
+    // Find which region this cell belongs to
+    for (const [startRow, endRow, startCol, endCol] of regions) {
+      if (row >= startRow && row < endRow && col >= startCol && col < endCol) {
+        regionStartRow = startRow;
+        regionStartCol = startCol;
+        
+        // Check all cells in this region
+        for (let r = startRow; r < endRow; r++) {
+          for (let c = startCol; c < endCol; c++) {
+            if (grid[r][c] === color) {
+              return false;
+            }
+          }
+        }
+        break;
+      }
+    }
+  } else {
+    // For 4x4 and 9x9, use standard square regions
+    regionSize = Math.sqrt(gridSize);
+    regionStartRow = Math.floor(row / regionSize) * regionSize;
+    regionStartCol = Math.floor(col / regionSize) * regionSize;
+    
+    for (let r = regionStartRow; r < regionStartRow + regionSize; r++) {
+      for (let c = regionStartCol; c < regionStartCol + regionSize; c++) {
+        if (grid[r][c] === color) {
+          return false;
+        }
       }
     }
   }

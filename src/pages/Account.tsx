@@ -1,296 +1,463 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Loader2, Save } from "lucide-react";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAchievements } from "@/hooks/useAchievements";
-import { CheckCircle, Circle, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PageWrapper from "@/components/PageWrapper";
 
 const Account = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
-  const { achievements } = useAchievements();
-
+  const [leaderboardOptIn, setLeaderboardOptIn] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
   useEffect(() => {
-    if (user) {
-      getProfile();
+    if (!user) {
+      toast.error("Please sign in to view this page");
+      navigate("/auth");
+      return;
     }
-  }, [user]);
-
-  const getProfile = async () => {
+    
+    setEmail(user.email || "");
+    
+    async function getProfile() {
+      try {
+        setLoading(true);
+        
+        // Get profile data
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setDisplayName(data.display_name || "");
+          setBio(data.bio || "");
+          setAvatarUrl(data.avatar_url || "");
+          setLeaderboardOptIn(data.leaderboard_opt_in !== false); // Default to true if null
+        }
+      } catch (error: any) {
+        console.error("Error fetching profile: ", error);
+        toast.error(error.message || "Error loading profile");
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    getProfile();
+  }, [user, navigate]);
+  
+  async function updateProfile() {
     try {
-      setLoading(true);
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`display_name, avatar_url, leaderboard_opt_in`)
-        .eq("id", user?.id)
+      setSaving(true);
+      
+      if (!user) throw new Error("No user logged in");
+      
+      // Check if profile exists first
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
         .single();
-
-      if (error && status !== 406) {
-        throw error;
-      }
-
-      if (data) {
-        setDisplayName(data.display_name || "");
-        setAvatarUrl(data.avatar_url || "");
-        setLeaderboardOptIn(data.leaderboard_opt_in || false);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error!",
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProfile = async () => {
-    try {
-      setLoading(true);
+      
+      // Prepare update data
       const updates = {
-        id: user?.id,
+        id: user.id,
         display_name: displayName,
+        bio: bio,
         avatar_url: avatarUrl,
         leaderboard_opt_in: leaderboardOptIn,
-        updated_at: new Date().toISOString(), // Convert Date to string
+        updated_at: new Date().toISOString(),
       };
-
-      const { error } = await supabase.from("profiles").upsert(updates);
-      if (error) {
-        throw error;
+      
+      let error;
+      
+      if (existingProfile) {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', user.id);
+          
+        error = updateError;
+      } else {
+        // Create new profile
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert([{ ...updates, created_at: new Date().toISOString() }]);
+          
+        error = insertError;
       }
-      toast({
-        title: "Success!",
-        description: "Profile updated successfully.",
-      });
+      
+      if (error) throw error;
+      
+      toast.success("Profile updated successfully!");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error!",
-        description: error.message,
-      });
+      console.error("Error updating profile: ", error);
+      toast.error(error.error_description || error.message || "Error updating profile");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
-  };
+  }
 
-  const signOut = async () => {
+  async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
+      if (!user || !event.target.files || event.target.files.length === 0) {
+        return;
       }
+      
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}.${fileExt}`;
+      
+      setUploading(true);
+      
+      // Remove old avatar if exists
+      if (avatarUrl) {
+        const oldFilePath = avatarUrl.split('/').pop();
+        if (oldFilePath) {
+          await supabase.storage.from("avatars").remove([oldFilePath]);
+        }
+      }
+      
+      // Upload new avatar
+      const { error: uploadError, data } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: publicURL } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      
+      // Update profile
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicURL.publicUrl })
+        .eq("id", user.id);
+        
+      if (updateError) throw updateError;
+      
+      setAvatarUrl(publicURL.publicUrl);
+      toast.success("Avatar updated successfully");
+      
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error!",
-        description: error.message,
-      });
+      console.error("Error uploading avatar:", error);
+      toast.error(error.message || "Error uploading avatar");
     } finally {
-      setLoading(false);
+      setUploading(false);
     }
+  }
+
+  async function updateEmail() {
+    try {
+      if (user?.email === email) {
+        toast.info("This is already your current email");
+        return;
+      }
+      
+      setIsSavingEmail(true);
+      const { error } = await supabase.auth.updateUser({ email });
+      
+      if (error) throw error;
+      
+      toast.success("Email update initiated. Check your inbox for confirmation.");
+    } catch (error: any) {
+      console.error("Error updating email:", error);
+      toast.error(error.message || "Failed to update email");
+    } finally {
+      setIsSavingEmail(false);
+    }
+  }
+
+  async function updatePassword() {
+    try {
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+      
+      setIsSavingPassword(true);
+      const { error } = await supabase.auth.updateUser({ password });
+      
+      if (error) throw error;
+      
+      toast.success("Password updated successfully");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      toast.error(error.message || "Failed to update password");
+    } finally {
+      setIsSavingPassword(false);
+    }
+  }
+
+  async function deleteAccount() {
+    try {
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: user!.id }
+      });
+      
+      if (error) throw error;
+      
+      await signOut();
+      navigate("/");
+      toast.success("Your account has been deleted");
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast.error(error.message || "Failed to delete account");
+    } finally {
+      setShowDeleteConfirm(false);
+    }
+  }
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').substring(0, 2);
   };
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-
-      <main className="flex-1 container max-w-4xl mx-auto px-4 py-8">
-        <div className="grid gap-6">
-          <Card className="bg-white rounded-xl shadow-md border border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Account Settings</CardTitle>
-              <CardDescription>
-                Manage your account settings and preferences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" value={user?.email || ""} disabled />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="display_name">Display Name</Label>
-                <Input
-                  id="display_name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="avatar_url">Avatar URL</Label>
-                <Input
-                  id="avatar_url"
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                />
-                {avatarUrl ? (
-                  <Avatar className="w-16 h-16">
-                    <AvatarImage src={avatarUrl} />
-                    <AvatarFallback>
-                      {displayName
-                        ?.split(" ")
-                        .map((name) => name[0])
-                        .join("")
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : null}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="leaderboard_opt_in">Show on Leaderboard</Label>
-                <Switch
-                  id="leaderboard_opt_in"
-                  checked={leaderboardOptIn}
-                  onCheckedChange={(checked) => setLeaderboardOptIn(checked)}
-                />
-              </div>
-
-              <Button onClick={updateProfile} disabled={loading} className="rounded-lg">
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update Profile"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white rounded-xl shadow-md border border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Achievements</CardTitle>
-              <CardDescription>
-                Track your progress and view unlocked achievements.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              {achievements.length > 0 ? (
-                achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
-                  >
-                    <div className="flex items-center gap-4">
-                      {achievement.achieved ? (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      ) : (
-                        <Circle className="w-6 h-6 text-gray-300" />
-                      )}
-                      <div>
-                        <h3 className="font-semibold">{achievement.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {achievement.description}
-                        </p>
-                        <AchievementProgress achievement={achievement} />
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-4 text-center text-muted-foreground">
-                  Loading achievements...
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white rounded-xl shadow-md border border-gray-100">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Danger Zone</CardTitle>
-              <CardDescription>
-                Careful, these actions can have serious consequences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="destructive"
-                onClick={signOut}
-                disabled={loading}
-                className="rounded-lg"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing Out...
-                  </>
-                ) : (
-                  "Sign Out"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </main>
+        
+        <Footer />
+      </div>
+    );
+  }
 
-      <Footer />
-    </div>
-  );
-};
-
-interface AchievementType {
-  id: string;
-  type: string;
-  name: string;
-  description: string;
-  achieved: boolean;
-  progress?: number;
-  progressTarget?: number;
-  achievedAt?: string;
-}
-
-const AchievementProgress = ({ achievement }: { achievement: AchievementType }) => {
-  // Handle both types of achievements: those with progress and those without
-  const hasProgress = typeof achievement.progress !== 'undefined' && 
-                     typeof achievement.progressTarget !== 'undefined';
-                     
-  // For achievements without progress tracking (like "first_victory"), 
-  // we consider them either 0% or 100% complete
-  const progressPercent = hasProgress 
-    ? Math.min(100, Math.round((achievement.progress! / achievement.progressTarget!) * 100)) 
-    : (achievement.achieved ? 100 : 0);
-    
   return (
-    <div className="mt-2">
-      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-        <span>{progressPercent}% complete</span>
-        {hasProgress && (
-          <span>{achievement.progress}/{achievement.progressTarget}</span>
-        )}
+    <PageWrapper 
+      loadingTitle="Account" 
+      loadingDescription="Loading your profile"
+      loadingColor="pink"
+    >
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        
+        <main className="flex-1 py-12 px-4 bg-white">
+          <div className="max-w-2xl mx-auto space-y-8">
+            <h1 className="text-3xl font-bold mb-8">My Account</h1>
+            
+            {/* Profile Information */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
+              <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+                <div className="flex flex-col items-center gap-2">
+                  <Avatar className="w-24 h-24 border-2 border-primary">
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} alt={displayName || "Profile"} />
+                    ) : (
+                      <AvatarFallback className="text-xl bg-primary text-primary-foreground">
+                        {getInitials(displayName)}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="avatar-upload">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        className="cursor-pointer"
+                        disabled={uploading}
+                      >
+                        {uploading ? "Uploading..." : "Change Photo"}
+                      </Button>
+                      <input 
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={uploadAvatar}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex-1 w-full space-y-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input 
+                      id="displayName" 
+                      value={displayName} 
+                      onChange={(e) => setDisplayName(e.target.value)} 
+                      placeholder="How do you want to be known?"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea 
+                      id="bio" 
+                      value={bio} 
+                      onChange={(e) => setBio(e.target.value)} 
+                      placeholder="Tell us about yourself" 
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="leaderboardOptIn"
+                      checked={leaderboardOptIn}
+                      onChange={(e) => setLeaderboardOptIn(e.target.checked)}
+                      className="h-4 w-4 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="leaderboardOptIn">Show me on leaderboards</Label>
+                  </div>
+                  
+                  <Button 
+                    onClick={updateProfile} 
+                    disabled={saving}
+                    className="w-full md:w-auto"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Email Update */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">Email Address</h2>
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email"
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com" 
+                  />
+                </div>
+                <Button 
+                  onClick={updateEmail}
+                  disabled={isSavingEmail}
+                >
+                  {isSavingEmail ? "Updating..." : "Update Email"}
+                </Button>
+              </div>
+            </div>
+            
+            {/* Password Update */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <h2 className="text-xl font-semibold mb-4">Password</h2>
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="password">New Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••" 
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input 
+                    id="confirmPassword" 
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••" 
+                  />
+                </div>
+                <Button 
+                  onClick={updatePassword}
+                  disabled={isSavingPassword}
+                >
+                  {isSavingPassword ? "Updating..." : "Change Password"}
+                </Button>
+              </div>
+            </div>
+            
+            {/* Account Deletion */}
+            <div className="bg-white p-6 rounded-lg shadow border border-destructive">
+              <h2 className="text-xl font-semibold text-destructive mb-4">Delete Account</h2>
+              <p className="mb-4 text-muted-foreground">
+                This action cannot be undone. It will permanently delete your account and remove all your data from our servers.
+              </p>
+              <Button 
+                variant="destructive" 
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Delete Account
+              </Button>
+            </div>
+          </div>
+        </main>
+        
+        {/* Delete Account Confirmation */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive">Delete Account</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete your account? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p>All your data will be permanently removed, including:</p>
+              <ul className="list-disc pl-6 text-sm text-muted-foreground space-y-2">
+                <li>Your profile information</li>
+                <li>Your game progress and scores</li>
+                <li>Your saved preferences</li>
+              </ul>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={deleteAccount}>Delete Account</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        <Footer />
       </div>
-      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-        <div 
-          className="h-full bg-primary rounded-full"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
-    </div>
+    </PageWrapper>
   );
 };
 

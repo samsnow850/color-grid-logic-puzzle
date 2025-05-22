@@ -9,57 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      achievements: {
-        Row: {
-          achieved_at: string
-          achievement_type: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          achieved_at?: string
-          achievement_type: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          achieved_at?: string
-          achievement_type?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      game_scores: {
-        Row: {
-          completed: boolean
-          created_at: string
-          difficulty: string
-          id: string
-          score: number
-          time_taken: number
-          user_id: string
-        }
-        Insert: {
-          completed?: boolean
-          created_at?: string
-          difficulty: string
-          id?: string
-          score: number
-          time_taken: number
-          user_id: string
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          difficulty?: string
-          id?: string
-          score?: number
-          time_taken?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -107,36 +56,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           score?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_stats: {
-        Row: {
-          average_score: number
-          games_played: number
-          games_won: number
-          highest_score: number
-          total_score: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          average_score?: number
-          games_played?: number
-          games_won?: number
-          highest_score?: number
-          total_score?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          average_score?: number
-          games_played?: number
-          games_won?: number
-          highest_score?: number
-          total_score?: number
-          updated_at?: string
           user_id?: string
         }
         Relationships: []

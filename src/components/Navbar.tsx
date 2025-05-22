@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,47 +53,40 @@ const Navbar = () => {
   };
 
   return (
-    <header className="border-b bg-background z-10">
-      <div className="container flex items-center justify-between h-16 px-4 md:px-6">
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 font-semibold"
-          onClick={() => window.scrollTo(0, 0)}
-        >
-          <div className="w-6 h-6 rounded bg-primary" />
-          <span className="hidden sm:inline">Color Grid Logic</span>
-        </Link>
-        
-        <nav className="hidden md:flex items-center gap-5">
-          <Link 
-            to="/" 
-            onClick={() => window.scrollTo(0, 0)}
-            className="text-sm font-medium hover:underline underline-offset-4"
-          >
-            Home
+    <header className="sticky top-0 z-40 w-full border-b bg-background">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="flex items-center font-bold text-lg">
+            <span className="hidden sm:inline">Color Grid Logic</span>
+            <span className="sm:hidden">CGL</span>
           </Link>
-          <Link 
-            to="/game" 
-            onClick={() => window.scrollTo(0, 0)}
-            className="text-sm font-medium hover:underline underline-offset-4"
-          >
-            Play Game
-          </Link>
-          <Link 
-            to="/leaderboard" 
-            onClick={() => window.scrollTo(0, 0)}
-            className="text-sm font-medium hover:underline underline-offset-4"
-          >
-            Leaderboard
-          </Link>
-          <Link
-            to="/about"
-            onClick={() => window.scrollTo(0, 0)}
-            className="text-sm font-medium hover:underline underline-offset-4"
-          >
-            About
-          </Link>
-        </nav>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link
+              to="/game"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Play
+            </Link>
+            <Link
+              to="/leaderboard"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Leaderboard
+            </Link>
+            <Link
+              to="/about"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              About
+            </Link>
+            <Link
+              to="/about-dev"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              About Dev
+            </Link>
+          </nav>
+        </div>
         
         <div className="flex items-center gap-4">
           {loading ? (

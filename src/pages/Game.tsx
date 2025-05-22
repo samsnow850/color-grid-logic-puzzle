@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,38 +12,52 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageWrapper from "@/components/PageWrapper";
 import ColorGrid from "@/components/game/ColorGrid";
 import ColorPalette from "@/components/game/ColorPalette";
 import GameTimer from "@/components/game/GameTimer";
 import PauseOverlay from "@/components/game/PauseOverlay";
-import AchievementDialog from "@/components/game/AchievementDialog";
+import HintSystem from "@/components/game/HintSystem";
+import AchievementsDialog from "@/components/game/AchievementsDialog";
+import TutorialMode from "@/components/game/TutorialMode";
 import { DifficultyLevel, generatePuzzle, checkWinCondition } from "@/lib/gameLogic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  Info, Trophy, ChevronRight, HelpCircle, Sparkles 
+  Info, 
+  Award, 
+  Book, 
+  Undo, 
+  Redo,
+  Trophy
 } from "lucide-react";
 import { scrollToTop } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { saveGameResult } from "@/lib/gameUtils";
-import { Link } from "react-router-dom";
-import { useAchievements } from "@/hooks/useAchievements";
-import { Achievement } from "@/lib/achievements";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  createHistory, 
+  recordHistory, 
+  undo, 
+  redo,
+  canUndo,
+  canRedo,
+  GridHistory
+} from "@/lib/historySystem";
+import { 
+  checkPuzzleCompletionAchievements, 
+  checkNoHintAchievement
+} from "@/lib/achievementSystem";
 
 const Game = () => {
   const { user } = useAuth();
-  const { achievements, refresh: refreshAchievements } = useAchievements();
-  
+  const { toast } = useToast();
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("easy");
   const [showTitleScreen, setShowTitleScreen] = useState(true);
   const [showGameOverScreen, setShowGameOverScreen] = useState(false);
-  const [showTutorialScreen, setShowTutorialScreen] = useState(false);
   const [gameWon, setGameWon] = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
   const [gridSize, setGridSize] = useState(4);
   const [grid, setGrid] = useState<string[][]>([]);
   const [originalGrid, setOriginalGrid] = useState<string[][]>([]);
+  const [solution, setSolution] = useState<string[][]>([]);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
   const [colors, setColors] = useState<string[]>([
     "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400"
@@ -51,13 +66,14 @@ const Game = () => {
   const [previewGrid, setPreviewGrid] = useState<JSX.Element | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [timeTaken, setTimeTaken] = useState(0);
-  const [errorCount, setErrorCount] = useState(0);
+  const [showMediumWarning, setShowMediumWarning] = useState(false);
+  const [gameTime, setGameTime] = useState(0);
+  const [gridHistory, setGridHistory] = useState<GridHistory<string> | null>(null);
+  const [hintsRemaining, setHintsRemaining] = useState(3);
   const [usedHint, setUsedHint] = useState(false);
-  const [showHintConfirm, setShowHintConfirm] = useState(false);
-  const [showAchievementDialog, setShowAchievementDialog] = useState(false);
-  const [latestAchievement, setLatestAchievement] = useState<Achievement | null>(null);
-
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  
   // Initialize with preview colors based on difficulty
   useEffect(() => {
     let colorCount = 4;
@@ -67,8 +83,12 @@ const Game = () => {
     ];
     
     if (difficulty === "medium") {
-      colorCount = 4;
-      gridSizeValue = 4;
+      colorCount = 7; // Changed to 7 for medium difficulty
+      gridSizeValue = 7; // Changed to 7 for medium difficulty
+      previewColors = [
+        "bg-blue-400", "bg-green-400", "bg-yellow-400", "bg-red-400",
+        "bg-purple-400", "bg-pink-400", "bg-orange-400"
+      ];
     } else if (difficulty === "hard") {
       colorCount = 9;
       gridSizeValue = 9;
@@ -85,9 +105,21 @@ const Game = () => {
     for (let i = 0; i < gridSizeValue; i++) {
       for (let j = 0; j < gridSizeValue; j++) {
         // Calculate region boundaries for borders
-        const regionSize = Math.sqrt(gridSizeValue);
-        const isTopEdge = i % regionSize === 0;
-        const isLeftEdge = j % regionSize === 0;
+        let regionSize = Math.sqrt(gridSizeValue);
+        let isTopEdge = i % regionSize === 0;
+        let isLeftEdge = j % regionSize === 0;
+        
+        // Special case for 7x7 which doesn't have clean square regions
+        if (gridSizeValue === 7) {
+          // Define custom region boundaries for 7x7
+          const isInTopRegion = i < 3;
+          const isInMiddleRegion = i >= 3 && i < 5;
+          const isInLeftRegion = j < 3;
+          
+          isTopEdge = i === 0 || i === 3 || i === 5;
+          isLeftEdge = j === 0 || j === 3;
+        }
+        
         const isBottomEdge = i === gridSizeValue - 1;
         const isRightEdge = j === gridSizeValue - 1;
         
@@ -118,8 +150,8 @@ const Game = () => {
         style={{
           gridTemplateColumns: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${gridSizeValue}, minmax(0, 1fr))`,
-          width: gridSizeValue === 9 ? "210px" : "180px",
-          height: gridSizeValue === 9 ? "210px" : "180px",
+          width: gridSizeValue === 9 ? "210px" : gridSizeValue === 7 ? "190px" : "160px",
+          height: gridSizeValue === 9 ? "210px" : gridSizeValue === 7 ? "190px" : "160px",
         }}
       >
         {previewElements}
@@ -131,20 +163,20 @@ const Game = () => {
   const startNewGame = () => {
     let newGridSize = 4;
     let colorCount = 4;
+    let hintCount = 3;
     
     try {
       setError(null);
       scrollToTop();
       
-      // For medium difficulty, use same size as easy
       if (difficulty === "medium") {
-        newGridSize = 4;
-        colorCount = 4;
-        // Here we'd normally set medium difficulty params, but it's out of service
-        toast.info("Medium difficulty is currently unavailable. Starting an Easy puzzle instead.");
+        // Show medium difficulty warning
+        setShowMediumWarning(true);
+        return; // Don't actually start the game for medium difficulty
       } else if (difficulty === "hard") {
         newGridSize = 9;
         colorCount = 9;
+        hintCount = 5; // More hints for hard difficulty
       }
       
       setGridSize(newGridSize);
@@ -157,23 +189,27 @@ const Game = () => {
       
       setColors(generatedColors);
       
-      // Generate a new puzzle
-      const actualDifficulty = difficulty === "medium" ? "easy" : difficulty;
-      const { puzzle, solution } = generatePuzzle(newGridSize, actualDifficulty);
+      const { puzzle, solution } = generatePuzzle(newGridSize, difficulty);
       setGrid(puzzle);
       setOriginalGrid(JSON.parse(JSON.stringify(puzzle)));
+      setSolution(solution);
+      
+      // Initialize undo/redo history
+      setGridHistory(createHistory(puzzle));
       
       // Reset game state
       setShowTitleScreen(false);
       setShowGameOverScreen(false);
       setIsTimerRunning(true);
       setIsPaused(false);
-      setTimeTaken(0);
-      setErrorCount(0);
+      setGameTime(0);
+      setHintsRemaining(hintCount);
       setUsedHint(false);
-      setSelectedCell(null);
-      setGameWon(false);
-      setFinalScore(0);
+      
+      toast({
+        title: `${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} puzzle started!`,
+        description: "Good luck and have fun!",
+      });
     } catch (err) {
       console.error("Error starting game:", err);
       setError("There was a problem starting the game. Please try a different difficulty level.");
@@ -194,16 +230,17 @@ const Game = () => {
   };
 
   const handleColorSelect = (color: string) => {
-    if (!selectedCell || isPaused) return;
+    if (!selectedCell || isPaused || !gridHistory) return;
     
     const [row, col] = selectedCell;
-    const newGrid = [...grid];
-    
-    // Check if this is a valid move
-    if (newGrid[row][col] === color) return; // No change
-    
-    // Apply the color
+    const newGrid = JSON.parse(JSON.stringify(gridHistory.present));
     newGrid[row][col] = color;
+    
+    // Update history
+    const newHistory = recordHistory(gridHistory, newGrid);
+    setGridHistory(newHistory);
+    
+    // Update current grid
     setGrid(newGrid);
     
     // Check if the puzzle is solved
@@ -211,58 +248,62 @@ const Game = () => {
       handleGameWon();
     }
   };
-
-  const handleGameWon = async () => {
-    // Stop the timer
-    setIsTimerRunning(false);
+  
+  const handleGameWon = () => {
     setGameWon(true);
+    setShowGameOverScreen(true);
+    setIsTimerRunning(false);
     
     if (user) {
-      // Calculate and save score
-      const score = await saveGameResult(
+      // Award achievements
+      const achievements = checkPuzzleCompletionAchievements(
         user.id,
-        difficulty === "medium" ? "easy" : difficulty, 
-        timeTaken,
-        errorCount,
-        true,
-        usedHint
+        difficulty,
+        gameTime
       );
-      setFinalScore(score);
       
-      // Refresh achievements to show any newly unlocked ones
-      await refreshAchievements();
+      // Award no-hint achievement if applicable
+      if (!usedHint) {
+        checkNoHintAchievement(user.id);
+      }
       
-      // Check if any new achievements were unlocked
-      setTimeout(() => {
-        const newlyUnlocked = achievements.find(a => a.achieved && 
-          (a.type === "first_victory" || a.type === "speed_demon" || 
-           a.type === "no_help" || 
-           (a.type === "easy_master" && difficulty === "easy") ||
-           (a.type === "hard_master" && difficulty === "hard")));
-           
-        if (newlyUnlocked) {
-          setLatestAchievement(newlyUnlocked);
-          setShowAchievementDialog(true);
-        } else {
-          setShowGameOverScreen(true);
-        }
-      }, 500);
-    } else {
-      // If not logged in, just show game over
-      setShowGameOverScreen(true);
+      // Show achievement toast if any were unlocked
+      const newlyUnlocked = achievements.filter(a => a.unlocked && a.date && 
+        new Date(a.date).getTime() > Date.now() - 10000);
+      
+      if (newlyUnlocked.length > 0) {
+        toast({
+          title: "Achievement Unlocked!",
+          description: `You've unlocked ${newlyUnlocked.length} new achievement${
+            newlyUnlocked.length !== 1 ? "s" : ""
+          }!`,
+        });
+        
+        // Show achievements dialog with a slight delay
+        setTimeout(() => {
+          setShowAchievements(true);
+        }, 1500);
+      }
     }
   };
 
   const handleReset = () => {
     if (isPaused) return;
     
-    setGrid(JSON.parse(JSON.stringify(originalGrid)));
-    setSelectedCell(null);
-    // Count as an error
-    setErrorCount(prev => prev + 1);
+    if (gridHistory) {
+      const newHistory = createHistory(JSON.parse(JSON.stringify(originalGrid)));
+      setGridHistory(newHistory);
+      setGrid(JSON.parse(JSON.stringify(originalGrid)));
+    } else {
+      setGrid(JSON.parse(JSON.stringify(originalGrid)));
+    }
     
-    // Show a toast when user resets
-    toast.info("Puzzle has been reset");
+    setSelectedCell(null);
+    
+    toast({
+      title: "Puzzle reset",
+      description: "The grid has been restored to its initial state.",
+    });
   };
 
   const handleGiveUp = () => {
@@ -271,31 +312,6 @@ const Game = () => {
     setGameWon(false);
     setShowGameOverScreen(true);
     setIsTimerRunning(false);
-    
-    // Record an incomplete game if the user is logged in
-    if (user) {
-      saveGameResult(
-        user.id,
-        difficulty === "medium" ? "easy" : difficulty,
-        timeTaken,
-        errorCount,
-        false,
-        usedHint
-      );
-    }
-  };
-  
-  const provideHint = () => {
-    if (!selectedCell || isPaused) return;
-    
-    setShowHintConfirm(false);
-    setUsedHint(true);
-    
-    // We'd normally provide a real hint here, but for now let's just
-    // give a generic message
-    toast("Try looking for rows or columns that are almost complete", {
-      description: "Focus on cells that have fewer possible options"
-    });
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -312,7 +328,7 @@ const Game = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedCell, colors, isPaused]);
+  }, [selectedCell, colors, isPaused, gridHistory]);
 
   const handlePauseGame = () => {
     setIsTimerRunning(false);
@@ -323,326 +339,381 @@ const Game = () => {
     setIsTimerRunning(true);
     setIsPaused(false);
   };
-  
-  const handleTimerUpdate = (seconds: number) => {
-    setTimeTaken(seconds);
-  };
 
-  // Handle showing game over screen from achievement dialog
-  const handleAchievementContinue = () => {
-    setShowGameOverScreen(true);
+  const handleCloseMediumWarning = () => {
+    setShowMediumWarning(false);
+  };
+  
+  const handleUndo = () => {
+    if (!gridHistory || isPaused) return;
+    
+    if (canUndo(gridHistory)) {
+      const newHistory = undo(gridHistory);
+      setGridHistory(newHistory);
+      setGrid(newHistory.present);
+      
+      // Clear selection after undo
+      setSelectedCell(null);
+    } else {
+      toast({
+        title: "Cannot undo",
+        description: "No more moves to undo.",
+      });
+    }
+  };
+  
+  const handleRedo = () => {
+    if (!gridHistory || isPaused) return;
+    
+    if (canRedo(gridHistory)) {
+      const newHistory = redo(gridHistory);
+      setGridHistory(newHistory);
+      setGrid(newHistory.present);
+      
+      // Clear selection after redo
+      setSelectedCell(null);
+    } else {
+      toast({
+        title: "Cannot redo",
+        description: "No more moves to redo.",
+      });
+    }
+  };
+  
+  const handleHintUsed = () => {
+    setHintsRemaining((prev) => Math.max(0, prev - 1));
+    setUsedHint(true);
+  };
+  
+  const handleCellReveal = (row: number, col: number, value: string) => {
+    if (!gridHistory) return;
+    
+    const newGrid = JSON.parse(JSON.stringify(gridHistory.present));
+    newGrid[row][col] = value;
+    
+    // Update history
+    const newHistory = recordHistory(gridHistory, newGrid);
+    setGridHistory(newHistory);
+    
+    // Update current grid
+    setGrid(newGrid);
+    
+    // Check if the puzzle is solved after hint
+    if (checkWinCondition(newGrid)) {
+      handleGameWon();
+    }
+  };
+  
+  // Update game time from timer component
+  const handleTimeUpdate = (seconds: number) => {
+    setGameTime(seconds);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-purple-50">
-      <Navbar />
+    <PageWrapper 
+      loadingTitle="Game Loading" 
+      loadingDescription="Preparing your color puzzle"
+      loadingColor="green"
+    >
+      <div className="min-h-screen flex flex-col bg-white">
+        <Navbar />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-        {showTitleScreen ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-md bg-white p-6 rounded-xl shadow-md border border-gray-100"
-          >
-            <h1 className="text-3xl font-bold mb-6 text-center text-primary">Color Grid Logic</h1>
-            <p className="mb-6 text-center text-muted-foreground">
-              Fill the grid with colors following Sudoku-style rules.
-            </p>
-            
-            <div className="mb-6">
-              <h2 className="text-lg font-medium mb-2">Select Difficulty:</h2>
-              <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
-                <div className="flex items-center space-x-2 mb-2 py-2 hover:bg-gray-50 rounded-lg px-2">
-                  <RadioGroupItem value="easy" id="easy" />
-                  <Label htmlFor="easy">Easy (4×4)</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2 mb-2 py-2 bg-gray-50 rounded-lg px-2 opacity-70">
-                  <RadioGroupItem value="medium" id="medium" disabled />
-                  <Label htmlFor="medium" className="flex items-center">
-                    Medium (4×4 - More challenging)
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                      Out of Service
-                    </span>
-                  </Label>
-                </div>
-                
-                <div className="flex items-center space-x-2 py-2 hover:bg-gray-50 rounded-lg px-2">
-                  <RadioGroupItem value="hard" id="hard" />
-                  <Label htmlFor="hard">Hard (9×9)</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            
-            {/* Preview of the selected grid */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Preview:</h3>
-              <div className="flex justify-center">
-                {previewGrid}
-              </div>
-            </div>
-            
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="flex flex-col gap-3">
-              <Button 
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white rounded-lg" 
-                size="lg"
-                onClick={startNewGame}
-              >
-                Start Game
-              </Button>
+        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+          {showTitleScreen ? (
+            <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h1 className="text-3xl font-bold mb-6 text-center">Color Grid Logic</h1>
+              <p className="mb-6 text-center text-muted-foreground">
+                Fill the grid with colors following Sudoku-style rules.
+              </p>
               
-              <Button
-                variant="outline"
-                className="w-full rounded-lg"
-                onClick={() => setShowTutorialScreen(true)}
-              >
-                <HelpCircle className="mr-2 h-4 w-4" />
-                How to Play
-              </Button>
-            </div>
-            
-            {!user && (
-              <div className="mt-6 pt-6 border-t border-gray-100 text-center text-sm text-muted-foreground">
-                <p>Sign in to track your progress and achievements</p>
-                <Button variant="link" size="sm" asChild>
-                  <Link to="/auth">Sign in now</Link>
+              <div className="mb-6">
+                <h2 className="text-lg font-medium mb-2">Select Difficulty:</h2>
+                <RadioGroup value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <RadioGroupItem value="easy" id="easy" />
+                    <Label htmlFor="easy">Easy (4×4)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 mb-2 relative">
+                    <RadioGroupItem value="medium" id="medium" disabled />
+                    <Label htmlFor="medium" className="flex items-center">
+                      Medium (7×7) 
+                      <span className="ml-2 text-xs font-bold text-red-500 bg-red-100 px-2 py-0.5 rounded-md">
+                        OUT OF SERVICE
+                      </span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="hard" id="hard" />
+                    <Label htmlFor="hard">Hard (9×9)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              {/* Preview of the selected grid */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2 text-center text-muted-foreground">Preview:</h3>
+                <div className="flex justify-center">
+                  {previewGrid}
+                </div>
+              </div>
+              
+              <div className="flex flex-col space-y-3">
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                
+                <Button 
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white" 
+                  size="lg"
+                  onClick={startNewGame}
+                >
+                  Start Game
                 </Button>
+                
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowTutorial(true)}
+                >
+                  <Book className="mr-2 h-4 w-4" />
+                  How to Play
+                </Button>
+                
+                {user && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowAchievements(true)}
+                  >
+                    <Award className="mr-2 h-4 w-4" />
+                    View Achievements
+                  </Button>
+                )}
               </div>
-            )}
-          </motion.div>
-        ) : (
-          <div className="w-full max-w-4xl">
-            <div className="mb-4 flex justify-between items-center">
-              <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+            </div>
+          ) : (
+            <div className="w-full max-w-4xl">
+              <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <h1 className="text-2xl font-bold">Color Grid Logic</h1>
+                
+                <div className="flex flex-wrap items-center gap-2">
+                  {!showTitleScreen && !showGameOverScreen && (
+                    <GameTimer 
+                      isRunning={isTimerRunning} 
+                      onPause={handlePauseGame} 
+                      onResume={handleResumeGame}
+                      onTimeUpdate={handleTimeUpdate}
+                    />
+                  )}
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAchievements(true)}
+                    disabled={isPaused}
+                  >
+                    <Trophy className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTutorial(true)}
+                    disabled={isPaused}
+                  >
+                    <Book className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
               
-              {!showTitleScreen && !showGameOverScreen && (
-                <GameTimer 
-                  isRunning={isTimerRunning} 
-                  onPause={handlePauseGame} 
-                  onResume={handleResumeGame}
-                  onUpdate={handleTimerUpdate}
-                />
+              <div className="bg-white p-4 md:p-8 rounded-lg shadow-md border border-gray-200">
+                <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                  <div className="flex flex-col items-center gap-4">
+                    <ColorGrid 
+                      grid={grid}
+                      originalGrid={originalGrid}
+                      gridSize={gridSize}
+                      selectedCell={selectedCell}
+                      onCellClick={handleCellClick}
+                    />
+                    
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={handleUndo}
+                        disabled={!gridHistory || !canUndo(gridHistory) || isPaused}
+                        className="flex items-center gap-1"
+                      >
+                        <Undo className="h-4 w-4" />
+                        Undo
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={handleRedo}
+                        disabled={!gridHistory || !canRedo(gridHistory) || isPaused}
+                        className="flex items-center gap-1"
+                      >
+                        <Redo className="h-4 w-4" />
+                        Redo
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={handleReset}
+                        disabled={isPaused}
+                      >
+                        Reset
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={handleGiveUp}
+                        disabled={isPaused}
+                      >
+                        Give Up
+                      </Button>
+                    </div>
+                    
+                    {/* Hint system */}
+                    <div className="w-full">
+                      <HintSystem 
+                        grid={grid}
+                        solution={solution}
+                        hintsRemaining={hintsRemaining}
+                        onHintUsed={handleHintUsed}
+                        onCellReveal={handleCellReveal}
+                        disabled={isPaused || showGameOverScreen}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="w-full md:w-auto">
+                    <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
+                    <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
+                    
+                    <div className="mt-8">
+                      <h2 className="text-lg font-medium mb-4 text-center md:text-left">Instructions</h2>
+                      <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                        <li>Click on an empty cell to select it</li>
+                        <li>Click on a color or press 1-{colors.length} to place it</li>
+                        <li>Each row, column, and region must contain each color exactly once</li>
+                        <li>Use the hint button if you're stuck (limited hints per game)</li>
+                        <li>Use Undo/Redo to fix mistakes</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+        
+        {/* Pause Overlay */}
+        {isPaused && <PauseOverlay onResume={handleResumeGame} />}
+        
+        {/* Medium Difficulty Warning Dialog */}
+        <Dialog open={showMediumWarning} onOpenChange={setShowMediumWarning}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-red-600">
+                Medium Difficulty Unavailable
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <Alert className="bg-red-50 border border-red-200 mb-4">
+                <Info className="h-5 w-5 text-red-600" />
+                <AlertDescription className="text-red-600">
+                  We're experiencing technical difficulties with the 7×7 puzzle format.
+                </AlertDescription>
+              </Alert>
+              <p className="text-center text-muted-foreground">
+                We are working hard to fix this issue. In the meantime, please try our other difficulty levels.
+                We apologize for the inconvenience.
+              </p>
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={handleCloseMediumWarning}
+              >
+                Return to Selection
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Game Over Dialog */}
+        <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                {gameWon ? "Puzzle Solved!" : "Puzzle Unfinished"}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="py-4">
+              <p className="text-center text-muted-foreground">
+                {gameWon 
+                  ? "Congratulations! You've successfully solved the puzzle." 
+                  : "Try a new puzzle?"}
+              </p>
+              
+              {gameWon && user && (
+                <div className="mt-4 text-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAchievements(true)}
+                    className="mx-auto flex items-center gap-2"
+                  >
+                    <Award className="h-4 w-4" />
+                    View Achievements
+                  </Button>
+                </div>
               )}
             </div>
             
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-              <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                <div className="flex flex-col items-center gap-4">
-                  <ColorGrid 
-                    grid={grid}
-                    originalGrid={originalGrid}
-                    gridSize={gridSize}
-                    selectedCell={selectedCell}
-                    onCellClick={handleCellClick}
-                  />
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleReset}
-                      disabled={isPaused}
-                      className="rounded-lg"
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="rounded-lg"
-                      onClick={() => setShowHintConfirm(true)}
-                      disabled={isPaused || usedHint}
-                    >
-                      {usedHint ? "Hint Used" : "Get Hint"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleGiveUp}
-                      disabled={isPaused}
-                      className="rounded-lg"
-                    >
-                      Give Up
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="w-full md:w-auto">
-                  <h2 className="text-lg font-medium mb-3 text-center md:text-left">Color Palette</h2>
-                  <ColorPalette colors={colors} onColorSelect={handleColorSelect} />
-                  
-                  <div className="mt-8">
-                    <h2 className="text-lg font-medium mb-4 text-center md:text-left">Instructions</h2>
-                    <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                      <li>Click on an empty cell to select it</li>
-                      <li>Click on a color or press 1-{colors.length} to place it</li>
-                      <li>Each row, column, and region must contain each color exactly once</li>
-                      <li>Press pause to take a break and hide the puzzle</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-      
-      {/* Pause Overlay */}
-      {isPaused && <PauseOverlay onResume={handleResumeGame} />}
-      
-      {/* Game Over Dialog */}
-      <Dialog open={showGameOverScreen} onOpenChange={setShowGameOverScreen}>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              {gameWon ? "Puzzle Solved!" : "Puzzle Unfinished"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            {gameWon ? (
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <Trophy className="h-8 w-8 text-green-600" />
-                </div>
-                <p className="text-muted-foreground">
-                  Congratulations! You've successfully solved the puzzle.
-                </p>
-                {user && finalScore > 0 && (
-                  <div className="bg-primary/5 py-3 px-4 rounded-lg">
-                    <p className="font-medium">Your Score</p>
-                    <p className="text-3xl font-bold text-primary">{finalScore}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground">
-                Try a new puzzle?
-              </p>
-            )}
-          </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white rounded-lg"
-              onClick={startNewGame}
-            >
-              {gameWon ? "Play Again" : "New Puzzle"}
-            </Button>
-            <Button 
-              variant="outline"
-              className="w-full sm:w-auto rounded-lg"
-              onClick={() => {
-                setShowGameOverScreen(false);
-                setShowTitleScreen(true);
-                scrollToTop();
-              }}
-            >
-              Main Menu
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Tutorial Dialog */}
-      <Dialog open={showTutorialScreen} onOpenChange={setShowTutorialScreen}>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">How to Play</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            <p className="text-muted-foreground">
-              Color Grid Logic is a puzzle game inspired by Sudoku, but with colors instead of numbers.
-            </p>
-            
-            <div className="space-y-2">
-              <h3 className="font-semibold">Game Rules:</h3>
-              <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                <li>Fill the grid with colors so that each row, column, and region contains each color exactly once</li>
-                <li>Some cells are pre-filled to get you started</li>
-                <li>Use logic to determine where each color should go</li>
-                <li>The puzzle is complete when all cells are filled correctly</li>
-              </ul>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="font-semibold">How to Play:</h3>
-              <ol className="list-decimal pl-5 space-y-1 text-sm text-muted-foreground">
-                <li>Click on an empty cell to select it</li>
-                <li>Click on a color from the palette or use number keys (1-4 for Easy, 1-9 for Hard) to place it</li>
-                <li>If you make a mistake, you can reset the puzzle or give up</li>
-                <li>The timer keeps track of how long you take to solve the puzzle</li>
-              </ol>
-            </div>
-            
-            <div className="space-y-2">
-              <h3 className="font-semibold">Tips:</h3>
-              <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                <li>Look for rows, columns, or regions that are almost complete</li>
-                <li>If a color can only go in one place in a row, column, or region, it must go there</li>
-                <li>Use process of elimination to narrow down possibilities</li>
-              </ul>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              className="rounded-lg"
-              onClick={() => setShowTutorialScreen(false)}
-            >
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Hint Confirmation Dialog */}
-      <Dialog open={showHintConfirm} onOpenChange={setShowHintConfirm}>
-        <DialogContent className="sm:max-w-md rounded-xl">
-          <DialogHeader>
-            <DialogTitle>Use a Hint?</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <p className="text-muted-foreground">
-              Using a hint will make you ineligible for the "No Help Needed" achievement.
-              Are you sure you want to use a hint?
-            </p>
-          </div>
-          
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto rounded-lg"
-              onClick={() => setShowHintConfirm(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="w-full sm:w-auto rounded-lg"
-              onClick={provideHint}
-            >
-              Use Hint
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Achievement Dialog */}
-      <AchievementDialog 
-        open={showAchievementDialog} 
-        onOpenChange={setShowAchievementDialog} 
-        achievement={latestAchievement}
-        onContinue={handleAchievementContinue} 
-      />
-      
-      <Footer />
-    </div>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={startNewGame}
+              >
+                {gameWon ? "Play Again" : "New Puzzle"}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setShowGameOverScreen(false);
+                  setShowTitleScreen(true);
+                  scrollToTop();
+                }}
+              >
+                Main Menu
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Achievements Dialog */}
+        <AchievementsDialog
+          open={showAchievements}
+          onOpenChange={setShowAchievements}
+        />
+        
+        {/* Tutorial Dialog */}
+        <TutorialMode
+          open={showTutorial}
+          onOpenChange={setShowTutorial}
+        />
+        
+        <Footer />
+      </div>
+    </PageWrapper>
   );
 };
 

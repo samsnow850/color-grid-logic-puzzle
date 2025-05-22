@@ -47,7 +47,7 @@ const TermsOfUse = () => {
           
           <h2 className="text-2xl font-semibold mt-8 mb-4">4. Contact</h2>
           <p className="mb-4">
-            If you have any questions about these Terms of Use, please contact us at: <a href="mailto:ssnow@sterneschool.org" className="text-blue-600 hover:underline">ssnow@sterneschool.org</a>
+            If you have any questions about these Terms of Use, please contact us at: <a href="mailto:support@color-grid-logic-puzzle.com" className="text-blue-600 hover:underline">support@color-grid-logic-puzzle.com</a>
           </p>
         </div>
       </main>

@@ -13,19 +13,11 @@ interface GoogleAuthButtonProps {
   onSuccess?: () => void;
 }
 
-// Google Identity Services API initialization options
-interface GoogleInitOptions {
-  client_id: string;
-  callback: (response: GoogleCredentialResponse) => void;
-  auto_select?: boolean;
-  cancel_on_tap_outside?: boolean;
-}
-
 const GOOGLE_CLIENT_ID = "631765203877-09ko5kuh9gnufa2dcl595ip4q4ll1da9.apps.googleusercontent.com";
 
 const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
-  const buttonRef = useRef<HTMLDivElement>(null);
-
+  const buttonContainerRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     // Load the Google Sign-In script if not already loaded
     if (!window.google) {
@@ -41,21 +33,34 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
       };
     }
     
-    // Initialize Google Sign-In when script is loaded or already available
+    // Initialize Google Sign-In when script is loaded
     const initializeGoogleButton = () => {
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: handleGoogleSignIn,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        } as GoogleInitOptions);
+        });
         
-        // Render the button
-        if (buttonRef.current) {
+        // Render the button directly using Google's method
+        if (buttonContainerRef.current) {
+          // Clear previous content
+          buttonContainerRef.current.innerHTML = '';
+          
+          // Create a div for Google's button
+          const buttonElement = document.createElement('div');
+          buttonContainerRef.current.appendChild(buttonElement);
+          
+          // Use Google's renderButton method
           window.google.accounts.id.renderButton(
-            buttonRef.current,
-            { theme: "outline", size: "large", text: buttonType, width: 280 }
+            buttonElement,
+            {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              text: buttonType,
+              width: buttonContainerRef.current.offsetWidth,
+              logo_alignment: 'left'
+            }
           );
         }
       } else {
@@ -92,7 +97,7 @@ const GoogleAuthButton = ({ buttonType, onSuccess }: GoogleAuthButtonProps) => {
     }
   };
 
-  return <div ref={buttonRef} className="google-signin-button"></div>;
+  return <div ref={buttonContainerRef} className="google-signin-button w-full h-10"></div>;
 };
 
 export default GoogleAuthButton;
